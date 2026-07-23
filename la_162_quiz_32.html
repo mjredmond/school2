@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Language Arts Quiz 32 Practice</title>
+<style>
+:root{--ink:#202124;--muted:#636a73;--line:#d7dbe2;--paper:#fff;--bg:#f4f6f8;--accent:#245d8f;--accent2:#477a43;--bad:#a3372a;--good:#217044;--soft:#eaf2fb;--warn:#f8efe0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.35}.wrap{max-width:1160px;margin:0 auto;padding:18px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.title h1{font-size:24px;margin:0 0 4px}.title p{margin:0;color:var(--muted)}.toolbar{display:flex;gap:8px;flex-wrap:wrap}button{font:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;padding:7px 10px;cursor:pointer}button:hover{border-color:#9aa6b5}.primary{background:var(--accent);border-color:var(--accent);color:white}.section{background:var(--paper);border:1px solid var(--line);border-radius:8px;margin:14px 0;padding:14px}.section h2{font-size:18px;margin:0 0 4px}.directions{margin:0 0 12px;color:var(--muted)}.item{border-top:1px solid var(--line);padding:14px 0}.item:first-of-type{border-top:0}.item-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.stem{display:flex;gap:8px;margin-bottom:10px}.num{font-weight:700;min-width:32px}.prompt{flex:1}.sentence-live{font-size:18px;line-height:1.45}.sentence-live .blank-slot{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:24px;border-bottom:2px solid #8e9aab;background:#fff;color:var(--muted)}.sentence-live .choice-fill{display:inline-flex;align-items:center;justify-content:center;min-width:20px;padding:0 4px;border:1px solid #d6a84b;border-radius:4px;background:#fff3c9;color:#3c2a00;font-weight:700}.sentence-live .cap-change{padding:0 3px;border-radius:4px;background:#dff3e7;box-shadow:inset 0 -2px 0 var(--accent2)}.sentence-live .cap-keep{padding:0 3px;border-radius:4px;background:#eef2f6;box-shadow:inset 0 -2px 0 #8e9aab}.options,.modes,.token-line,.chips,.diagram-choices{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.selected,.active{background:var(--soft);border-color:var(--accent);color:#123c61}.token{position:relative;min-height:36px;background:#fff}.token.marked{background:#eaf6ec;border-color:var(--accent2)}.token.object{box-shadow:inset 0 -3px 0 #bc7f1a}.token.subject{box-shadow:inset 0 -3px 0 #245d8f;background:#edf4ff}.token.verb{outline:2px solid rgba(155,95,26,.45);background:#fff7ed}.token.bold-word{font-weight:700}.proof-mark{display:inline-block;color:var(--bad);font-weight:700;padding:0 1px}.proof-cap{background:#dff3e7;box-shadow:inset 0 -2px 0 var(--accent2)}.verb-slot{display:inline-flex;align-items:center;min-height:36px;padding:7px 10px;border:1px dashed #9aa6b5;border-radius:6px;background:#fbfcfd}.verb-choice.active{text-decoration:underline;text-decoration-thickness:2px}.token.start{outline:2px solid #6d83b5}.comma-before:before{content:',';position:absolute;left:3px;top:-12px;color:var(--bad);font-weight:700}.comma-after:after{content:',';position:absolute;right:3px;top:-12px;color:var(--bad);font-weight:700}.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;background:#fff}.pill button{padding:0 5px;border:0;background:transparent}.feedback{font-weight:700;margin-top:8px}.correct .feedback{color:var(--good)}.missed .feedback{color:var(--bad)}input,textarea{font:inherit;border:1px solid var(--line);border-radius:6px;padding:8px;width:min(100%,420px)}textarea{min-height:84px}.action-stack{display:grid;gap:10px;margin:8px 0}.action-row{border:1px solid var(--line);border-radius:6px;background:#fff;padding:8px}.action-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}.action-title .pill{font-weight:700}.subrow{display:grid;grid-template-columns:minmax(120px,1fr) minmax(160px,360px);gap:8px;align-items:center;margin:8px 0}.answer{background:var(--warn);border:1px solid #ecd8b9;border-radius:6px;margin-top:8px;padding:8px;color:#3e2e13}.diagram{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fbfcfd}.diagram-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:8px;margin-top:8px}.slot{min-height:58px;border:1px dashed #9aa6b5;border-radius:6px;background:#fff;padding:7px}.slot.active{background:var(--soft);border-style:solid}.slot-label{font-size:12px;color:var(--muted);margin-bottom:4px}.bank-token{display:inline-flex;flex-direction:column;align-items:center;gap:2px;min-width:54px}.pos{font-size:11px;color:var(--muted)}.conj-note{border-left:2px dashed #8e9aab;padding-left:8px;color:var(--muted)}.role-toolbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:7px;margin:10px 0}.role-btn{min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px solid #c8d3df;background:#fff;border-radius:6px}.role-btn strong{font-size:13px}.role-btn span{font-size:11px;color:var(--muted)}.role-btn.selected{border-color:var(--accent);background:var(--soft)}.sentence-line{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.mode-row{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.mode-btn.active{background:var(--soft);border-color:var(--accent)}.word-bank{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.word-token{position:relative;display:inline-flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;min-width:58px;min-height:50px;border:1px solid #c8d3df;border-radius:6px;padding:7px 8px 6px;background:#fff;cursor:pointer;user-select:none}.word-token:hover{border-color:var(--accent)}.word-token.active-role{outline:2px solid rgba(36,93,143,.28)}.word-token.used-word{background:#f2f7ef;border-color:rgba(53,122,84,.55)}.role-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:110px;min-height:18px}.chip{display:inline-flex;align-items:center;min-height:18px;border-radius:999px;padding:1px 5px;color:#fff;font-size:10px;font-weight:800}.role-s{background:#2f5f98}.role-av,.role-lv,.role-bv{background:#9b5f1a}.role-do,.role-pn,.role-pa{background:#357a54}.role-adj{background:#6b5ca5}.role-adv{background:#7f4b77}.role-conj{background:#b34d37}.role-prep,.role-op,.role-omit{background:#637083}.diagram-wrap{overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:8px;background:#fff}.diagram-svg{display:block;width:760px;max-width:none;height:330px}.diagram-line{stroke:#263241;stroke-width:2;stroke-linecap:round;fill:none}.diagram-guide{stroke:#6e7b8a;stroke-width:1.5;stroke-dasharray:5 4;fill:none}.diagram-text{font-size:18px;font-family:Georgia,"Times New Roman",serif;fill:#1c2633;text-anchor:middle}.small-text{font-size:14px}.diagram-target{cursor:pointer;pointer-events:all}.target-hit{fill:transparent;stroke:transparent}.diagram-target:hover .target-hit,.diagram-target.selected .target-hit{fill:rgba(155,106,23,.12);stroke:#bc7f1a;stroke-width:3}.diagram-target.filled rect:not(.target-hit){stroke-width:2.5}.diagram-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}.diagram-choice{min-height:106px;border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s}.diagram-choice:hover{border-color:var(--accent);background:#f7fbff}.diagram-choice.selected{border-color:var(--accent);background:var(--soft);box-shadow:0 0 0 2px rgba(36,93,143,.18)}.diagram-choice svg{display:block;width:100%;height:94px}@media(max-width:640px){.top{display:block}.toolbar{margin-top:12px}.subrow{grid-template-columns:1fr}.wrap{padding:12px}.title h1{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="title"><h1 id="title">Language Arts Quiz 32 Practice</h1><p id="subtitle"></p></div>
+    <div class="toolbar"><button class="primary" id="checkAllBtn">Check All</button><button id="resetBtn">Reset / Randomize</button><button id="answersBtn">Show Unlocked Answers</button></div>
+  </div>
+  <div id="score"></div>
+  <main id="app"></main>
+</div>
+<script>
+const PRACTICE={"title":"Language Arts Quiz 32 Practice","subtitle":"Lesson 162","source":{"pdf":"abeka_la_docs.pdf","pages":"42","source_image":"la_page_42.png"},"sections":[{"id":"interjections","title":"Interjections","directions":"Write the punctuation mark that should follow the interjection. Then tell whether the next word needs capitalization.","items":[{"id":"q1","num":1,"type":"choice","skill":"Strong interjection with no capitalization change needed","variants":[{"prompt":"Oh ___ I misplaced my pencil again.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Oh ___ I forgot to close the gate.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Oh ___ I see the answer now.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Oh ___ I left the keys on the counter.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Oh ___ I hear the bell ringing.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]}]},{"id":"q2","num":2,"type":"choice","skill":"Mild interjection followed by a comma","variants":[{"prompt":"Well ___ we can meet after recess.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Well ___ the map is on the desk.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Well ___ I can try another way.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Well ___ this hallway looks familiar.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Well ___ the lesson is almost over.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]}]},{"id":"q3","num":3,"type":"choice","skill":"Strong interjection followed by a word needing capitalization","variants":[{"prompt":"Wow ___ those fireworks are bright!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]},{"prompt":"Wow ___ that waterfall is tall!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]},{"prompt":"Wow ___ this cake is enormous!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]},{"prompt":"Wow ___ those clouds are dark!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]},{"prompt":"Wow ___ that horse runs fast!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]}]},{"id":"q4","num":4,"type":"choice","skill":"Mild thinking interjection followed by a comma","variants":[{"prompt":"Hmm ___ I might choose the blue ribbon.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Hmm ___ this clue seems useful.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Hmm ___ we should check the answer.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Hmm ___ that plan may work.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Hmm ___ I need one more clue.","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":1},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]}]},{"id":"q5","num":5,"type":"choice","skill":"Pain interjection with no capitalization change needed","variants":[{"prompt":"Ouch ___ I bumped my elbow!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Ouch ___ My finger got pinched!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Ouch ___ That splinter is sharp!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Ouch ___ I stepped on a pebble!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]},{"prompt":"Ouch ___ My knee hit the bench!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":0}]}]},{"id":"q6","num":6,"type":"choice","skill":"Strong attention-getting interjection followed by a word needing capitalization","variants":[{"prompt":"Hey ___ your coat is on the chair!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]},{"prompt":"Hey ___ the bus is waiting!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]},{"prompt":"Hey ___ your dog found the ball!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]},{"prompt":"Hey ___ come look at this!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]},{"prompt":"Hey ___ our team just scored!","items":[{"prompt":"Punctuation mark","choices":["!",",","."],"answer":0},{"prompt":"Capitalization","choices":["Already correct","Capitalize next word"],"answer":1}]}]}]},{"id":"parts-of-speech","title":"Parts of Speech","directions":"Identify the named word by choosing V, N, Adj., Adv., Pro., Prep., Int., or Conj.","items":[{"id":"q7","num":7,"type":"choice","skill":"Adjective label","variants":[{"prompt":"Identify \"quiet\": We enjoyed a quiet walk beside the lake.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":2},{"prompt":"Identify \"silver\": The silver bell rang after lunch.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":2},{"prompt":"Identify \"fresh\": Mia packed fresh rolls for the trip.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":2},{"prompt":"Identify \"wooden\": Caleb carried a wooden box upstairs.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":2},{"prompt":"Identify \"brave\": The brave dog guarded the porch.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":2}]},{"id":"q8","num":8,"type":"choice","skill":"Conjunction label","variants":[{"prompt":"Identify \"and\": The choir and orchestra practiced together.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":7},{"prompt":"Identify \"but\": Grace wanted tea, but Jonah chose milk.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":7},{"prompt":"Identify \"or\": We can read or draw after chores.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":7},{"prompt":"Identify \"and\": The peaches and pears smelled sweet.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":7},{"prompt":"Identify \"but\": The path was narrow but safe.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":7}]},{"id":"q9","num":9,"type":"choice","skill":"Adverb label","variants":[{"prompt":"Identify \"carefully\": Nora carefully folded the letter.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":3},{"prompt":"Identify \"brightly\": The lanterns glowed brightly at dusk.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":3},{"prompt":"Identify \"softly\": The teacher spoke softly during prayer.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":3},{"prompt":"Identify \"soon\": The guests will arrive soon.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":3},{"prompt":"Identify \"neatly\": Daniel neatly stacked the papers.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":3}]},{"id":"q10","num":10,"type":"choice","skill":"Verb label","variants":[{"prompt":"Identify \"opened\": The librarian opened the front door.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":0},{"prompt":"Identify \"sparkled\": The stream sparkled in the sunlight.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":0},{"prompt":"Identify \"carried\": Emma carried the basket inside.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":0},{"prompt":"Identify \"answered\": The student answered the question.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":0},{"prompt":"Identify \"waited\": The hikers waited near the trail.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":0}]},{"id":"q11","num":11,"type":"choice","skill":"Interjection label","variants":[{"prompt":"Identify \"Wow\": \"Wow, this garden is beautiful,\" said Anna.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":6},{"prompt":"Identify \"Oh\": \"Oh, I remember that verse,\" replied Ben.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":6},{"prompt":"Identify \"Well\": \"Well, the answer is simple,\" said Ruth.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":6},{"prompt":"Identify \"Ouch\": \"Ouch, that thorn is sharp,\" cried Eli.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":6},{"prompt":"Identify \"Hey\": \"Hey, your cap is on the bench,\" called Mark.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":6}]},{"id":"q12","num":12,"type":"choice","skill":"Preposition label","variants":[{"prompt":"Identify \"beneath\": The kitten hid beneath the chair.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":5},{"prompt":"Identify \"through\": We walked through the narrow gate.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":5},{"prompt":"Identify \"around\": The children ran around the playground.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":5},{"prompt":"Identify \"beside\": The lamp stood beside the sofa.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":5},{"prompt":"Identify \"during\": The room stayed quiet during the test.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":5}]},{"id":"q13","num":13,"type":"choice","skill":"Pronoun label","variants":[{"prompt":"Identify \"They\": They carried the boxes to the porch.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":4},{"prompt":"Identify \"She\": She watered the flowers before breakfast.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":4},{"prompt":"Identify \"We\": We finished the poster after school.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":4},{"prompt":"Identify \"He\": He placed the books on the shelf.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":4},{"prompt":"Identify \"It\": It rolled under the table.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":4}]},{"id":"q14","num":14,"type":"choice","skill":"Noun label","variants":[{"prompt":"Identify \"river\": The river curved behind the mill.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":1},{"prompt":"Identify \"lantern\": A lantern hung by the doorway.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":1},{"prompt":"Identify \"teacher\": The teacher smiled at the class.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":1},{"prompt":"Identify \"garden\": The garden needed water after lunch.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":1},{"prompt":"Identify \"basket\": The basket sat beside the steps.","choices":["V","N","Adj.","Adv.","Pro.","Prep.","Int.","Conj."],"answer":1}]}]}]};
+const app=document.getElementById('app');
+const score=document.getElementById('score');
+const state={variant:{},answers:{},checkedAll:false,checkedItems:{},showAnswers:false,wrongAttempts:{},revealedAnswers:{}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const norm=s=>String(s??'').toLowerCase().replace(/[^a-z0-9. ]+/g,' ').replace(/\s+/g,' ').trim();
+const sameSet=(a,b)=>JSON.stringify([...new Set(a||[])].map(Number).sort((x,y)=>x-y))===JSON.stringify([...new Set(b||[])].map(Number).sort((x,y)=>x-y));
+const arrEq=(a,b)=>JSON.stringify(a||[])===JSON.stringify(b||[]);
+const q=s=>CSS.escape(String(s));
+function allItems(){return (PRACTICE.sections||[]).flatMap(section=>(section.items||[]).map(item=>({section,item})));}
+function findItem(id){return allItems().find(x=>x.item.id===id)?.item;}
+function activeVariant(item){return (item.variants||[])[state.variant[item.id]]||{};}
+function defaultAnswer(type){
+  if(type==='choice')return{choice:null,choices:{}};
+  if(type==='proofread')return{mode:'punct',side:'after',mark:',',caps:[],punct:[]};
+  if(type==='short-answer')return{text:'',texts:{}};
+  if(type==='edit-text')return{text:''};
+  if(type==='word-mark')return{targets:[]};
+  if(type==='comma')return{mode:'after',boundaries:[],boundarySides:{}};
+  if(['phrase','pattern','advprep'].includes(type))return{mode:'phrase',phraseStart:null,phrases:[],objects:[],subjects:[],verbs:[],verb:'',pattern:'',advprep:'',label:''};
+  if(type==='diagram')return{pattern:'',basicShape:'',shape:'',selectedRole:'S',selectedWord:null,selectedTarget:'',roles:{},assignments:{},understood:{}};
+  return{};
+}
+function ensure(id){const item=findItem(id);if(!state.answers[id])state.answers[id]=defaultAnswer(item?.type);return state.answers[id];}
+function newRun(){state.variant={};state.answers={};state.checkedAll=false;state.checkedItems={};state.showAnswers=false;state.wrongAttempts={};state.revealedAnswers={};for(const {item} of allItems()){state.variant[item.id]=Math.floor(Math.random()*Math.max(1,(item.variants||[]).length));state.answers[item.id]=defaultAnswer(item.type);}render();}
+function isItemChecked(item){return !!state.checkedAll||!!state.checkedItems[item.id];}
+function answerUnlocked(id){return (state.wrongAttempts[id]||0)>=5||!!state.revealedAnswers[id];}
+function shouldShowAnswer(id){return !!state.revealedAnswers[id]||(state.showAnswers&&answerUnlocked(id));}
+function recordCheck(item){const ok=isCorrect(item,activeVariant(item),ensure(item.id));if(ok){state.wrongAttempts[item.id]=0;}else{state.wrongAttempts[item.id]=(state.wrongAttempts[item.id]||0)+1;}return ok;}
+function renderPrompt(item,v,a){
+  const prompt=v.prompt||item.prompt||'';
+  if(item.type==='diagram')return esc(v.sentence||((v.tokens||[]).filter(token=>!String(token).startsWith('(')).join(' ')));
+  if(item.type==='choice'&&Array.isArray(v.items)&&String(prompt).includes('___'))return renderSentencePreview(prompt,v,a);
+  return esc(prompt);
+}
+function selectedSubChoice(v,a,matcher){
+  const items=v.items||[];
+  const index=items.findIndex(matcher);
+  if(index<0)return null;
+  const picked=a.choices?.[index];
+  if(picked===undefined||picked===null||picked==='')return null;
+  const sub=items[index];
+  return {index,picked:Number(picked),label:String((sub.choices||[])[Number(picked)]??''),sub};
+}
+function isPunctuationChoice(sub){const p=String(sub.prompt||'').toLowerCase();return p.includes('punctuation')||p.includes('mark');}
+function isCapitalizationChoice(sub){return String(sub.prompt||'').toLowerCase().includes('capital');}
+function shouldCapitalize(label){return /capital/i.test(label)&&!/already|correct|unchanged|no change/i.test(label);}
+function renderSentencePreview(prompt,v,a){
+  const text=String(prompt||'');
+  const slot=text.indexOf('___');
+  if(slot<0)return esc(text);
+  const before=text.slice(0,slot).replace(/\s+$/,'');
+  const after=text.slice(slot+3).replace(/^\s+/,'');
+  const punct=selectedSubChoice(v,a,isPunctuationChoice);
+  const cap=selectedSubChoice(v,a,isCapitalizationChoice);
+  const mark=punct?`<span class="choice-fill">${esc(punct.label)}</span>`:'<span class="blank-slot"></span>';
+  const tail=renderCapitalizationTail(after,cap);
+  return `<span class="sentence-live">${esc(before)}${mark}${tail?` ${tail}`:''}</span>`;
+}
+function renderCapitalizationTail(text,cap){
+  const raw=String(text||'');
+  if(!cap)return esc(raw);
+  const match=raw.match(/[A-Za-z][A-Za-z']*/);
+  if(!match)return esc(raw);
+  const start=match.index||0;
+  const word=match[0];
+  const makeCap=shouldCapitalize(cap.label);
+  const shown=makeCap?word.charAt(0).toUpperCase()+word.slice(1):word;
+  const cls=makeCap?'cap-change':'cap-keep';
+  return esc(raw.slice(0,start))+`<span class="${cls}">${esc(shown)}</span>`+esc(raw.slice(start+word.length));
+}
+function render(){
+  document.getElementById('subtitle').textContent=PRACTICE.subtitle||'';
+  app.innerHTML=(PRACTICE.sections||[]).map(section=>`<section class="section"><h2>${esc(section.title)}</h2>${section.directions?`<p class="directions">${esc(section.directions)}</p>`:''}${(section.items||[]).map(renderItem).join('')}</section>`).join('');
+  const items=allItems();
+  const checked=items.filter(({item})=>isItemChecked(item));
+  if(checked.length){const good=checked.filter(({item})=>isCorrect(item,activeVariant(item),state.answers[item.id])).length;const unchecked=items.length-checked.length;score.innerHTML=`<div class="section"><strong>${state.checkedAll?'Score':'Checked'}:</strong> ${good} correct of ${checked.length} checked${unchecked?` (${unchecked} unchecked)`:''}</div>`;}else{score.innerHTML='';}
+}
+function renderItem(item){
+  const v=activeVariant(item);
+  const a=ensure(item.id);
+  const ok=isCorrect(item,v,a);
+  const checked=isItemChecked(item);
+  const cls=checked?(ok?' correct':' missed'):'';
+  const wrongCount=state.wrongAttempts[item.id]||0;
+  const canReveal=answerUnlocked(item.id);
+  const showItemAnswer=shouldShowAnswer(item.id);
+  const feedback=checked?'<span class="feedback">'+(ok?'Correct':'Try again')+'</span>':'';
+  const attempts=checked&&!ok&&wrongCount>0?'<span class="pill">Wrong tries: '+Math.min(wrongCount,5)+'/5</span>':'';
+  const reveal=!showItemAnswer&&canReveal?'<button data-action="reveal-answer" data-id="'+esc(item.id)+'">Show Answer</button>':'';
+  return '<article class="item'+cls+'" id="'+esc(item.id)+'"><div class="stem"><div class="num">'+esc(item.num)+'.</div><div class="prompt">'+renderPrompt(item,v,a)+'</div></div>'+renderByType(item,v,a)+'<div class="item-tools"><button data-action="check-item" data-id="'+esc(item.id)+'">'+(checked?'Check Again':'Check')+'</button>'+feedback+attempts+reveal+'</div>'+(showItemAnswer?renderAnswer(item,v):'')+'</article>';
+}
+function renderByType(item,v,a){
+  if(item.type==='choice')return renderChoice(item,v,a);
+  if(item.type==='proofread')return renderProofread(item,v,a);
+  if(item.type==='short-answer')return renderShort(item,v,a);
+  if(item.type==='edit-text')return `<textarea data-input="edit" data-id="${esc(item.id)}">${esc(a.text||'')}</textarea>`;
+  if(item.type==='word-mark')return renderWordMark(item,v,a);
+  if(item.type==='comma')return renderComma(item,v,a);
+  if(['phrase','pattern','advprep'].includes(item.type))return renderPhrase(item,v,a);
+  if(item.type==='diagram')return renderDiagram(item,v,a);
+  return `<p class="directions">Unsupported item type: ${esc(item.type)}</p>`;
+}
+function renderChoice(item,v,a){
+  if(Array.isArray(v.items))return v.items.map((sub,i)=>`<div class="subrow"><label>${esc(sub.prompt||String.fromCharCode(97+i)+'.')}</label><div class="options">${(sub.choices||[]).map((c,j)=>`<button data-action="choice-sub" data-id="${esc(item.id)}" data-index="${i}" data-value="${j}" class="${Number(a.choices?.[i])===j?'selected':''}">${esc(c)}</button>`).join('')}</div></div>`).join('');
+  return `<div class="options">${(v.choices||[]).map((c,i)=>`<button data-action="choice" data-id="${esc(item.id)}" data-value="${i}" class="${a.choice===i?'selected':''}">${esc(c)}</button>`).join('')}</div>`;
+}function renderShort(item,v,a){
+  if(Array.isArray(v.items))return v.items.map((sub,i)=>`<div class="subrow"><label>${esc(sub.prompt||String.fromCharCode(97+i)+'.')}</label><input data-input="short" data-id="${esc(item.id)}" data-index="${i}" value="${esc(a.texts?.[i]||'')}"></div>`).join('');
+  return `<input data-input="short" data-id="${esc(item.id)}" value="${esc(a.text||'')}">`;
+}
+function renderTokens(tokens,buttonHtml){return `<div class="token-line">${(tokens||[]).map(buttonHtml).join('')}</div>`;}
+function renderWordMark(item,v,a){return renderTokens(v.tokens,(t,i)=>`<button class="token ${a.targets.includes(i)?'marked':''}" data-action="toggle-token" data-id="${esc(item.id)}" data-index="${i}">${esc(t)}</button>`);}
+function renderComma(item,v,a){
+  const modes=`<div class="modes"><button class="${a.mode==='before'?'active':''}" data-action="comma-mode" data-id="${esc(item.id)}" data-value="before">Add Before</button><button class="${a.mode==='after'?'active':''}" data-action="comma-mode" data-id="${esc(item.id)}" data-value="after">Add After</button><button data-action="clear-commas" data-id="${esc(item.id)}">Clear</button></div>`;
+  const tokens=renderTokens(v.tokens,(t,i)=>{const before=a.boundaries.includes(i)&&(a.boundarySides?.[i]==='before'||i===0);const after=a.boundaries.includes(i+1)&&(a.boundarySides?.[i+1]==='after'||i+1===(v.tokens||[]).length);return `<button class="token ${before?'comma-before':''} ${after?'comma-after':''}" data-action="comma-token" data-id="${esc(item.id)}" data-index="${i}">${esc(t)}</button>`});
+  return modes+tokens;
+}
+function renderProofread(item,v,a){
+  const marks=v.markOptions||[',','.','!','?','"'];
+  const modes=`<div class="modes"><button class="${a.mode==='punct'?'active':''}" data-action="proof-mode" data-id="${esc(item.id)}" data-value="punct">Punctuation</button><button class="${a.mode==='cap'?'active':''}" data-action="proof-mode" data-id="${esc(item.id)}" data-value="cap">Capitalization</button><button class="${a.side==='before'?'active':''}" data-action="proof-side" data-id="${esc(item.id)}" data-value="before">Add Before</button><button class="${a.side==='after'?'active':''}" data-action="proof-side" data-id="${esc(item.id)}" data-value="after">Add After</button><button data-action="clear-proofread" data-id="${esc(item.id)}">Clear</button></div>`;
+  const markBtns=`<div class="modes"><span class="pill">Mark</span>${marks.map(m=>`<button class="${a.mark===m?'active':''}" data-action="proof-mark" data-id="${esc(item.id)}" data-value="${esc(m)}">${esc(m)}</button>`).join('')}</div>`;
+  const tokens=renderTokens(v.tokens,(t,i)=>{
+    const before=(a.punct||[]).filter(p=>Number(p.boundary)===i&&(p.side==='before'||i===0)).map(p=>`<span class="proof-mark">${esc(p.mark)}</span>`).join('');
+    const after=(a.punct||[]).filter(p=>Number(p.boundary)===i+1&&(p.side==='after'||i+1===(v.tokens||[]).length)).map(p=>`<span class="proof-mark">${esc(p.mark)}</span>`).join('');
+    const capped=(a.caps||[]).includes(i);
+    const shown=capped?capitalizeToken(t):t;
+    return `<button class="token ${capped?'proof-cap':''}" data-action="proof-token" data-id="${esc(item.id)}" data-index="${i}">${before}${esc(shown)}${after}</button>`;
+  });
+  return modes+markBtns+tokens;
+}
+function capitalizeToken(text){return String(text||'').replace(/[A-Za-z]/,m=>m.toUpperCase());}
+function togglePunct(a,boundary,mark,side){
+  if(!a.punct)a.punct=[];
+  const i=a.punct.findIndex(p=>Number(p.boundary)===Number(boundary)&&String(p.mark)===String(mark));
+  if(i>=0){
+    if(a.punct[i].side===side)a.punct.splice(i,1);
+    else a.punct[i].side=side;
+  }else a.punct.push({boundary:Number(boundary),mark:String(mark),side:String(side||'after')});
+}
+function phraseTokenClasses(v,a,i,kind){
+  const all=kind==='all';
+  const inPhrase=(a.phrases||[]).some(r=>i>=r.start&&i<=r.end);
+  const isObject=(a.objects||[]).includes(i);
+  const isSubject=(a.subjects||[]).includes(i);
+  const isVerb=(a.verbs||[]).includes(i);
+  const isStart=(kind==='phrase'||all&&a.mode==='phrase')&&a.phraseStart===i;
+  const isBold=(v.boldIndices||[]).includes(i);
+  return `token ${(all||kind==='phrase')&&inPhrase?'marked':''} ${(all||kind==='object')&&isObject?'object':''} ${(all||kind==='subject')&&isSubject?'subject':''} ${(all||kind==='verb')&&isVerb?'verb':''} ${isStart?'start':''} ${isBold?'bold-word':''}`;
+}
+function renderPhraseTokenLine(item,v,a,kind,action){
+  return renderTokens(v.tokens,(t,i)=>{
+    if(t==='__VERB__')return `<span class="verb-slot">(${esc((v.verbChoices||[]).join(', '))})</span>`;
+    return `<button class="${phraseTokenClasses(v,a,i,kind)}" data-action="${esc(action)}" data-id="${esc(item.id)}" data-index="${i}">${esc(t)}</button>`;
+  });
+}
+function renderActionRow(item,title,content,clearAction){
+  const clear=clearAction?`<button data-action="${esc(clearAction)}" data-id="${esc(item.id)}">Clear</button>`:'';
+  return `<div class="action-row"><div class="action-title"><span class="pill">${esc(title)}</span>${clear}</div>${content}</div>`;
+}
+function renderSeparatedPhrase(item,v,a,pattern,advprep,labelChoices,verbChoices){
+  const buttons=[];
+  if(Array.isArray(v.phrases))buttons.push(['phrase','Prepositional Phrase']);
+  if(Array.isArray(v.objects))buttons.push(['object','Object of Preposition']);
+  if(Array.isArray(v.subjectTargets))buttons.push(['subject','Subject']);
+  if(Array.isArray(v.verbTargets))buttons.push(['verb','Verb']);
+  const modeButtons=buttons.map(([mode,label])=>`<button class="${a.mode===mode?'active':''}" data-action="phrase-mode" data-id="${esc(item.id)}" data-value="${esc(mode)}">${esc(label)}</button>`).join('');
+  const clearButtons=`<button data-action="clear-phrases" data-id="${esc(item.id)}">Clear Phrases</button>${Array.isArray(v.objects)?`<button data-action="clear-objects" data-id="${esc(item.id)}">Clear Objects</button>`:''}${Array.isArray(v.subjectTargets)?`<button data-action="clear-subjects" data-id="${esc(item.id)}">Clear Subjects</button>`:''}${Array.isArray(v.verbTargets)?`<button data-action="clear-verbs" data-id="${esc(item.id)}">Clear Verbs</button>`:''}`;
+  const modes=`<div class="modes"><span class="pill">Mark</span>${modeButtons}${clearButtons}</div>`;
+  const tokens=renderPhraseTokenLine(item,v,a,'all','phrase-token');
+  const chips=`<div class="chips">${(a.phrases||[]).map((r,i)=>`<span class="pill">phrase ${r.start+1}-${r.end+1}<button data-action="remove-phrase" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}${(a.objects||[]).map(i=>`<span class="pill">object ${i+1}<button data-action="remove-object" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}${(a.subjects||[]).map(i=>`<span class="pill">subject ${i+1}<button data-action="remove-subject" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}${(a.verbs||[]).map(i=>`<span class="pill">verb ${i+1}<button data-action="remove-verb" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}</div>`;
+  const extras=[pattern,advprep,verbChoices,labelChoices].filter(Boolean).join('');
+  return modes+tokens+extras+chips;
+}
+function renderPhrase(item,v,a){
+  const pattern=item.type==='pattern'?`<div class="modes"><span class="pill">Pattern</span>${(v.patternOptions||['S AV','S AV DO','S LV PA','S LV PN','S AV IO DO']).map(p=>`<button class="${a.pattern===p?'active':''}" data-action="set-pattern" data-id="${esc(item.id)}" data-value="${esc(p)}">${esc(p)}</button>`).join('')}</div>`:'';
+  const advprep=item.type==='advprep'?`<div class="modes"><span class="pill">Answer</span>${['Adv.','Prep.'].map(p=>`<button class="${a.advprep===p?'active':''}" data-action="set-advprep" data-id="${esc(item.id)}" data-value="${esc(p)}">${esc(p)}</button>`).join('')}</div>`:'';
+  const labelChoices=Array.isArray(v.labelOptions)?`<div class="modes"><span class="pill">Noun label</span>${v.labelOptions.map(p=>`<button class="${a.label===p?'active':''}" data-action="set-label" data-id="${esc(item.id)}" data-value="${esc(p)}">${esc(p)}</button>`).join('')}</div>`:'';
+  const subjectBtn=Array.isArray(v.subjectTargets)?`<button class="${a.mode==='subject'?'active':''}" data-action="phrase-mode" data-id="${esc(item.id)}" data-value="subject">Mark Subject</button>`:'';
+  const objectBtn=Array.isArray(v.objects)?`<button class="${a.mode==='object'?'active':''}" data-action="phrase-mode" data-id="${esc(item.id)}" data-value="object">Object of Preposition</button>`:'';
+  const clearObjects=Array.isArray(v.objects)?`<button data-action="clear-objects" data-id="${esc(item.id)}">Clear Objects</button>`:'';
+  const verbChoices=Array.isArray(v.verbChoices)?`<div class="modes"><span class="pill">Correct verb</span>${v.verbChoices.map(p=>`<button class="verb-choice ${a.verb===p?'active':''}" data-action="set-verb-choice" data-id="${esc(item.id)}" data-value="${esc(p)}">${esc(p)}</button>`).join('')}</div>`:'';
+  if(v.separateActions)return renderSeparatedPhrase(item,v,a,pattern,advprep,labelChoices,verbChoices);
+  const modes=`<div class="modes"><button class="${a.mode==='phrase'?'active':''}" data-action="phrase-mode" data-id="${esc(item.id)}" data-value="phrase">Prepositional Phrase</button>${subjectBtn}${objectBtn}<button data-action="clear-phrases" data-id="${esc(item.id)}">Clear Phrases</button>${clearObjects}<button data-action="clear-subjects" data-id="${esc(item.id)}">Clear Subjects</button></div>`;
+  const tokens=renderTokens(v.tokens,(t,i)=>{
+    if(t==='__VERB__')return `<span class="verb-slot">(${esc((v.verbChoices||[]).join(', '))})</span>`;
+    const inPhrase=a.phrases.some(r=>i>=r.start&&i<=r.end);
+    const isObject=a.objects.includes(i);
+    const isSubject=(a.subjects||[]).includes(i);
+    const isStart=a.phraseStart===i;
+    const isBold=(v.boldIndices||[]).includes(i);
+    return `<button class="token ${inPhrase?'marked':''} ${isObject?'object':''} ${isSubject?'subject':''} ${isStart?'start':''} ${isBold?'bold-word':''}" data-action="phrase-token" data-id="${esc(item.id)}" data-index="${i}">${esc(t)}</button>`
+  });
+  const chips=`<div class="chips">${a.phrases.map((r,i)=>`<span class="pill">phrase ${r.start+1}-${r.end+1}<button data-action="remove-phrase" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}${(a.subjects||[]).map(i=>`<span class="pill">subject ${i+1}<button data-action="remove-subject" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}</div>`;
+  return pattern+advprep+labelChoices+modes+tokens+verbChoices+chips;
+}const DIAGRAM_ROLES=[
+  {id:'S',label:'Subject',className:'role-s'},
+  {id:'AV',label:'Action Verb',className:'role-av'},
+  {id:'LV',label:'Linking Verb',className:'role-lv'},
+  {id:'BV',label:'Being Verb',className:'role-bv'},
+  {id:'DO',label:'Direct Object',className:'role-do'},
+  {id:'PN',label:'Pred. Nom.',className:'role-pn'},
+  {id:'PA',label:'Pred. Adj.',className:'role-pa'},
+  {id:'ADJ',label:'Adjective',className:'role-adj'},
+  {id:'ADV',label:'Adverb',className:'role-adv'},
+  {id:'CONJ',label:'Conjunction',className:'role-conj'},
+  {id:'PREP',label:'Preposition',className:'role-prep'},
+  {id:'OP',label:'Obj. Prep.',className:'role-op'},
+  {id:'OMIT',label:'Prep phrase word',className:'role-omit'}
+];
+const DIAGRAM_ROLE_MAP=Object.fromEntries(DIAGRAM_ROLES.map(role=>[role.id,role]));
+const DIAGRAM_BASIC_LABELS={
+  simple:'Simple subject and predicate',
+  'av-do':'Action verb with direct object',
+  'compound-subject-do':'Compound subject with direct object',
+  'compound-verb':'Compound action verbs',
+  'linking-complement':'Linking verb with complement'
+};
+const DIAGRAM_SHAPE_LABELS={
+  simple:'Simple subject and predicate',
+  'simple-subjectmod':'Simple subject and predicate with subject modifier',
+  'simple-adv':'Simple subject and predicate with adverb',
+  'av-do':'Action verb with direct object',
+  'av-do-subjectmod':'Action verb with direct object and subject modifier',
+  'av-do-objectmod':'Action verb with direct object and object modifier',
+  'av-do-adv':'Action verb with direct object and adverb',
+  'csdo-basic':'Compound subject with direct object',
+  'csdo-subject-object-adv':'Compound subject, direct object, and modifiers',
+  'csdo-object2-adv':'Compound subject, direct object, object modifiers, and adverb',
+  'csdo-subject2-object':'Compound subject, direct object, subject modifiers, and object modifier',
+  'cv-basic':'Compound action verbs',
+  'cv-subject1mod':'Compound action verbs with one subject modifier',
+  'cv-subject2mods':'Compound action verbs with two subject modifiers',
+  'cv-with-object':'Compound action verbs with direct object divider',
+  'lv-pa':'Linking verb with predicate adjective',
+  'lv-pn':'Linking verb with predicate nominative',
+  'lv-compound-pa':'Linking verb with compound predicate adjectives',
+  'lv-compound-pn':'Linking verb with compound predicate nominatives'
+};
+const DIAGRAM_DETAIL_CHOICES={
+  simple:['simple','simple-subjectmod','simple-adv'],
+  'av-do':['av-do','av-do-subjectmod','av-do-objectmod','av-do-adv'],
+  'compound-subject-do':['csdo-basic','csdo-subject-object-adv','csdo-object2-adv','csdo-subject2-object'],
+  'compound-verb':['cv-basic','cv-subject1mod','cv-subject2mods','cv-with-object'],
+  'linking-complement':['lv-pa','lv-pn','lv-compound-pa','lv-compound-pn']
+};
+const DIAGRAM_SLOT_LABELS={
+  subject:'Subject',verb:'Verb',object:'Direct object',complement:'Complement',
+  subjectA:'Subject',subjectConj:'and',subjectB:'Subject',
+  verbA:'Action verb',verbConj:'and',verbB:'Action verb',
+  objectA:'Direct object',objectConj:'and',objectB:'Direct object',
+  complementA:'Complement',complementConj:'and',complementB:'Complement',
+  subjectMod:'Adjective',subjectModA:'Adjective',subjectModB:'Adjective',
+  objectMod:'Adjective',objectModA:'Adjective',objectModB:'Adjective',
+  complementMod:'Adjective',complementModA:'Adjective',complementModB:'Adjective',
+  adv:'Adverb'
+};
+function diagramBasicForShape(shape){
+  shape=String(shape||'');
+  if(shape==='simple'||shape.startsWith('simple-'))return 'simple';
+  if(shape==='av-do'||shape.startsWith('av-do-'))return 'av-do';
+  if(shape.startsWith('csdo-'))return 'compound-subject-do';
+  if(shape.startsWith('cv-'))return 'compound-verb';
+  if(shape.startsWith('lv-'))return 'linking-complement';
+  return '';
+}
+function diagramLabel(value,labels){return labels?.[value]||String(value||'');}
+function diagramRoleOptions(v){
+  const ids=v.roleOptions||DIAGRAM_ROLES.map(role=>role.id);
+  return ids.map(id=>DIAGRAM_ROLE_MAP[id]||{id,label:String(id),className:'role-omit'});
+}
+function diagramSlotLabel(value,v){
+  if(v.slotLabels&&v.slotLabels[value])return v.slotLabels[value];
+  if(DIAGRAM_SLOT_LABELS[value])return DIAGRAM_SLOT_LABELS[value];
+  return String(value||'').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/\b\w/g,m=>m.toUpperCase());
+}
+function diagramHiddenIndices(v){return new Set((v.hiddenIndices||[]).map(Number));}
+function isHiddenDiagramIndex(v,index){return diagramHiddenIndices(v).has(Number(index));}
+function visibleDiagramEntries(v){return (v.tokens||[]).map((token,index)=>({token,index})).filter(entry=>!isHiddenDiagramIndex(v,entry.index));}
+function diagramUnderstoodWords(v){return (v.understoodWords||[]).map((word,index)=>({key:String(word.key||word.id||index),index:Number(word.index),prompt:word.prompt||'Understood word',answer:word.answer||word.label||''})).filter(word=>Number.isFinite(word.index));}
+function diagramUnderstoodForIndex(v,index){return diagramUnderstoodWords(v).find(word=>Number(word.index)===Number(index));}
+function diagramTokenLabel(v,a,index){const word=diagramUnderstoodForIndex(v,index);if(word)return a.understood?.[word.key]||'';return (v.tokens||[])[index]||'';}
+function diagramSelectedWordLabel(v,a){if(a.selectedWord===undefined||a.selectedWord===null)return 'none';return diagramTokenLabel(v,a,Number(a.selectedWord))||'understood word';}
+function diagramUnderstoodOk(v,a){return diagramUnderstoodWords(v).every(word=>textAnswer(a.understood?.[word.key],word.answer));}
+function diagramSlots(v){
+  if(Array.isArray(v.slots))return v.slots.map(slot=>({id:String(slot.id),label:slot.label||diagramSlotLabel(slot.id,v),expected:(slot.expected||[]).map(Number)}));
+  return Object.entries(v.slots||{}).map(([id,expected])=>({id:String(id),label:diagramSlotLabel(id,v),expected:(expected||[]).map(Number)}));
+}
+function diagramHasSlot(v,slotId){return diagramSlots(v).some(slot=>slot.id===slotId);}
+function diagramExpectedRoles(v){
+  const out={};
+  DIAGRAM_ROLES.forEach(role=>out[role.id]=[]);
+  const roles=v.roles||{};
+  for(const [key,value] of Object.entries(roles)){
+    if(/^\d+$/.test(key)){
+      const index=Number(key);
+      if(isHiddenDiagramIndex(v,index))continue;
+      const id=String(value);
+      if(!out[id])out[id]=[];
+      out[id].push(index);
+    }else{
+      out[key]=(Array.isArray(value)?value:[]).map(Number).filter(index=>!isHiddenDiagramIndex(v,index));
+    }
+  }
+  for(const key of Object.keys(out))out[key]=[...new Set(out[key])].sort((a,b)=>a-b);
+  return out;
+}
+function diagramAnswerRoles(a){
+  const out={};
+  DIAGRAM_ROLES.forEach(role=>out[role.id]=[]);
+  const roles=a.roles||{};
+  for(const [key,value] of Object.entries(roles)){
+    if(/^\d+$/.test(key)){
+      const id=String(value);
+      if(!out[id])out[id]=[];
+      out[id].push(Number(key));
+    }else{
+      out[key]=(Array.isArray(value)?value:[]).map(Number);
+    }
+  }
+  for(const key of Object.keys(out))out[key]=[...new Set(out[key])].sort((a,b)=>a-b);
+  return out;
+}
+function diagramAvailableDetails(v,a,allDetails){
+  const listed=(allDetails||[]).map(String);
+  if(!a.basicShape)return [];
+  const custom=v.detailChoices?.[a.basicShape];
+  const group=custom||DIAGRAM_DETAIL_CHOICES[a.basicShape]||listed.filter(x=>diagramBasicForShape(x)===a.basicShape);
+  const listedSet=new Set(listed);
+  const filtered=(group||[]).filter(x=>listedSet.has(x));
+  return filtered.length?filtered:(group||[]);
+}
+function diagramAssignmentLabel(v,a,slotId){
+  const ids=[...new Set((a.assignments?.[slotId]||[]).map(Number))].sort((x,y)=>x-y);
+  return ids.map(id=>diagramTokenLabel(v,a,id)).filter(Boolean).join(' ');
+}
+function diagramWordUsed(a,index){
+  return Object.values(a.assignments||{}).some(ids=>(ids||[]).map(Number).includes(Number(index)));
+}
+function diagramOmitted(v){
+  if(Array.isArray(v.omitted))return v.omitted;
+  if(typeof v.omitted==='string'&&v.omitted.trim())return [v.omitted.trim()];
+  return [];
+}
+function renderDiagram(item,v,a){
+  if(!a.roles)a.roles={};
+  if(!a.assignments)a.assignments={};
+  if(!a.understood)a.understood={};
+  a._itemId=item.id;
+  if(a.shape&&!a.basicShape)a.basicShape=diagramBasicForShape(a.shape);
+  const basic=v.basicOptions||Object.keys(DIAGRAM_BASIC_LABELS);
+  const detail=v.shapeOptions||Object.keys(DIAGRAM_SHAPE_LABELS);
+  const availableDetails=diagramAvailableDetails(v,a,detail);
+  const roleList=diagramRoleOptions(v);
+  const roles=diagramAnswerRoles(a);
+  const currentRole=a.selectedRole||a.roleMode||'S';
+  const omitted=diagramOmitted(v);
+  const roleToolbar=`<div class="role-toolbar">${roleList.map(role=>`<button class="role-btn ${currentRole===role.id?'selected':''}" type="button" data-action="diagram-role-mode" data-id="${esc(item.id)}" data-value="${esc(role.id)}"><strong>${esc(role.id)}</strong><span>${esc(role.label)}</span></button>`).join('')}<button class="role-btn ${currentRole==='CLEAR'?'selected':''}" type="button" data-action="diagram-role-mode" data-id="${esc(item.id)}" data-value="CLEAR"><strong>Clear</strong><span>Remove role</span></button></div>`;
+  const sentenceLine=`<div class="sentence sentence-line">${visibleDiagramEntries(v).map(({token,index})=>renderDiagramToken(item,v,a,roles,token,index)).join('')}</div>`;
+  const patternHtml=`<div class="mode-row" role="group" aria-label="Sentence pattern choices">${(v.patternOptions||['S AV','S AV DO','S LV PN','S LV PA','S BV']).map(pattern=>`<button class="mode-btn ${a.pattern===pattern?'active':''}" type="button" data-action="diagram-pattern" data-id="${esc(item.id)}" data-value="${esc(pattern)}">${esc(pattern)}</button>`).join('')}</div>`;
+  const basicHtml=`<div class="diagram-choices" role="group" aria-label="Basic diagram structure choices">${basic.map((basicId,index)=>`<button class="diagram-choice ${a.basicShape===basicId?'selected':''}" type="button" aria-label="Basic diagram option ${index+1}" data-action="diagram-basic" data-id="${esc(item.id)}" data-value="${esc(basicId)}">${renderStructurePreview(basicId)}</button>`).join('')}</div>`;
+  const detailHtml=a.basicShape?`<div class="diagram-choices" role="group" aria-label="Detailed diagram version choices">${availableDetails.map((shapeId,index)=>`<button class="diagram-choice ${a.shape===shapeId?'selected':''}" type="button" aria-label="Detailed diagram option ${index+1}" data-action="diagram-shape" data-id="${esc(item.id)}" data-value="${esc(shapeId)}">${renderStructurePreview(shapeId)}</button>`).join('')}</div>`:'';
+  const legend=`<div class="legend">${omitted.length?`<span class="pill">Omit: ${esc(omitted.join('; '))}</span>`:''}<span class="pill">Selected word: ${esc(diagramSelectedWordLabel(v,a))}</span></div>`;
+  const understoodHtml=renderUnderstoodWords(item,v,a);
+  const bank=`<div class="word-bank" aria-label="Diagram word bank">${visibleDiagramEntries(v).map(({token,index})=>`<button class="word-token ${a.selectedWord===index?'active-role':''} ${diagramWordUsed(a,index)?'used-word':''}" type="button" data-action="diagram-word" data-id="${esc(item.id)}" data-index="${index}"><span class="word-text">${esc(token)}</span></button>`).join('')}</div>`;
+  return `<div class="diagram diagram-test15">${roleToolbar}${sentenceLine}${patternHtml}${basicHtml}${detailHtml}${legend}${understoodHtml}${bank}<div class="diagram-wrap">${renderDiagramSvg(v,a)}</div></div>`;
+}
+function renderUnderstoodWords(item,v,a){
+  const words=diagramUnderstoodWords(v);
+  if(!words.length)return '';
+  if(!a.understood)a.understood={};
+  return `<div class="mode-row understood-row">${words.map(word=>`<label class="pill" for="${esc(item.id)}-understood-${esc(word.key)}">${esc(word.prompt)}</label><input id="${esc(item.id)}-understood-${esc(word.key)}" data-input="diagram-understood" data-id="${esc(item.id)}" data-key="${esc(word.key)}" value="${esc(a.understood?.[word.key]||'')}" autocomplete="off" spellcheck="false" placeholder="Type word"><button class="${a.selectedWord===word.index?'active':''}" type="button" data-action="diagram-understood-word" data-id="${esc(item.id)}" data-index="${word.index}">Use</button>`).join('')}</div>`;
+}
+function renderDiagramToken(item,v,a,roles,token,index){
+  const chips=diagramRoleOptions(v).filter(role=>(roles[role.id]||[]).includes(index)).map(role=>`<span class="chip ${role.className}">${esc(role.id)}</span>`).join('');
+  return `<button class="word-token" type="button" data-action="diagram-role-token" data-id="${esc(item.id)}" data-index="${index}"><span class="word-text">${esc(token)}</span><span class="role-chips">${chips}</span></button>`;
+}
+function renderStructurePreview(shapeId){
+  return `<svg viewBox="0 0 760 260" role="img" aria-hidden="true">${structurePreviewContent(shapeId)}</svg>`;
+}
+function previewModifier(x1,y1,x2,y2){
+  return `<line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>`;
+}
+function splitConjunctionGuide(x,topY,bottomY,gapTop,gapBottom,controlX){
+  return `<path class="diagram-guide" d="M${x} ${topY} C${controlX} ${topY+18} ${controlX} ${gapTop-8} ${x+10} ${gapTop}"></path><path class="diagram-guide" d="M${x+10} ${gapBottom} C${controlX} ${gapBottom+8} ${controlX} ${bottomY-18} ${x} ${bottomY}"></path>`;
+}
+function structurePreviewContent(shapeId){
+  if(shapeId==='compound-subject-do')shapeId='csdo-basic';
+  if(shapeId==='compound-verb')shapeId='cv-basic';
+  if(shapeId==='linking-complement')shapeId='lv-pa';
+  if(shapeId==='av-do'||shapeId.startsWith('av-do-')){
+    const mods=[];
+    if(shapeId==='av-do-subjectmod')mods.push(previewModifier(215,130,175,202));
+    if(shapeId==='av-do-objectmod')mods.push(previewModifier(590,130,550,202));
+    if(shapeId==='av-do-adv')mods.push(previewModifier(430,130,390,202));
+    return `<line class="diagram-line" x1="110" y1="130" x2="650" y2="130"></line><line class="diagram-line" x1="330" y1="88" x2="330" y2="172"></line><line class="diagram-line" x1="500" y1="88" x2="500" y2="130"></line>${mods.join('')}`;
+  }
+  if(shapeId==='simple'||shapeId.startsWith('simple-')){
+    const mods=[];
+    if(shapeId==='simple-subjectmod')mods.push(previewModifier(260,130,220,202));
+    if(shapeId==='simple-adv')mods.push(previewModifier(500,130,460,202));
+    return `<line class="diagram-line" x1="110" y1="130" x2="650" y2="130"></line><line class="diagram-line" x1="380" y1="88" x2="380" y2="172"></line>${mods.join('')}`;
+  }
+  if(shapeId.startsWith('csdo-')){
+    const mods=[];
+    if(shapeId==='csdo-subject-object-adv')mods.push(previewModifier(420,130,380,202),previewModifier(222,178,182,234),previewModifier(590,130,550,202));
+    if(shapeId==='csdo-object2-adv')mods.push(previewModifier(420,130,380,202),previewModifier(575,130,535,202),previewModifier(625,130,585,202));
+    if(shapeId==='csdo-subject2-object')mods.push(previewModifier(190,178,150,234),previewModifier(245,178,205,234),previewModifier(590,130,550,202));
+    return `<line class="diagram-line" x1="90" y1="130" x2="670" y2="130"></line><line class="diagram-line" x1="330" y1="86" x2="330" y2="174"></line><line class="diagram-line" x1="500" y1="86" x2="500" y2="130"></line><line class="diagram-line" x1="140" y1="82" x2="290" y2="82"></line><line class="diagram-line" x1="140" y1="178" x2="290" y2="178"></line><line class="diagram-line" x1="290" y1="82" x2="330" y2="130"></line><line class="diagram-line" x1="290" y1="178" x2="330" y2="130"></line>${splitConjunctionGuide(210,94,166,116,144,226)}${mods.join('')}`;
+  }
+  if(shapeId.startsWith('cv-')){
+    const mods=[];
+    if(shapeId==='cv-subject1mod')mods.push(previewModifier(210,130,170,202));
+    if(shapeId==='cv-subject2mods')mods.push(previewModifier(205,130,165,202),previewModifier(255,130,215,202));
+    const objectDivider=shapeId==='cv-with-object'?`<line class="diagram-line" x1="595" y1="88" x2="595" y2="178"></line>`:'';
+    return `<line class="diagram-line" x1="90" y1="130" x2="670" y2="130"></line><line class="diagram-line" x1="330" y1="86" x2="330" y2="174"></line><line class="diagram-line" x1="370" y1="82" x2="560" y2="82"></line><line class="diagram-line" x1="370" y1="178" x2="560" y2="178"></line><line class="diagram-line" x1="330" y1="130" x2="370" y2="82"></line><line class="diagram-line" x1="330" y1="130" x2="370" y2="178"></line>${splitConjunctionGuide(458,94,166,116,144,474)}${objectDivider}${mods.join('')}`;
+  }
+  if(shapeId.startsWith('lv-')){
+    const mods=[];
+    if(shapeId==='lv-compound-pa'||shapeId==='lv-compound-pn')return `<line class="diagram-line" x1="90" y1="130" x2="670" y2="130"></line><line class="diagram-line" x1="315" y1="86" x2="315" y2="174"></line><line class="diagram-line" x1="492" y1="86" x2="520" y2="130"></line><line class="diagram-line" x1="532" y1="82" x2="660" y2="82"></line><line class="diagram-line" x1="532" y1="178" x2="660" y2="178"></line><line class="diagram-line" x1="520" y1="130" x2="532" y2="82"></line><line class="diagram-line" x1="520" y1="130" x2="532" y2="178"></line>${splitConjunctionGuide(596,94,166,116,144,612)}`;
+    return `<line class="diagram-line" x1="110" y1="130" x2="650" y2="130"></line><line class="diagram-line" x1="330" y1="88" x2="330" y2="172"></line><line class="diagram-line" x1="505" y1="88" x2="532" y2="130"></line>${mods.join('')}`;
+  }
+  return `<line class="diagram-line" x1="110" y1="130" x2="650" y2="130"></line><line class="diagram-line" x1="380" y1="88" x2="380" y2="172"></line>`;
+}
+function emptyDiagramSvg(message='Choose a diagram structure first.'){
+  return `<svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas"><text class="diagram-text small-text" x="380" y="195">${esc(message)}</text></svg>`;
+}
+function targetBox(v,a,slotId,x,y,width,height,rotate=0){
+  if(!diagramHasSlot(v,slotId))return '';
+  const label=diagramAssignmentLabel(v,a,slotId);
+  const filled=label?' filled':'';
+  const selected=a.selectedTarget===slotId?' selected':'';
+  const textX=x+width/2;
+  const textY=y+height/2+6;
+  const transform=rotate?` transform="rotate(${rotate} ${textX} ${textY})"`:'';
+  return `<g class="diagram-target${filled}${selected}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${x-8}" y="${y-8}" width="${width+16}" height="${height+16}" rx="7"></rect><rect x="${x}" y="${y}" width="${width}" height="${height}" rx="6" fill="#f8fafc" stroke="#667085"></rect><text class="diagram-text small-text" x="${textX}" y="${textY}"${transform}>${esc(label)}</text></g>`;
+}
+function modTarget(v,a,slotId,x1,y1,x2,y2,textX,textY,rotate=-55){
+  if(!slotId||!diagramHasSlot(v,slotId))return '';
+  const label=diagramAssignmentLabel(v,a,slotId);
+  const filled=label?' filled':'';
+  return `<g class="diagram-target${filled}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${Math.min(x1,x2)-16}" y="${Math.min(y1,y2)-22}" width="${Math.abs(x2-x1)+48}" height="${Math.abs(y2-y1)+48}" rx="7"></rect><line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line><text class="diagram-text small-text" x="${textX}" y="${textY}" transform="rotate(${rotate} ${textX} ${textY})">${esc(label)}</text></g>`;
+}
+function firstExistingSlot(v,ids){return ids.find(id=>diagramHasSlot(v,id))||ids[0];}
+function existingSlots(v,prefix){return diagramSlots(v).map(slot=>slot.id).filter(id=>id===prefix||id.startsWith(prefix));}
+function simpleSvg(v,a,shape=a.shape||v.shape){
+  const subjectSlot=firstExistingSlot(v,['subject','subjectA']);
+  const verbSlot=firstExistingSlot(v,['verb','verbA']);
+  const subjectMods=existingSlots(v,'subjectMod');
+  const modLines=[];
+  if(shape==='simple-subjectmod')modLines.push(modTarget(v,a,subjectMods[0]||'subjectMod',240,170,194,246,210,224));
+  if(shape==='simple-adv')modLines.push(modTarget(v,a,firstExistingSlot(v,['adv']),520,170,474,246,490,224));
+  return `<svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas"><line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line><line class="diagram-line" x1="380" y1="124" x2="380" y2="216"></line>${targetBox(v,a,subjectSlot,166,136,142,34)}${targetBox(v,a,verbSlot,450,136,142,34)}${modLines.join('')}</svg>`;
+}
+function avDoSvg(v,a,shape=a.shape||v.shape){
+  const subjectSlot=firstExistingSlot(v,['subject','subjectA']);
+  const verbSlot=firstExistingSlot(v,['verb','verbA']);
+  const objectSlot=firstExistingSlot(v,['object']);
+  const subjectMods=existingSlots(v,'subjectMod');
+  const objectMods=existingSlots(v,'objectMod');
+  const modLines=[];
+  if(shape==='av-do-subjectmod')modLines.push(modTarget(v,a,subjectMods[0]||'subjectMod',220,170,174,246,190,224));
+  if(shape==='av-do-objectmod')modLines.push(modTarget(v,a,objectMods[0]||'objectMod',614,170,568,246,584,224));
+  if(shape==='av-do-adv')modLines.push(modTarget(v,a,firstExistingSlot(v,['adv']),434,170,388,246,404,224));
+  return `<svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas"><line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line><line class="diagram-line" x1="330" y1="124" x2="330" y2="216"></line><line class="diagram-line" x1="510" y1="124" x2="510" y2="170"></line>${targetBox(v,a,subjectSlot,146,136,142,34)}${targetBox(v,a,verbSlot,372,136,122,34)}${targetBox(v,a,objectSlot,548,136,132,34)}${modLines.join('')}</svg>`;
+}
+function compoundSubjectDoModifiers(v,a,shape){
+  const subjectMods=existingSlots(v,'subjectMod');
+  const objectMods=existingSlots(v,'objectMod');
+  const adv=firstExistingSlot(v,['adv']);
+  if(shape==='csdo-subject-object-adv')return [modTarget(v,a,adv,420,170,374,246,388,224),modTarget(v,a,subjectMods[0],226,224,180,302,196,278),modTarget(v,a,objectMods[0],620,170,574,246,590,224)].join('');
+  if(shape==='csdo-object2-adv')return [modTarget(v,a,adv,420,170,374,246,388,224),modTarget(v,a,objectMods[0],592,170,546,246,562,224),modTarget(v,a,objectMods[1],642,170,596,246,612,224)].join('');
+  if(shape==='csdo-subject2-object')return [modTarget(v,a,subjectMods[0],196,224,150,302,166,278),modTarget(v,a,subjectMods[1],248,224,202,302,218,278),modTarget(v,a,objectMods[0],620,170,574,246,590,224)].join('');
+  return '';
+}
+function compoundSubjectDoSvg(v,a,shape=a.shape||v.shape){
+  return `<svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas"><line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line><line class="diagram-line" x1="340" y1="124" x2="340" y2="216"></line><line class="diagram-line" x1="520" y1="124" x2="520" y2="170"></line><line class="diagram-line" x1="142" y1="116" x2="302" y2="116"></line><line class="diagram-line" x1="142" y1="224" x2="302" y2="224"></line><line class="diagram-line" x1="302" y1="116" x2="340" y2="170"></line><line class="diagram-line" x1="302" y1="224" x2="340" y2="170"></line>${splitConjunctionGuide(214,126,214,148,184,232)}${targetBox(v,a,'subjectA',154,82,132,34)}${targetBox(v,a,'subjectConj',196,151,72,30)}${targetBox(v,a,'subjectB',154,224,132,34)}${targetBox(v,a,'verb',376,136,122,34)}${targetBox(v,a,'object',558,136,122,34)}${compoundSubjectDoModifiers(v,a,shape)}</svg>`;
+}
+function compoundVerbModifiers(v,a,shape){
+  const subjectMods=existingSlots(v,'subjectMod');
+  if(shape==='cv-subject1mod')return modTarget(v,a,subjectMods[0],214,170,168,246,184,224);
+  if(shape==='cv-subject2mods')return [modTarget(v,a,subjectMods[0],214,170,168,246,184,224),modTarget(v,a,subjectMods[1],254,170,208,246,224,224)].join('');
+  return '';
+}
+function compoundVerbSvg(v,a,shape=a.shape||v.shape){
+  const objectDivider=shape==='cv-with-object'?`<line class="diagram-line" x1="600" y1="124" x2="600" y2="224"></line>${targetBox(v,a,'object',612,136,72,34)}`:'';
+  return `<svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas"><line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line><line class="diagram-line" x1="330" y1="124" x2="330" y2="216"></line><line class="diagram-line" x1="366" y1="116" x2="572" y2="116"></line><line class="diagram-line" x1="366" y1="224" x2="572" y2="224"></line><line class="diagram-line" x1="330" y1="170" x2="366" y2="116"></line><line class="diagram-line" x1="330" y1="170" x2="366" y2="224"></line>${splitConjunctionGuide(460,126,214,148,184,478)}${objectDivider}${targetBox(v,a,'subject',154,136,132,34)}${targetBox(v,a,'verbA',400,82,132,34)}${targetBox(v,a,'verbConj',432,151,78,30)}${targetBox(v,a,'verbB',400,224,132,34)}${compoundVerbModifiers(v,a,shape)}</svg>`;
+}
+function linkingComplementSvg(v,a,shape=a.shape||v.shape){
+  const subjectSlot=firstExistingSlot(v,['subject']);
+  const verbSlot=firstExistingSlot(v,['verb']);
+  const subjectMods=existingSlots(v,'subjectMod');
+  const complementMods=existingSlots(v,'complementMod');
+  const modLines=[];
+  if(shape==='lv-pa'||shape==='lv-pn')modLines.push(modTarget(v,a,subjectMods[0],214,170,168,246,184,224),modTarget(v,a,complementMods[0],626,170,580,246,596,224));
+  if(shape==='lv-compound-pa'||shape==='lv-compound-pn'){
+    modLines.push(modTarget(v,a,subjectMods[0],214,170,168,246,184,224),modTarget(v,a,subjectMods[1],254,170,208,246,224,224));
+    return `<svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas"><line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line><line class="diagram-line" x1="330" y1="124" x2="330" y2="216"></line><line class="diagram-line" x1="504" y1="124" x2="534" y2="170"></line><line class="diagram-line" x1="548" y1="116" x2="684" y2="116"></line><line class="diagram-line" x1="548" y1="224" x2="684" y2="224"></line><line class="diagram-line" x1="534" y1="170" x2="548" y2="116"></line><line class="diagram-line" x1="534" y1="170" x2="548" y2="224"></line>${splitConjunctionGuide(616,126,214,148,184,632)}${targetBox(v,a,subjectSlot,154,136,132,34)}${targetBox(v,a,verbSlot,376,136,112,34)}${targetBox(v,a,'complementA',562,82,112,34)}${targetBox(v,a,'complementConj',584,151,78,30)}${targetBox(v,a,'complementB',562,224,112,34)}${modLines.join('')}</svg>`;
+  }
+  return `<svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas"><line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line><line class="diagram-line" x1="330" y1="124" x2="330" y2="216"></line><line class="diagram-line" x1="510" y1="124" x2="540" y2="170"></line>${targetBox(v,a,subjectSlot,146,136,142,34)}${targetBox(v,a,verbSlot,372,136,122,34)}${targetBox(v,a,firstExistingSlot(v,['complement','complementA']),558,136,132,34)}${modLines.join('')}</svg>`;
+}
+function renderDiagramSvg(v,a){
+  a._itemId=a._itemId||'';
+  const shape=a.shape;
+  if(!shape)return emptyDiagramSvg(a.basicShape?'Choose a detailed diagram version.':'Choose a basic diagram structure.');
+  if(shape==='simple'||shape.startsWith('simple-'))return simpleSvg(v,a,shape);
+  if(shape==='av-do'||shape.startsWith('av-do-'))return avDoSvg(v,a,shape);
+  if(shape.startsWith('cv-'))return compoundVerbSvg(v,a,shape);
+  if(shape.startsWith('csdo-'))return compoundSubjectDoSvg(v,a,shape);
+  if(shape.startsWith('lv-'))return linkingComplementSvg(v,a,shape);
+  return simpleSvg(v,a,shape);
+}
+function diagramAnswerHtml(item,v){
+  const correct=defaultAnswer('diagram');
+  correct._itemId=item.id;
+  correct.basicShape=v.basicShape||diagramBasicForShape(v.shape);
+  correct.shape=v.shape||'';
+  correct.pattern=v.pattern||'';
+  correct.roles=diagramExpectedRoles(v);
+  correct.assignments={};
+  correct.understood={};
+  for(const word of diagramUnderstoodWords(v))correct.understood[word.key]=word.answer;
+  for(const slot of diagramSlots(v))correct.assignments[slot.id]=[...slot.expected];
+  const roleLines=diagramRoleOptions(v).map(role=>{const ids=diagramExpectedRoles(v)[role.id]||[];return ids.length?`${role.id}: ${ids.map(index=>(v.tokens||[])[index]).join(', ')}`:'';}).filter(Boolean).join('; ');
+  const omitted=diagramOmitted(v);
+  return `<strong>Pattern:</strong> ${esc(v.pattern||'')}<br>${omitted.length?`<strong>Omit:</strong> ${esc(omitted.join('; '))}<br>`:''}<strong>Roles:</strong> ${esc(roleLines)}<div class="diagram-wrap">${renderDiagramSvg(v,correct)}</div>`;
+}
+function renderAnswer(item,v){
+  let text='';
+  if(item.type==='choice')text=Array.isArray(v.items)?v.items.map(sub=>`${sub.prompt||'Answer'}: ${(sub.choices||[])[sub.answer]||''}`).join('; '):((v.choices||[])[v.answer]||'');
+  else if(item.type==='proofread')text=v.answer||'';
+  else if(item.type==='short-answer')text=Array.isArray(v.items)?v.items.map(x=>x.answer).join('; '):v.answer;
+  else if(item.type==='edit-text')text=v.answer;
+  else if(item.type==='word-mark')text=(v.targets||[]).map(i=>(v.tokens||[])[i]).join(', ');
+  else if(item.type==='comma')text=`Comma boundaries: ${(v.commaBoundaries||[]).join(', ')}`;
+  else if(['phrase','pattern','advprep'].includes(item.type))text=[v.pattern,v.answer,v.correctVerb?`verb ${v.correctVerb}`:'',Array.isArray(v.subjectTargets)?`subject ${(v.subjectTargets||[]).map(i=>i+1).join(', ')}`:'',Array.isArray(v.verbTargets)?`verb ${(v.verbTargets||[]).map(i=>i+1).join(', ')}`:'',`phrases ${(v.phrases||[]).map(r=>`${r.start+1}-${r.end+1}`).join(', ')}`,`objects ${(v.objects||[]).map(i=>i+1).join(', ')}`,v.labelAnswer?`label ${v.labelAnswer}`:''].filter(Boolean).join('; ');
+  else if(item.type==='diagram')return `<div class="answer"><strong>Answer:</strong> ${diagramAnswerHtml(item,v)}</div>`;
+  return `<div class="answer"><strong>Answer:</strong> ${esc(text)}</div>`;
+}function sortedRanges(ranges){return (ranges||[]).map(r=>({start:Number(r.start),end:Number(r.end)})).sort((a,b)=>a.start-b.start||a.end-b.end);}
+function sameRanges(a,b){return JSON.stringify(sortedRanges(a))===JSON.stringify(sortedRanges(b));}
+function sameObjectMap(a,b){const ak=Object.keys(a||{}).sort();const bk=Object.keys(b||{}).sort();if(!arrEq(ak,bk))return false;return ak.every(k=>sameSet(a[k],b[k]));}
+function sameRoleMap(a,b){const clean=x=>Object.fromEntries(Object.entries(x||{}).map(([k,v])=>[String(k),String(v)]).sort(([a],[b])=>Number(a)-Number(b)));return JSON.stringify(clean(a))===JSON.stringify(clean(b));}
+function textAnswer(got,expected){if(Array.isArray(expected))return expected.some(x=>norm(got)===norm(x));return norm(got)===norm(expected);}
+function samePunct(a,b){const clean=x=>(x||[]).map(p=>`${Number(p.boundary)}:${String(p.mark)}`).sort();return arrEq(clean(a),clean(b));}
+function isCorrect(item,v,a){
+  if(!a)return false;
+  if(item.type==='choice'){
+    if(Array.isArray(v.items))return v.items.every((sub,i)=>Number(a.choices?.[i])===Number(sub.answer));
+    return Number(a.choice)===Number(v.answer);
+  }
+  if(item.type==='proofread')return sameSet(a.caps,v.capitalized)&&samePunct(a.punct,v.punctuation);
+  if(item.type==='short-answer'){
+    if(Array.isArray(v.items))return v.items.every((sub,i)=>textAnswer(a.texts?.[i],sub.answer));
+    return textAnswer(a.text,v.answer);
+  }
+  if(item.type==='edit-text')return textAnswer(a.text,v.answer);
+  if(item.type==='word-mark')return sameSet(a.targets,v.targets);
+  if(item.type==='comma')return sameSet(a.boundaries,v.commaBoundaries);
+  if(['phrase','pattern','advprep'].includes(item.type)){
+    const phraseOk=sameRanges(a.phrases,v.phrases);
+    const objectOk=v.objects?sameSet(a.objects,v.objects):true;
+    const subjectOk=Array.isArray(v.subjectTargets)?sameSet(a.subjects||[],v.subjectTargets):true;
+    const verbMarkOk=Array.isArray(v.verbTargets)?sameSet(a.verbs||[],v.verbTargets):true;
+    const verbOk=v.correctVerb?String(a.verb||'')===String(v.correctVerb):true;
+    const patternOk=item.type==='pattern'?a.pattern===v.pattern:true;
+    const advprepOk=item.type==='advprep'?a.advprep===v.answer:true;
+    const labelOk=v.labelAnswer?String(a.label||'')===String(v.labelAnswer):true;
+    return phraseOk&&objectOk&&subjectOk&&verbMarkOk&&verbOk&&patternOk&&advprepOk&&labelOk;
+  }
+  if(item.type==='diagram'){
+    const expectedRoles=diagramExpectedRoles(v);
+    const answerRolesMap=diagramAnswerRoles(a);
+    const roleIds=new Set([...Object.keys(expectedRoles),...Object.keys(answerRolesMap)]);
+    const rolesOk=[...roleIds].every(role=>sameSet(answerRolesMap[role]||[],expectedRoles[role]||[]));
+    const slotsOk=diagramSlots(v).every(slot=>sameSet(a.assignments?.[slot.id]||[],slot.expected));
+    const understoodOk=diagramUnderstoodOk(v,a);
+    return (!v.pattern||a.pattern===v.pattern)&&(!v.basicShape||a.basicShape===v.basicShape)&&(!v.shape||a.shape===v.shape)&&rolesOk&&slotsOk&&understoodOk;
+  }
+  return false;
+}function toggle(list,value){const i=list.indexOf(value);if(i>=0)list.splice(i,1);else list.push(value);}
+function uniqueRanges(ranges){const seen=new Set();return ranges.filter(r=>{const k=`${r.start}-${r.end}`;if(seen.has(k))return false;seen.add(k);return true;});}
+app.addEventListener('click',event=>{
+  const btn=event.target.closest('[data-action]');
+  if(!btn)return;
+  event.preventDefault();
+  const id=btn.dataset.id;
+  const action=btn.dataset.action;
+  const value=btn.dataset.value;
+  const idx=Number(btn.dataset.index);
+  const a=id?ensure(id):null;
+  if(action==='check-item'){const item=findItem(id);if(item){state.checkedItems[id]=true;recordCheck(item);}state.showAnswers=false;render();return;}
+  if(action==='reveal-answer'){if(answerUnlocked(id))state.revealedAnswers[id]=true;state.showAnswers=false;render();return;}
+  if(action==='choice-sub'){if(!a.choices)a.choices={};a.choices[btn.dataset.index]=Number(value);}
+  if(action==='choice')a.choice=Number(value);
+  if(action==='proof-mode')a.mode=value;
+  if(action==='proof-side')a.side=value;
+  if(action==='proof-mark')a.mark=value;
+  if(action==='proof-token'){if(a.mode==='cap')toggle(a.caps,idx);else togglePunct(a,a.side==='before'?idx:idx+1,a.mark||',',a.side||'after');}
+  if(action==='clear-proofread'){a.caps=[];a.punct=[];}
+  if(action==='toggle-token')toggle(a.targets,idx);
+  if(action==='comma-mode')a.mode=value;
+  if(action==='comma-token'){const boundary=a.mode==='before'?idx:idx+1;if(!a.boundarySides)a.boundarySides={};const existing=a.boundaries.indexOf(boundary);if(existing>=0){if(a.boundarySides[boundary]===a.mode){a.boundaries.splice(existing,1);delete a.boundarySides[boundary];}else a.boundarySides[boundary]=a.mode;}else{a.boundaries.push(boundary);a.boundarySides[boundary]=a.mode;}}
+  if(action==='clear-commas'){a.boundaries=[];a.boundarySides={};}
+  if(action==='phrase-mode'){a.mode=value;if(value==='object'||value==='subject'||value==='verb')a.phraseStart=null;}
+  if(action==='phrase-token'){
+    if(a.mode==='object')toggle(a.objects,idx);
+    else if(a.mode==='subject')toggle(a.subjects,idx);
+    else if(a.mode==='verb')toggle(a.verbs,idx);
+    else if(a.phraseStart===null||a.phraseStart===undefined)a.phraseStart=idx;
+    else{const start=Math.min(a.phraseStart,idx);const end=Math.max(a.phraseStart,idx);a.phrases=uniqueRanges([...a.phrases,{start,end,type:'prepositional'}]);a.phraseStart=null;}
+  }
+  if(action==='clear-phrases'){a.phrases=[];a.phraseStart=null;}
+  if(action==='phrase-range-token'){
+    if(a.phraseStart===null||a.phraseStart===undefined)a.phraseStart=idx;
+    else{const start=Math.min(a.phraseStart,idx);const end=Math.max(a.phraseStart,idx);a.phrases=uniqueRanges([...a.phrases,{start,end,type:'prepositional'}]);a.phraseStart=null;}
+  }
+  if(action==='phrase-subject-token')toggle(a.subjects,idx);
+  if(action==='phrase-object-token')toggle(a.objects,idx);
+  if(action==='phrase-verb-token')toggle(a.verbs,idx);
+  if(action==='clear-objects')a.objects=[];
+  if(action==='clear-subjects')a.subjects=[];
+  if(action==='clear-verbs')a.verbs=[];
+  if(action==='remove-phrase')a.phrases.splice(idx,1);
+  if(action==='remove-object')toggle(a.objects,idx);
+  if(action==='remove-subject')toggle(a.subjects,idx);
+  if(action==='remove-verb')toggle(a.verbs,idx);
+  if(action==='set-pattern')a.pattern=value;
+  if(action==='set-advprep')a.advprep=value;
+  if(action==='set-label')a.label=value;
+  if(action==='set-verb-choice')a.verb=value;
+  if(action==='diagram-pattern')a.pattern=a.pattern===value?'':value;
+  if(action==='diagram-basic'){const next=a.basicShape===value?'':value;a.basicShape=next;a.shape='';a.assignments={};a.selectedWord=null;}
+  if(action==='diagram-shape'){const next=a.shape===value?'':value;a.shape=next;if(next)a.basicShape=diagramBasicForShape(next);a.assignments={};a.selectedWord=null;}
+  if(action==='diagram-role-mode'){a.selectedRole=value;}
+  if(action==='diagram-role-token'){
+    if(!a.roles)a.roles={};
+    const selectedRole=a.selectedRole||'S';
+    if(selectedRole==='CLEAR'){
+      for(const key of Object.keys(a.roles))a.roles[key]=(a.roles[key]||[]).filter(n=>Number(n)!==idx);
+    }else{
+      if(!a.roles[selectedRole])a.roles[selectedRole]=[];
+      toggle(a.roles[selectedRole],idx);
+      a.roles[selectedRole]=[...new Set(a.roles[selectedRole])].sort((x,y)=>x-y);
+    }
+  }
+  if(action==='diagram-word')a.selectedWord=a.selectedWord===idx?null:idx;
+  if(action==='diagram-understood-word')a.selectedWord=a.selectedWord===idx?null:idx;
+  if(action==='diagram-target'){
+    if(!a.assignments)a.assignments={};
+    const slot=btn.dataset.slot;
+    if(a.selectedWord===undefined||a.selectedWord===null)delete a.assignments[slot];
+    else{a.assignments[slot]=[Number(a.selectedWord)];a.selectedWord=null;}
+    a.selectedTarget=slot;
+  }
+  render();
+});
+app.addEventListener('input',event=>{
+  const el=event.target;
+  if(!el.dataset||!el.dataset.input)return;
+  const a=ensure(el.dataset.id);
+  if(el.dataset.input==='edit')a.text=el.value;
+  if(el.dataset.input==='short'){
+    if(el.dataset.index!==undefined)a.texts[el.dataset.index]=el.value;
+    else a.text=el.value;
+  }
+  if(el.dataset.input==='diagram-understood'){
+    if(!a.understood)a.understood={};
+    a.understood[el.dataset.key]=el.value;
+  }
+});
+document.getElementById('checkAllBtn').addEventListener('click',()=>{state.checkedAll=true;state.showAnswers=false;for(const {item} of allItems())recordCheck(item);render();});
+document.getElementById('resetBtn').addEventListener('click',newRun);
+document.getElementById('answersBtn').addEventListener('click',()=>{state.showAnswers=!state.showAnswers;render();});
+newRun();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
