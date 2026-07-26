@@ -1,0 +1,42 @@
+site_name: School Practice Quizzes
+site_description: Interactive practice quizzes for math, language arts, and history.
+site_url: https://mjredmond.github.io/school2/
+repo_url: https://github.com/mjredmond/school2
+edit_uri: ""
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+nav:
+  - Quizzes: index.md
+  - Math: math.md
+  - Language Arts: language-arts.md
+  - History: history.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+
+# Quiz HTML files live in docs/quizzes/ and are copied verbatim by MkDocs.
+# use_directory_urls stays on; links to .html files resolve correctly.
