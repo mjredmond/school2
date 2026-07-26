@@ -1,0 +1,3722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentence Diagram Practice</title>
+<style>
+  :root {
+    --bg: #eef2f5;
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --ink: #1f2933;
+    --muted: #667085;
+    --line: #d8dee8;
+    --blue: #2563a8;
+    --green: #2f855a;
+    --amber: #b7791f;
+    --red: #c2413a;
+    --teal: #087f8c;
+    --plum: #7b3f76;
+    --shadow: 0 2px 10px rgba(31,41,51,.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  button, select {
+    font: inherit;
+  }
+
+  #app {
+    min-height: 100vh;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    background: #263241;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,.22);
+  }
+
+  .topbar h1 {
+    flex: 1;
+    min-width: 180px;
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 4px 10px;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 6px;
+    background: rgba(255,255,255,.08);
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  .progress-track {
+    width: 150px;
+    height: 8px;
+    background: rgba(255,255,255,.22);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #5ee0a0;
+    transition: width .25s ease;
+  }
+
+  main {
+    width: min(1180px, calc(100% - 28px));
+    margin: 18px auto 56px;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) auto auto auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .nav-group, .button-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    min-height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--ink);
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .08s;
+  }
+
+  .btn:hover { background: #f3f6fa; border-color: #b9c4d2; }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn.primary:hover { background: #1f5592; }
+  .btn.success { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn.danger { background: #fff5f5; border-color: #f0b7b3; color: var(--red); }
+  .btn.ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.25); }
+
+  .exercise-select {
+    min-height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    padding: 6px 10px;
+    color: var(--ink);
+    width: 100%;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 430px);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .panel + .panel { margin-top: 14px; }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    background: #fbfcfe;
+  }
+
+  .panel-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .panel-body {
+    padding: 14px;
+  }
+
+  .sentence-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    color: #243447;
+    background: #e8eef7;
+  }
+
+  .badge.complete { background: #dff3e8; color: #276749; }
+
+  .sentence {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 14px;
+    border: 1px solid #dbe3ed;
+    border-radius: 8px;
+    background: #f8fbff;
+    min-height: 84px;
+  }
+
+  .word-token {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+    min-height: 52px;
+    padding: 7px 8px 6px;
+    border: 1px solid #c8d3df;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .word-token:hover { border-color: var(--blue); }
+  .word-token.virtual { border-style: dashed; color: #516173; background: #fbfbf7; }
+  .word-token.active-role { outline: 2px solid rgba(37,99,168,.28); }
+
+  .word-text {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .role-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+    max-width: 96px;
+    min-height: 18px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 18px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+
+  .role-toolbar {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .role-btn {
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    padding: 5px;
+    text-align: center;
+  }
+
+  .role-btn strong {
+    display: block;
+    font-size: 13px;
+  }
+
+  .role-btn span {
+    display: block;
+    margin-top: 1px;
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .role-btn.selected {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(37,99,168,.18);
+    background: #f4f8ff;
+  }
+
+  .patterns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .pattern-btn {
+    min-height: 34px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .pattern-btn.selected {
+    background: #e8f3ee;
+    border-color: var(--green);
+    color: #276749;
+  }
+
+  .mark-mode {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+
+  .toggle-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .toggle-control input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+  }
+
+  .link-controls {
+    display: grid;
+    grid-template-columns: minmax(180px, 240px) 1fr auto;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .link-select {
+    min-height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    padding: 6px 9px;
+  }
+
+  .link-status {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .link-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    min-height: 32px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #fbfcfe;
+  }
+
+  .link-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 28px;
+    border: 1px solid #bed0e3;
+    border-radius: 999px;
+    background: #f3f8ff;
+    color: #244967;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .link-remove {
+    border: none;
+    background: transparent;
+    color: #8a2f2a;
+    cursor: pointer;
+    font-weight: 900;
+    padding: 0 2px;
+  }
+
+  .word-bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    min-height: 58px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f7f8fa;
+  }
+
+  .word-card {
+    min-height: 30px;
+    border: 1px solid #b8c3d1;
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    padding: 5px 9px;
+    cursor: grab;
+    user-select: none;
+    font-weight: 700;
+  }
+
+  .word-card.selected {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 2px rgba(183,121,31,.22);
+    background: #fffaf0;
+  }
+
+  .word-card:active { cursor: grabbing; }
+
+  .diagram-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .diagram-choice {
+    min-height: 106px;
+    border: 1px solid #b8c3d1;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    padding: 5px;
+  }
+
+  .diagram-choice.selected {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(47,111,166,.22);
+    background: #f7fbff;
+  }
+
+  .diagram-choice svg {
+    display: block;
+    width: 100%;
+    height: 96px;
+    pointer-events: none;
+  }
+
+  .diagram-choice .target-hit {
+    display: none;
+  }
+
+  .diagram-workspace {
+    display: grid;
+    gap: 12px;
+  }
+
+  .canvas-wrap {
+    min-width: 0;
+  }
+
+  .diagram-canvas {
+    width: 100%;
+    height: 430px;
+    border: 1px solid #b8c4d2;
+    border-radius: 8px;
+    background:
+      linear-gradient(#edf1f6 1px, transparent 1px),
+      linear-gradient(90deg, #edf1f6 1px, transparent 1px),
+      #fff;
+    background-size: 24px 24px;
+    touch-action: none;
+  }
+
+  .diagram-target {
+    cursor: pointer;
+    pointer-events: all;
+  }
+
+  .diagram-target.selected .target-hit,
+  .diagram-target.drop-hover .target-hit {
+    fill: rgba(183,121,31,.14);
+    stroke: var(--amber);
+    stroke-width: 3;
+  }
+
+  .diagram-target.drop-hover .diagram-line,
+  .diagram-target.drop-hover rect:not(.target-hit) {
+    stroke: var(--amber);
+    stroke-width: 3;
+  }
+
+  .diagram-target.filled .target-hit {
+    stroke-width: 3;
+  }
+
+  .target-hit {
+    fill: transparent;
+    stroke: transparent;
+    stroke-width: 18;
+    pointer-events: all;
+  }
+
+  .diagram-line {
+    stroke: #1f2933;
+    stroke-width: 2.4;
+    stroke-linecap: square;
+  }
+
+  .diagram-divider {
+    stroke: #1f2933;
+    stroke-width: 2.4;
+    stroke-linecap: square;
+  }
+
+  .diagram-branch {
+    stroke: #1f2933;
+    stroke-width: 2;
+    stroke-linecap: square;
+    fill: none;
+  }
+
+  .diagram-conj-guide {
+    stroke: #667085;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-dasharray: 4 5;
+    fill: none;
+  }
+
+  .diagram-text {
+    font: 700 14px "Segoe UI", Tahoma, Arial, sans-serif;
+    fill: #111827;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  .diagram-notice {
+    fill: #667085;
+    font-weight: 700;
+  }
+
+  .diagram-modifier-text {
+    font-size: 13px;
+    text-anchor: middle;
+  }
+
+  .diagram-canvas.answer-diagram {
+    height: 360px;
+  }
+
+  .feedback {
+    display: grid;
+    gap: 8px;
+  }
+
+  .message {
+    border-radius: 7px;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    background: #f8fafc;
+  }
+
+  .message.good {
+    border-color: #b7dfc8;
+    background: #f0fbf5;
+    color: #276749;
+  }
+
+  .message.bad {
+    border-color: #f0c0ba;
+    background: #fff7f6;
+    color: #9f2f2a;
+  }
+
+  .message.warn {
+    border-color: #ecd39a;
+    background: #fffaf0;
+    color: #805d16;
+  }
+
+  .feedback-list {
+    margin: 8px 0 0;
+    padding-left: 20px;
+  }
+
+  .feedback-list li + li { margin-top: 4px; }
+
+  .progress-history {
+    display: grid;
+    gap: 10px;
+  }
+
+  .progress-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .progress-pill {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #f8fafc;
+    padding: 7px 8px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .progress-pill strong {
+    display: block;
+    color: var(--ink);
+    font-size: 17px;
+    line-height: 1.1;
+  }
+
+  .progress-list {
+    display: grid;
+    gap: 6px;
+    max-height: 420px;
+    overflow: auto;
+    padding-right: 2px;
+  }
+
+  .progress-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    text-align: left;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--ink);
+    padding: 7px 8px;
+    cursor: pointer;
+  }
+
+  .progress-row:hover {
+    border-color: #b9c4d2;
+    background: #f8fbff;
+  }
+
+  .progress-row.current {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(37,99,168,.12);
+  }
+
+  .progress-row.correct { background: #f0fbf5; }
+  .progress-row.started { background: #fffaf0; }
+  .progress-row.not-started { background: #f8fafc; color: var(--muted); }
+
+  .progress-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #aeb9c7;
+    margin-top: 5px;
+  }
+
+  .progress-row.correct .progress-dot { background: var(--green); }
+  .progress-row.started .progress-dot { background: var(--amber); }
+
+  .progress-row-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .progress-row-meta {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .answer-panel {
+    display: none;
+  }
+
+  .answer-panel.open {
+    display: block;
+  }
+
+  .answer-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .answer-token {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 7px;
+    border-radius: 6px;
+    background: #f4f6f8;
+  }
+
+  .answer-diagram {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .answer-slot {
+    display: grid;
+    grid-template-columns: 145px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fbfcfe;
+  }
+
+  .answer-slot strong {
+    color: #465464;
+  }
+
+  .tip-box {
+    margin-top: 12px;
+    border-left: 4px solid var(--teal);
+    background: #f1fbfc;
+    padding: 10px 12px;
+    color: #24535a;
+  }
+
+  .role-s { background: var(--blue); }
+  .role-av { background: var(--green); }
+  .role-lv { background: var(--teal); }
+  .role-bv { background: #596477; }
+  .role-do { background: var(--amber); }
+  .role-pn { background: var(--plum); }
+  .role-pa { background: #a34863; }
+  .role-adj { background: #6b7d2a; }
+  .role-adv { background: #8a5c1a; }
+  .role-conj { background: #4b6f91; }
+  .role-pp { background: #6b7280; }
+  .role-prep { background: #4f46a5; }
+  .role-op { background: #9b4d2f; }
+
+  @media (max-width: 900px) {
+    .topbar { position: static; flex-wrap: wrap; }
+    .toolbar { grid-template-columns: 1fr; }
+    .layout { grid-template-columns: 1fr; }
+    .role-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .link-controls { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 560px) {
+    main { width: calc(100% - 16px); margin-top: 10px; }
+    .role-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stat { width: 100%; justify-content: space-between; }
+    .progress-track { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <h1>Sentence Diagram Practice</h1>
+    <div class="stat"><span id="completeText">0/0 complete</span><div class="progress-track"><div id="completeBar" class="progress-fill"></div></div></div>
+    <button class="btn ghost" id="resetProgressBtn" type="button">Reset Progress</button>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <select id="exerciseSelect" class="exercise-select" aria-label="Exercise"></select>
+      <div class="nav-group">
+        <button class="btn" id="prevBtn" type="button">Previous</button>
+        <button class="btn" id="nextBtn" type="button">Next</button>
+      </div>
+      <div class="button-group">
+        <button class="btn" id="tryAgainBtn" type="button">Try Again</button>
+        <button class="btn" id="showAnswerBtn" type="button">Show Answer</button>
+      </div>
+      <div class="sentence-meta" id="exerciseMeta"></div>
+    </div>
+
+    <div class="layout">
+      <section>
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">1. Mark the Sentence</h2>
+            <button class="btn primary" id="checkMarkingBtn" type="button">Check Marking</button>
+          </div>
+          <div class="panel-body">
+            <div id="sentenceTokens" class="sentence"></div>
+            <div class="role-toolbar" id="roleToolbar"></div>
+            <div class="patterns" id="patternButtons"></div>
+            <div class="mark-mode">
+              <button class="btn primary" id="roleModeBtn" type="button">Mark Roles</button>
+              <button class="btn" id="linkModeBtn" type="button">Link Words</button>
+              <label class="toggle-control">
+                <input id="ignorePrepPhrasesToggle" type="checkbox">
+                <span>Ignore prep. phrases</span>
+              </label>
+            </div>
+            <div class="link-controls">
+              <select id="linkTypeSelect" class="link-select" aria-label="Relationship type"></select>
+              <div id="linkStatus" class="link-status">Use Link Words to connect modifiers and complements.</div>
+              <button class="btn danger" id="clearLinksBtn" type="button">Clear Links</button>
+            </div>
+            <div id="linkList" class="link-list"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">2. Build the Diagram</h2>
+            <div class="button-group">
+              <button class="btn" id="returnCardBtn" type="button">Clear Target</button>
+              <button class="btn danger" id="clearConnectionsBtn" type="button">Reset Diagram</button>
+              <button class="btn primary" id="checkDiagramBtn" type="button">Check Diagram</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="diagramChoices" class="diagram-choices" aria-label="Diagram choices"></div>
+            <div id="modifierChoices" class="diagram-choices" aria-label="Modifier pattern choices"></div>
+            <div id="wordBank" class="word-bank" aria-label="Diagram word bank"></div>
+            <div style="height:12px"></div>
+            <div class="diagram-workspace">
+              <div class="canvas-wrap">
+                <svg id="diagramCanvas" class="diagram-canvas" viewBox="0 0 760 430" role="img" aria-label="Sentence diagram canvas"></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside>
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Feedback</h2>
+          </div>
+          <div class="panel-body">
+            <div id="feedback" class="feedback">
+              <div class="message">Choose roles, mark the pattern, then build the diagram.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Progress</h2>
+          </div>
+          <div class="panel-body">
+            <div id="progressHistory" class="progress-history"></div>
+          </div>
+        </div>
+
+        <div class="panel answer-panel" id="answerPanel">
+          <div class="panel-header">
+            <h2 class="panel-title">Correct Answer</h2>
+          </div>
+          <div class="panel-body" id="answerBody"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<script>
+const STORAGE_KEY = "sentence_diagram_practice_v1";
+
+const ROLES = [
+  { id: "S", label: "Subject", className: "role-s" },
+  { id: "AV", label: "Action Verb", className: "role-av" },
+  { id: "LV", label: "Linking Verb", className: "role-lv" },
+  { id: "BV", label: "Being Verb", className: "role-bv" },
+  { id: "DO", label: "Direct Object", className: "role-do" },
+  { id: "PN", label: "Pred. Nom.", className: "role-pn" },
+  { id: "PA", label: "Pred. Adj.", className: "role-pa" },
+  { id: "ADJ", label: "Adjective", className: "role-adj" },
+  { id: "ADV", label: "Adverb", className: "role-adv" },
+  { id: "CONJ", label: "Conjunction", className: "role-conj" },
+  { id: "PP", label: "Prep Phrase", className: "role-pp" },
+  { id: "PREP", label: "Preposition", className: "role-prep" },
+  { id: "OP", label: "Obj. Prep.", className: "role-op" }
+];
+
+const ROLE_MAP = Object.fromEntries(ROLES.map(role => [role.id, role]));
+const PATTERNS = ["S AV", "S AV DO", "S LV PN", "S LV PA", "S BV"];
+
+const LINK_TYPES = [
+  { id: "ADJ_NOUN", label: "Adjective -> noun", from: "ADJ", to: "noun" },
+  { id: "ADV_VERB", label: "Adverb -> verb", from: "ADV", to: "verb" },
+  { id: "DO_VERB", label: "Direct object -> action verb", from: "DO", to: "AV" },
+  { id: "COMP_LV", label: "PN/PA -> linking verb", from: "PN/PA", to: "LV" },
+  { id: "PREP_OP", label: "Preposition -> object", from: "PREP", to: "OP" }
+];
+
+const LINK_MAP = Object.fromEntries(LINK_TYPES.map(type => [type.id, type]));
+
+const EXERCISES = [
+  {
+    id: "ex01",
+    title: "Action verb with a direct object",
+    level: "Starter",
+    sentence: "Mason watched three playful dolphins.",
+    tokens: ["Mason", "watched", "three", "playful", "dolphins"],
+    pattern: "S AV DO",
+    roles: { S: [0], AV: [1], DO: [4], ADJ: [2, 3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Action verb", expected: [1] },
+      { id: "object", label: "Direct object", expected: [4] },
+      { id: "objectMods", label: "Object modifiers", expected: [2, 3], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "object"] },
+      { label: "Modifiers", slots: ["objectMods"] }
+    ],
+    tips: ["Dolphins receives the action watched.", "Three and playful describe dolphins."]
+  },
+  {
+    id: "ex02",
+    title: "Subject and object modifiers",
+    level: "Starter",
+    sentence: "The tiny kitten chased a red ribbon.",
+    tokens: ["The", "tiny", "kitten", "chased", "a", "red", "ribbon"],
+    pattern: "S AV DO",
+    roles: { S: [2], AV: [3], DO: [6], ADJ: [0, 1, 4, 5] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verb", label: "Action verb", expected: [3] },
+      { id: "object", label: "Direct object", expected: [6] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 1], unordered: true },
+      { id: "objectMods", label: "Object modifiers", expected: [4, 5], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "object"] },
+      { label: "Modifiers", slots: ["subjectMods", "objectMods"] }
+    ],
+    tips: ["Kitten tells who chased.", "Ribbon answers what the kitten chased."]
+  },
+  {
+    id: "ex03",
+    title: "Compound subject",
+    level: "Starter",
+    sentence: "Grace and Lily washed the dishes carefully.",
+    tokens: ["Grace", "and", "Lily", "washed", "the", "dishes", "carefully"],
+    pattern: "S AV DO",
+    roles: { S: [0, 2], AV: [3], DO: [5], ADJ: [4], ADV: [6], CONJ: [1] },
+    slots: [
+      { id: "subjectA", label: "Subject branch", expected: [0] },
+      { id: "subjectConj", label: "Subject connector", expected: [1] },
+      { id: "subjectB", label: "Subject branch", expected: [2] },
+      { id: "verb", label: "Action verb", expected: [3] },
+      { id: "object", label: "Direct object", expected: [5] },
+      { id: "objectMods", label: "Object modifier", expected: [4], unordered: true },
+      { id: "verbMods", label: "Verb modifier", expected: [6], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subjectA", "subjectConj", "subjectB", "verb", "object"] },
+      { label: "Modifiers", slots: ["objectMods", "verbMods"] }
+    ],
+    tips: ["Grace and Lily form the compound subject.", "Carefully tells how they washed."]
+  },
+  {
+    id: "ex04",
+    title: "Adverb at the beginning",
+    level: "Starter",
+    sentence: "Yesterday, Caleb carried the heavy box.",
+    tokens: ["Yesterday", "Caleb", "carried", "the", "heavy", "box"],
+    pattern: "S AV DO",
+    roles: { S: [1], AV: [2], DO: [5], ADJ: [3, 4], ADV: [0] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Action verb", expected: [2] },
+      { id: "object", label: "Direct object", expected: [5] },
+      { id: "verbMods", label: "Verb modifier", expected: [0], unordered: true },
+      { id: "objectMods", label: "Object modifiers", expected: [3, 4], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "object"] },
+      { label: "Modifiers", slots: ["verbMods", "objectMods"] }
+    ],
+    tips: ["Yesterday tells when Caleb carried.", "Box receives the action carried."]
+  },
+  {
+    id: "ex05",
+    title: "Compound action verbs",
+    level: "Core",
+    sentence: "The brown rabbit hopped and hid.",
+    tokens: ["The", "brown", "rabbit", "hopped", "and", "hid"],
+    pattern: "S AV",
+    roles: { S: [2], AV: [3, 5], ADJ: [0, 1], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verbA", label: "Verb branch", expected: [3] },
+      { id: "verbConj", label: "Verb connector", expected: [4] },
+      { id: "verbB", label: "Verb branch", expected: [5] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 1], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verbA", "verbConj", "verbB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Hopped and hid are both action verbs.", "There is no direct object in this sentence."]
+  },
+  {
+    id: "ex06",
+    title: "Linking verb with predicate nominative",
+    level: "Core",
+    sentence: "Duke is our faithful dog.",
+    tokens: ["Duke", "is", "our", "faithful", "dog"],
+    pattern: "S LV PN",
+    roles: { S: [0], LV: [1], PN: [4], ADJ: [2, 3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Linking verb", expected: [1] },
+      { id: "pn", label: "Predicate nominative", expected: [4] },
+      { id: "pnMods", label: "PN modifiers", expected: [2, 3], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pn"] },
+      { label: "Modifiers", slots: ["pnMods"] }
+    ],
+    tips: ["Dog renames Duke.", "A predicate nominative follows a linking verb."]
+  },
+  {
+    id: "ex07",
+    title: "Compound predicate adjectives",
+    level: "Core",
+    sentence: "The soup was hot and tasty.",
+    tokens: ["The", "soup", "was", "hot", "and", "tasty"],
+    pattern: "S LV PA",
+    roles: { S: [1], LV: [2], PA: [3, 5], ADJ: [0], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Linking verb", expected: [2] },
+      { id: "paA", label: "PA branch", expected: [3] },
+      { id: "paConj", label: "PA connector", expected: [4] },
+      { id: "paB", label: "PA branch", expected: [5] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "paA", "paConj", "paB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Hot and tasty describe soup after the linking verb was."]
+  },
+  {
+    id: "ex08",
+    title: "More predicate adjectives",
+    level: "Core",
+    sentence: "Those peaches are sweet and juicy.",
+    tokens: ["Those", "peaches", "are", "sweet", "and", "juicy"],
+    pattern: "S LV PA",
+    roles: { S: [1], LV: [2], PA: [3, 5], ADJ: [0], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Linking verb", expected: [2] },
+      { id: "paA", label: "PA branch", expected: [3] },
+      { id: "paConj", label: "PA connector", expected: [4] },
+      { id: "paB", label: "PA branch", expected: [5] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "paA", "paConj", "paB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Sweet and juicy describe peaches; they do not rename peaches."]
+  },
+  {
+    id: "ex09",
+    title: "State-of-being verb",
+    level: "Core",
+    sentence: "The missing glove is under the seat.",
+    tokens: ["The", "missing", "glove", "is", "under", "the", "seat"],
+    pattern: "S BV",
+    roles: { S: [2], BV: [3], ADJ: [0, 1, 5], PP: [4, 5, 6], PREP: [4], OP: [6] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verb", label: "Being verb", expected: [3] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 1], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    omitted: ["under the seat"],
+    tips: ["Is tells where the glove is, so it is a state-of-being verb here.", "Use the prep-phrase option to include or ignore the phrase in the diagram."]
+  },
+  {
+    id: "ex11",
+    title: "Predicate nominative with a phrase",
+    level: "Core",
+    sentence: "The girl in the red jacket is my neighbor.",
+    tokens: ["The", "girl", "in", "the", "red", "jacket", "is", "my", "neighbor"],
+    pattern: "S LV PN",
+    roles: { S: [1], LV: [6], PN: [8], ADJ: [0, 3, 4, 7], PP: [2, 3, 4, 5], PREP: [2], OP: [5] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Linking verb", expected: [6] },
+      { id: "pn", label: "Predicate nominative", expected: [8] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true },
+      { id: "pnMods", label: "PN modifier", expected: [7], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pn"] },
+      { label: "Modifiers", slots: ["subjectMods", "pnMods"] }
+    ],
+    omitted: ["in the red jacket"],
+    tips: ["Neighbor renames girl after the linking verb is.", "Use the prep-phrase option to include or ignore the phrase in the diagram."]
+  },
+  {
+    id: "ex12",
+    title: "Object plus prepositional phrase",
+    level: "Core",
+    sentence: "Dad asked Noah for kindling.",
+    tokens: ["Dad", "asked", "Noah", "for", "kindling"],
+    pattern: "S AV DO",
+    roles: { S: [0], AV: [1], DO: [2], PP: [3, 4], PREP: [3], OP: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Action verb", expected: [1] },
+      { id: "object", label: "Direct object", expected: [2] }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "object"] }
+    ],
+    omitted: ["for kindling"],
+    tips: ["Noah receives the action asked.", "Kindling is the object of the preposition for."]
+  },
+  {
+    id: "ex14",
+    title: "Simple predicate adjectives",
+    level: "Core",
+    sentence: "The clear weather is cool and rainy.",
+    tokens: ["The", "clear", "weather", "is", "cool", "and", "rainy"],
+    pattern: "S LV PA",
+    roles: { S: [2], LV: [3], PA: [4, 6], ADJ: [0, 1], CONJ: [5] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verb", label: "Linking verb", expected: [3] },
+      { id: "paA", label: "PA branch", expected: [4] },
+      { id: "paConj", label: "PA connector", expected: [5] },
+      { id: "paB", label: "PA branch", expected: [6] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 1], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "paA", "paConj", "paB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Cool and rainy describe weather after is."]
+  },
+  {
+    id: "ex15",
+    title: "Compound subject with direct object",
+    level: "Core",
+    sentence: "Grandma and Mom enjoy the board game.",
+    tokens: ["Grandma", "and", "Mom", "enjoy", "the", "board", "game"],
+    pattern: "S AV DO",
+    roles: { S: [0, 2], AV: [3], DO: [6], ADJ: [4, 5], CONJ: [1] },
+    slots: [
+      { id: "subjectA", label: "Subject branch", expected: [0] },
+      { id: "subjectConj", label: "Subject connector", expected: [1] },
+      { id: "subjectB", label: "Subject branch", expected: [2] },
+      { id: "verb", label: "Action verb", expected: [3] },
+      { id: "object", label: "Direct object", expected: [6] },
+      { id: "objectMods", label: "Object modifiers", expected: [4, 5], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subjectA", "subjectConj", "subjectB", "verb", "object"] },
+      { label: "Modifiers", slots: ["objectMods"] }
+    ],
+    tips: ["Grandma and Mom are both subjects.", "Game receives the action enjoy."]
+  },
+  {
+    id: "ex16",
+    title: "Action verb without direct object",
+    level: "Core",
+    sentence: "The small boat floated under the bridge.",
+    tokens: ["The", "small", "boat", "floated", "under", "the", "bridge"],
+    pattern: "S AV",
+    roles: { S: [2], AV: [3], ADJ: [0, 1, 5], PP: [4, 5, 6], PREP: [4], OP: [6] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verb", label: "Action verb", expected: [3] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 1], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    omitted: ["under the bridge"],
+    tips: ["Floated is an action verb, but it does not take a direct object here."]
+  },
+  {
+    id: "ex17",
+    title: "Predicate nominative with adjective",
+    level: "Core",
+    sentence: "Claire is a careful artist.",
+    tokens: ["Claire", "is", "a", "careful", "artist"],
+    pattern: "S LV PN",
+    roles: { S: [0], LV: [1], PN: [4], ADJ: [2, 3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Linking verb", expected: [1] },
+      { id: "pn", label: "Predicate nominative", expected: [4] },
+      { id: "pnMods", label: "PN modifiers", expected: [2, 3], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pn"] },
+      { label: "Modifiers", slots: ["pnMods"] }
+    ],
+    tips: ["Artist renames Claire; careful describes artist."]
+  },
+  {
+    id: "ex18",
+    title: "Action verb with phrase",
+    level: "Review",
+    sentence: "The old watch belonged to Uncle Mark.",
+    tokens: ["The", "old", "watch", "belonged", "to", "Uncle", "Mark"],
+    pattern: "S AV",
+    roles: { S: [2], AV: [3], ADJ: [0, 1, 5], PP: [4, 5, 6], PREP: [4], OP: [6] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verb", label: "Action verb", expected: [3] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 1], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    omitted: ["to Uncle Mark"],
+    tips: ["Belonged is an action verb here.", "Mark is the object of the preposition to."]
+  },
+  {
+    id: "ex19",
+    title: "Verb phrase with direct object",
+    level: "Review",
+    sentence: "Nolan and his cousins were planning a hike.",
+    tokens: ["Nolan", "and", "his", "cousins", "were", "planning", "a", "hike"],
+    pattern: "S AV DO",
+    roles: { S: [0, 3], AV: [4, 5], DO: [7], ADJ: [2, 6], CONJ: [1] },
+    slots: [
+      { id: "subjectA", label: "Subject branch", expected: [0] },
+      { id: "subjectConj", label: "Subject connector", expected: [1] },
+      { id: "subjectB", label: "Subject branch", expected: [3] },
+      { id: "verb", label: "Action verb phrase", expected: [4, 5] },
+      { id: "object", label: "Direct object", expected: [7] },
+      { id: "subjectMods", label: "Subject modifier", expected: [2], unordered: true },
+      { id: "objectMods", label: "Object modifier", expected: [6], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subjectA", "subjectConj", "subjectB", "verb", "object"] },
+      { label: "Modifiers", slots: ["subjectMods", "objectMods"] }
+    ],
+    tips: ["Were planning is the action verb phrase.", "Hike receives the action planning."]
+  },
+  {
+    id: "ex20",
+    title: "Predicate adjective with phrase",
+    level: "Review",
+    sentence: "The first day of summer camp is exciting.",
+    tokens: ["The", "first", "day", "of", "summer", "camp", "is", "exciting"],
+    pattern: "S LV PA",
+    roles: { S: [2], LV: [6], PA: [7], ADJ: [0, 1, 4], PP: [3, 4, 5], PREP: [3], OP: [5] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verb", label: "Linking verb", expected: [6] },
+      { id: "pa", label: "Predicate adjective", expected: [7] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 1], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pa"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    omitted: ["of summer camp"],
+    tips: ["Exciting describes day after the linking verb is.", "Use the prep-phrase option to include or ignore the phrase in the diagram."]
+  },
+  {
+    id: "ex21",
+    title: "Adverb and prepositional phrase",
+    level: "Review",
+    sentence: "The children laughed loudly through the puppet show.",
+    tokens: ["The", "children", "laughed", "loudly", "through", "the", "puppet", "show"],
+    pattern: "S AV",
+    roles: { S: [1], AV: [2], ADJ: [0, 5, 6], ADV: [3], PP: [4, 5, 6, 7], PREP: [4], OP: [7] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Action verb", expected: [2] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true },
+      { id: "verbMods", label: "Verb modifier", expected: [3], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb"] },
+      { label: "Modifiers", slots: ["subjectMods", "verbMods"] }
+    ],
+    omitted: ["through the puppet show"],
+    tips: ["Loudly tells how the children laughed.", "Show is the object of the preposition through."]
+  },
+  {
+    id: "ex22",
+    title: "Future action verb phrase",
+    level: "Review",
+    sentence: "Mom will keep the chair by the window.",
+    tokens: ["Mom", "will", "keep", "the", "chair", "by", "the", "window"],
+    pattern: "S AV DO",
+    roles: { S: [0], AV: [1, 2], DO: [4], ADJ: [3, 6], PP: [5, 6, 7], PREP: [5], OP: [7] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Action verb phrase", expected: [1, 2] },
+      { id: "object", label: "Direct object", expected: [4] },
+      { id: "objectMods", label: "Object modifier", expected: [3], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "object"] },
+      { label: "Modifiers", slots: ["objectMods"] }
+    ],
+    omitted: ["by the window"],
+    tips: ["Will keep is the full action verb phrase.", "Chair receives the action keep."]
+  },
+  {
+    id: "ex41",
+    title: "Action verb without object",
+    level: "Review",
+    sentence: "The bright stars twinkled above the barn.",
+    tokens: ["The", "bright", "stars", "twinkled", "above", "the", "barn"],
+    pattern: "S AV",
+    roles: { S: [2], AV: [3], ADJ: [0, 1, 5], PP: [4, 5, 6], PREP: [4], OP: [6] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verb", label: "Action verb", expected: [3] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 1], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    omitted: ["above the barn"],
+    tips: ["Twinkled is an action verb without a direct object.", "Use the prep-phrase option to include or ignore the phrase in the diagram."]
+  },
+  {
+    id: "ex42",
+    title: "Single predicate adjective",
+    level: "Review",
+    sentence: "The lemonade tasted sweet.",
+    tokens: ["The", "lemonade", "tasted", "sweet"],
+    pattern: "S LV PA",
+    roles: { S: [1], LV: [2], PA: [3], ADJ: [0] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Linking verb", expected: [2] },
+      { id: "pa", label: "Predicate adjective", expected: [3] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pa"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Sweet describes lemonade after the linking verb tasted."]
+  },
+  {
+    id: "ex23",
+    title: "Compound subject with object",
+    level: "Conjunctions",
+    sentence: "Ava and Ben painted the fence.",
+    tokens: ["Ava", "and", "Ben", "painted", "the", "fence"],
+    pattern: "S AV DO",
+    roles: { S: [0, 2], AV: [3], DO: [5], ADJ: [4], CONJ: [1] },
+    slots: [
+      { id: "subjectA", label: "Subject branch", expected: [0] },
+      { id: "subjectConj", label: "Subject connector", expected: [1] },
+      { id: "subjectB", label: "Subject branch", expected: [2] },
+      { id: "verb", label: "Action verb", expected: [3] },
+      { id: "object", label: "Direct object", expected: [5] },
+      { id: "objectMods", label: "Object modifier", expected: [4], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subjectA", "subjectConj", "subjectB", "verb", "object"] },
+      { label: "Modifiers", slots: ["objectMods"] }
+    ],
+    tips: ["Ava and Ben form a compound subject.", "Fence receives the action painted."]
+  },
+  {
+    id: "ex24",
+    title: "Compound subject without object",
+    level: "Conjunctions",
+    sentence: "The captain and the sailor waved.",
+    tokens: ["The", "captain", "and", "the", "sailor", "waved"],
+    pattern: "S AV",
+    roles: { S: [1, 4], AV: [5], ADJ: [0, 3], CONJ: [2] },
+    slots: [
+      { id: "subjectA", label: "Subject branch", expected: [1] },
+      { id: "subjectConj", label: "Subject connector", expected: [2] },
+      { id: "subjectB", label: "Subject branch", expected: [4] },
+      { id: "verb", label: "Action verb", expected: [5] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 3], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subjectA", "subjectConj", "subjectB", "verb"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Captain and sailor are joined as the compound subject."]
+  },
+  {
+    id: "ex25",
+    title: "Compound action verbs",
+    level: "Conjunctions",
+    sentence: "The small dog barked and growled.",
+    tokens: ["The", "small", "dog", "barked", "and", "growled"],
+    pattern: "S AV",
+    roles: { S: [2], AV: [3, 5], ADJ: [0, 1], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verbA", label: "Verb branch", expected: [3] },
+      { id: "verbConj", label: "Verb connector", expected: [4] },
+      { id: "verbB", label: "Verb branch", expected: [5] },
+      { id: "subjectMods", label: "Subject modifiers", expected: [0, 1], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verbA", "verbConj", "verbB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Barked and growled are both action verbs."]
+  },
+  {
+    id: "ex26",
+    title: "Two action verbs",
+    level: "Conjunctions",
+    sentence: "Mia skipped and twirled.",
+    tokens: ["Mia", "skipped", "and", "twirled"],
+    pattern: "S AV",
+    roles: { S: [0], AV: [1, 3], CONJ: [2] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verbA", label: "Verb branch", expected: [1] },
+      { id: "verbConj", label: "Verb connector", expected: [2] },
+      { id: "verbB", label: "Verb branch", expected: [3] }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verbA", "verbConj", "verbB"] }
+    ],
+    tips: ["Skipped and twirled are joined as compound action verbs."]
+  },
+  {
+    id: "ex27",
+    title: "Compound verbs with plural subject",
+    level: "Conjunctions",
+    sentence: "The hikers stopped and rested.",
+    tokens: ["The", "hikers", "stopped", "and", "rested"],
+    pattern: "S AV",
+    roles: { S: [1], AV: [2, 4], ADJ: [0], CONJ: [3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verbA", label: "Verb branch", expected: [2] },
+      { id: "verbConj", label: "Verb connector", expected: [3] },
+      { id: "verbB", label: "Verb branch", expected: [4] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verbA", "verbConj", "verbB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Stopped and rested share the same subject."]
+  },
+  {
+    id: "ex28",
+    title: "Compound verbs with subject modifier",
+    level: "Conjunctions",
+    sentence: "The kite dipped and soared.",
+    tokens: ["The", "kite", "dipped", "and", "soared"],
+    pattern: "S AV",
+    roles: { S: [1], AV: [2, 4], ADJ: [0], CONJ: [3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verbA", label: "Verb branch", expected: [2] },
+      { id: "verbConj", label: "Verb connector", expected: [3] },
+      { id: "verbB", label: "Verb branch", expected: [4] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verbA", "verbConj", "verbB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Dipped and soared form the compound verb."]
+  },
+  {
+    id: "ex29",
+    title: "Compound direct objects",
+    level: "Conjunctions",
+    sentence: "Mason packed lunch and water.",
+    tokens: ["Mason", "packed", "lunch", "and", "water"],
+    pattern: "S AV DO",
+    roles: { S: [0], AV: [1], DO: [2, 4], CONJ: [3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Action verb", expected: [1] },
+      { id: "objectA", label: "Object branch", expected: [2] },
+      { id: "objectConj", label: "Object connector", expected: [3] },
+      { id: "objectB", label: "Object branch", expected: [4] }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "objectA", "objectConj", "objectB"] }
+    ],
+    tips: ["Lunch and water both receive the action packed."]
+  },
+  {
+    id: "ex30",
+    title: "More compound direct objects",
+    level: "Conjunctions",
+    sentence: "Lena bought apples and oranges.",
+    tokens: ["Lena", "bought", "apples", "and", "oranges"],
+    pattern: "S AV DO",
+    roles: { S: [0], AV: [1], DO: [2, 4], CONJ: [3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Action verb", expected: [1] },
+      { id: "objectA", label: "Object branch", expected: [2] },
+      { id: "objectConj", label: "Object connector", expected: [3] },
+      { id: "objectB", label: "Object branch", expected: [4] }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "objectA", "objectConj", "objectB"] }
+    ],
+    tips: ["Apples and oranges are compound direct objects."]
+  },
+  {
+    id: "ex31",
+    title: "Compound objects with modifier",
+    level: "Conjunctions",
+    sentence: "The chef chopped carrots and celery.",
+    tokens: ["The", "chef", "chopped", "carrots", "and", "celery"],
+    pattern: "S AV DO",
+    roles: { S: [1], AV: [2], DO: [3, 5], ADJ: [0], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Action verb", expected: [2] },
+      { id: "objectA", label: "Object branch", expected: [3] },
+      { id: "objectConj", label: "Object connector", expected: [4] },
+      { id: "objectB", label: "Object branch", expected: [5] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "objectA", "objectConj", "objectB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Carrots and celery both answer what the chef chopped."]
+  },
+  {
+    id: "ex32",
+    title: "Compound direct object nouns",
+    level: "Conjunctions",
+    sentence: "Dad fixed bikes and scooters.",
+    tokens: ["Dad", "fixed", "bikes", "and", "scooters"],
+    pattern: "S AV DO",
+    roles: { S: [0], AV: [1], DO: [2, 4], CONJ: [3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Action verb", expected: [1] },
+      { id: "objectA", label: "Object branch", expected: [2] },
+      { id: "objectConj", label: "Object connector", expected: [3] },
+      { id: "objectB", label: "Object branch", expected: [4] }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "objectA", "objectConj", "objectB"] }
+    ],
+    tips: ["Bikes and scooters receive the action fixed."]
+  },
+  {
+    id: "ex33",
+    title: "Compound objects after action verb",
+    level: "Conjunctions",
+    sentence: "Sophie drew stars and planets.",
+    tokens: ["Sophie", "drew", "stars", "and", "planets"],
+    pattern: "S AV DO",
+    roles: { S: [0], AV: [1], DO: [2, 4], CONJ: [3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Action verb", expected: [1] },
+      { id: "objectA", label: "Object branch", expected: [2] },
+      { id: "objectConj", label: "Object connector", expected: [3] },
+      { id: "objectB", label: "Object branch", expected: [4] }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "objectA", "objectConj", "objectB"] }
+    ],
+    tips: ["Stars and planets are joined as compound direct objects."]
+  },
+  {
+    id: "ex34",
+    title: "Compound predicate adjectives",
+    level: "Conjunctions",
+    sentence: "The puppy was sleepy and warm.",
+    tokens: ["The", "puppy", "was", "sleepy", "and", "warm"],
+    pattern: "S LV PA",
+    roles: { S: [1], LV: [2], PA: [3, 5], ADJ: [0], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Linking verb", expected: [2] },
+      { id: "paA", label: "PA branch", expected: [3] },
+      { id: "paConj", label: "PA connector", expected: [4] },
+      { id: "paB", label: "PA branch", expected: [5] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "paA", "paConj", "paB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Sleepy and warm both describe puppy after the linking verb."]
+  },
+  {
+    id: "ex35",
+    title: "More compound predicate adjectives",
+    level: "Conjunctions",
+    sentence: "The hallway was narrow and quiet.",
+    tokens: ["The", "hallway", "was", "narrow", "and", "quiet"],
+    pattern: "S LV PA",
+    roles: { S: [1], LV: [2], PA: [3, 5], ADJ: [0], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Linking verb", expected: [2] },
+      { id: "paA", label: "PA branch", expected: [3] },
+      { id: "paConj", label: "PA connector", expected: [4] },
+      { id: "paB", label: "PA branch", expected: [5] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "paA", "paConj", "paB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Narrow and quiet are joined predicate adjectives."]
+  },
+  {
+    id: "ex36",
+    title: "Compound predicate nominatives",
+    level: "Conjunctions",
+    sentence: "Caleb became captain and leader.",
+    tokens: ["Caleb", "became", "captain", "and", "leader"],
+    pattern: "S LV PN",
+    roles: { S: [0], LV: [1], PN: [2, 4], CONJ: [3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Linking verb", expected: [1] },
+      { id: "pnA", label: "PN branch", expected: [2] },
+      { id: "pnConj", label: "PN connector", expected: [3] },
+      { id: "pnB", label: "PN branch", expected: [4] }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pnA", "pnConj", "pnB"] }
+    ],
+    tips: ["Captain and leader rename Caleb after the linking verb."]
+  },
+  {
+    id: "ex37",
+    title: "More predicate nominatives",
+    level: "Conjunctions",
+    sentence: "Mrs. Grant is teacher and coach.",
+    tokens: ["Mrs. Grant", "is", "teacher", "and", "coach"],
+    pattern: "S LV PN",
+    roles: { S: [0], LV: [1], PN: [2, 4], CONJ: [3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Linking verb", expected: [1] },
+      { id: "pnA", label: "PN branch", expected: [2] },
+      { id: "pnConj", label: "PN connector", expected: [3] },
+      { id: "pnB", label: "PN branch", expected: [4] }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pnA", "pnConj", "pnB"] }
+    ],
+    tips: ["Teacher and coach are compound predicate nominatives."]
+  },
+  {
+    id: "ex38",
+    title: "Compound predicate nominative pair",
+    level: "Conjunctions",
+    sentence: "Eli became pianist and singer.",
+    tokens: ["Eli", "became", "pianist", "and", "singer"],
+    pattern: "S LV PN",
+    roles: { S: [0], LV: [1], PN: [2, 4], CONJ: [3] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [0] },
+      { id: "verb", label: "Linking verb", expected: [1] },
+      { id: "pnA", label: "PN branch", expected: [2] },
+      { id: "pnConj", label: "PN connector", expected: [3] },
+      { id: "pnB", label: "PN branch", expected: [4] }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pnA", "pnConj", "pnB"] }
+    ],
+    tips: ["Pianist and singer rename Eli."]
+  },
+  {
+    id: "ex39",
+    title: "Names as predicate nominatives",
+    level: "Conjunctions",
+    sentence: "The winners were Jordan and Maya.",
+    tokens: ["The", "winners", "were", "Jordan", "and", "Maya"],
+    pattern: "S LV PN",
+    roles: { S: [1], LV: [2], PN: [3, 5], ADJ: [0], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Linking verb", expected: [2] },
+      { id: "pnA", label: "PN branch", expected: [3] },
+      { id: "pnConj", label: "PN connector", expected: [4] },
+      { id: "pnB", label: "PN branch", expected: [5] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pnA", "pnConj", "pnB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Jordan and Maya identify the winners."]
+  },
+  {
+    id: "ex40",
+    title: "Compound predicate nominatives with modifier",
+    level: "Conjunctions",
+    sentence: "Our neighbor is baker and gardener.",
+    tokens: ["Our", "neighbor", "is", "baker", "and", "gardener"],
+    pattern: "S LV PN",
+    roles: { S: [1], LV: [2], PN: [3, 5], ADJ: [0], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [1] },
+      { id: "verb", label: "Linking verb", expected: [2] },
+      { id: "pnA", label: "PN branch", expected: [3] },
+      { id: "pnConj", label: "PN connector", expected: [4] },
+      { id: "pnB", label: "PN branch", expected: [5] },
+      { id: "subjectMods", label: "Subject modifier", expected: [0], unordered: true }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "pnA", "pnConj", "pnB"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    tips: ["Baker and gardener are predicate nominatives."]
+  },
+  {
+    id: "ex51",
+    title: "Compound object modifiers with phrase",
+    level: "Coordinated modifiers",
+    sentence: "On her hikes, Morgan often takes exciting and interesting pictures.",
+    tokens: ["On", "her", "hikes", "Morgan", "often", "takes", "exciting", "and", "interesting", "pictures"],
+    pattern: "S AV DO",
+    roles: { S: [3], AV: [5], DO: [9], ADJ: [1, 6, 8], ADV: [4], PP: [0, 1, 2], PREP: [0], OP: [2], CONJ: [7] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [3] },
+      { id: "verb", label: "Action verb", expected: [5] },
+      { id: "object", label: "Direct object", expected: [9] },
+      { id: "verbMods", label: "Verb modifier", expected: [4], unordered: true }
+    ],
+    compoundModifiers: [
+      { id: "objectCompoundMods1", targetSlot: "object", modifiers: [6, 8], conjunction: 7, label: "Object compound modifier" }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "object"] },
+      { label: "Modifiers", slots: ["verbMods"] }
+    ],
+    omitted: ["On her hikes"],
+    tips: ["Often tells when or how often Morgan takes pictures.", "Exciting and interesting work together to describe pictures."]
+  },
+  {
+    id: "ex52",
+    title: "Compound subject modifiers with phrase",
+    level: "Coordinated modifiers",
+    sentence: "After school, the bright and cheerful students sang loudly.",
+    tokens: ["After", "school", "the", "bright", "and", "cheerful", "students", "sang", "loudly"],
+    pattern: "S AV",
+    roles: { S: [6], AV: [7], ADJ: [2, 3, 5], ADV: [8], PP: [0, 1], PREP: [0], OP: [1], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [6] },
+      { id: "verb", label: "Action verb", expected: [7] },
+      { id: "subjectMods", label: "Subject modifier", expected: [2], unordered: true },
+      { id: "verbMods", label: "Verb modifier", expected: [8], unordered: true }
+    ],
+    compoundModifiers: [
+      { id: "subjectCompoundMods1", targetSlot: "subject", modifiers: [3, 5], conjunction: 4, label: "Subject compound modifier" }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb"] },
+      { label: "Modifiers", slots: ["subjectMods", "verbMods"] }
+    ],
+    omitted: ["After school"],
+    tips: ["Bright and cheerful both describe students."]
+  },
+  {
+    id: "ex53",
+    title: "Compound object modifiers",
+    level: "Coordinated modifiers",
+    sentence: "Before dinner, Noah made warm and tasty soup.",
+    tokens: ["Before", "dinner", "Noah", "made", "warm", "and", "tasty", "soup"],
+    pattern: "S AV DO",
+    roles: { S: [2], AV: [3], DO: [7], ADJ: [4, 6], PP: [0, 1], PREP: [0], OP: [1], CONJ: [5] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [2] },
+      { id: "verb", label: "Action verb", expected: [3] },
+      { id: "object", label: "Direct object", expected: [7] }
+    ],
+    compoundModifiers: [
+      { id: "objectCompoundMods2", targetSlot: "object", modifiers: [4, 6], conjunction: 5, label: "Object compound modifier" }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "object"] }
+    ],
+    omitted: ["Before dinner"],
+    tips: ["Warm and tasty are joined modifiers for soup."]
+  },
+  {
+    id: "ex54",
+    title: "Compound object modifiers with adverb",
+    level: "Coordinated modifiers",
+    sentence: "During art class, Lily drew bright and cheerful posters carefully.",
+    tokens: ["During", "art", "class", "Lily", "drew", "bright", "and", "cheerful", "posters", "carefully"],
+    pattern: "S AV DO",
+    roles: { S: [3], AV: [4], DO: [8], ADJ: [1, 5, 7], ADV: [9], PP: [0, 1, 2], PREP: [0], OP: [2], CONJ: [6] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [3] },
+      { id: "verb", label: "Action verb", expected: [4] },
+      { id: "object", label: "Direct object", expected: [8] },
+      { id: "verbMods", label: "Verb modifier", expected: [9], unordered: true }
+    ],
+    compoundModifiers: [
+      { id: "objectCompoundMods3", targetSlot: "object", modifiers: [5, 7], conjunction: 6, label: "Object compound modifier" }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb", "object"] },
+      { label: "Modifiers", slots: ["verbMods"] }
+    ],
+    omitted: ["During art class"],
+    tips: ["Bright and cheerful both describe posters."]
+  },
+  {
+    id: "ex55",
+    title: "Compound subject modifiers",
+    level: "Coordinated modifiers",
+    sentence: "At sunset, the red and yellow kite soared.",
+    tokens: ["At", "sunset", "the", "red", "and", "yellow", "kite", "soared"],
+    pattern: "S AV",
+    roles: { S: [6], AV: [7], ADJ: [2, 3, 5], PP: [0, 1], PREP: [0], OP: [1], CONJ: [4] },
+    slots: [
+      { id: "subject", label: "Subject", expected: [6] },
+      { id: "verb", label: "Action verb", expected: [7] },
+      { id: "subjectMods", label: "Subject modifier", expected: [2], unordered: true }
+    ],
+    compoundModifiers: [
+      { id: "subjectCompoundMods2", targetSlot: "subject", modifiers: [3, 5], conjunction: 4, label: "Subject compound modifier" }
+    ],
+    rows: [
+      { label: "Main line", slots: ["subject", "verb"] },
+      { label: "Modifiers", slots: ["subjectMods"] }
+    ],
+    omitted: ["At sunset"],
+    tips: ["Red and yellow are joined modifiers for kite."]
+  }
+];
+
+let progress = loadProgress();
+let state = createFreshState(0);
+
+function loadProgress() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    return {
+      completed: parsed.completed || {},
+      attempts: parsed.attempts || {},
+      started: parsed.started || {},
+      ignorePrepPhrases: parsed.ignorePrepPhrases !== false,
+      lastIndex: Number.isInteger(parsed.lastIndex) ? parsed.lastIndex : 0
+    };
+  } catch {
+    return { completed: {}, attempts: {}, started: {}, ignorePrepPhrases: true, lastIndex: 0 };
+  }
+}
+
+function saveProgress() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+}
+
+function createFreshState(index) {
+  const exercise = EXERCISES[index];
+  const roles = {};
+  ROLES.forEach(role => roles[role.id] = new Set());
+  return {
+    index,
+    markMode: "roles",
+    selectedRole: "S",
+    linkType: "ADJ_NOUN",
+    linkSource: null,
+    selectedDiagramToken: null,
+    selectedDiagramKey: null,
+    selectedModifierKey: null,
+    selectedTargetKey: null,
+    dragTokenId: null,
+    hoverTargetKey: null,
+    marking: { pattern: null, roles, links: [] },
+    diagram: { assignments: {} },
+    markingCorrect: false,
+    diagramCorrect: false,
+    feedback: [{ type: "message", tone: "", text: "Mark roles, link related words, choose a diagram shape, then place the words." }],
+    answerOpen: false
+  };
+}
+
+function getExercise() {
+  return EXERCISES[state.index];
+}
+
+function tokenText(exercise, tokenId) {
+  const token = exercise.tokens[tokenId];
+  return typeof token === "string" ? token : token.text;
+}
+
+function tokenIsVirtual(exercise, tokenId) {
+  const token = exercise.tokens[tokenId];
+  return typeof token !== "string" && !!token.virtual;
+}
+
+function roleClass(roleId) {
+  return ROLE_MAP[roleId] ? ROLE_MAP[roleId].className : "";
+}
+
+function roleLabel(roleId) {
+  return ROLE_MAP[roleId] ? ROLE_MAP[roleId].label : roleId;
+}
+
+function expectedRoles(exercise) {
+  const expected = {};
+  ROLES.forEach(role => expected[role.id] = new Set(exercise.roles[role.id] || []));
+  return expected;
+}
+
+function arraysEqual(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+function setsEqual(a, b) {
+  if (a.size !== b.size) return false;
+  for (const value of a) {
+    if (!b.has(value)) return false;
+  }
+  return true;
+}
+
+function formatTokens(exercise, tokenIds) {
+  if (!tokenIds || tokenIds.length === 0) return "nothing";
+  return tokenIds.map(id => tokenText(exercise, id)).join(" ");
+}
+
+function differenceList(aSet, bSet) {
+  const out = [];
+  aSet.forEach(value => {
+    if (!bSet.has(value)) out.push(value);
+  });
+  return out;
+}
+
+function sortIds(ids) {
+  return [...ids].sort((a, b) => a - b);
+}
+
+function allDiagramTokenIds(exercise) {
+  return sortIds(expectedDiagramSpec(exercise).pieces.flatMap(piece => piece.tokens));
+}
+
+function activeTargetKeys() {
+  if (!state.selectedDiagramKey || !state.selectedModifierKey) return new Set();
+  return new Set(layoutGuidedDiagram(getExercise(), state.selectedDiagramKey, { modifierKey: state.selectedModifierKey }).targets.map(target => target.key));
+}
+
+function assignedTargetFor(tokenId) {
+  const keys = activeTargetKeys();
+  return Object.entries(state.diagram.assignments)
+    .find(([key, tokens]) => keys.has(key) && tokens.includes(tokenId))?.[0] || null;
+}
+
+function assignedPieceFor(tokenId) {
+  return assignedTargetFor(tokenId);
+}
+
+function tokenHasRole(exercise, tokenId, roleId) {
+  return (exercise.roles[roleId] || []).includes(tokenId);
+}
+
+function roleIds(exercise, roleId) {
+  return exercise.roles[roleId] || [];
+}
+
+function shouldIgnorePrepPhrases() {
+  return progress.ignorePrepPhrases !== false;
+}
+
+function ignoredTokenIds(exercise) {
+  return shouldIgnorePrepPhrases() ? new Set(roleIds(exercise, "PP")) : new Set();
+}
+
+function withoutIgnoredTokens(values, ignored) {
+  return new Set([...values].filter(id => !ignored.has(id)));
+}
+
+function activeLinksForChecking(links, ignored) {
+  return links.filter(link => !ignored.has(link.from) && !ignored.has(link.to));
+}
+
+function slotById(exercise, id) {
+  return exercise.slots.find(slot => slot.id === id) || null;
+}
+
+function firstTokenFromSlot(exercise, ids) {
+  for (const id of ids) {
+    const slot = slotById(exercise, id);
+    if (slot && slot.expected.length) return slot.expected[0];
+  }
+  return null;
+}
+
+function lastTokenFromSlot(exercise, ids) {
+  for (const id of ids) {
+    const slot = slotById(exercise, id);
+    if (slot && slot.expected.length) return slot.expected[slot.expected.length - 1];
+  }
+  return null;
+}
+
+function lastToken(values) {
+  return values.length ? values[values.length - 1] : null;
+}
+
+function primaryVerbToken(exercise) {
+  return lastTokenFromSlot(exercise, ["verb", "verbA"]) ??
+    lastToken(roleIds(exercise, "AV")) ??
+    lastToken(roleIds(exercise, "LV")) ??
+    lastToken(roleIds(exercise, "BV")) ??
+    null;
+}
+
+function nounLikeTokenIds(exercise) {
+  const ids = new Set();
+  ["S", "DO", "PN", "OP"].forEach(role => roleIds(exercise, role).forEach(id => ids.add(id)));
+  return [...ids];
+}
+
+function closestToken(tokenId, candidates) {
+  if (!candidates.length) return null;
+  return candidates
+    .map(id => ({ id, distance: Math.abs(id - tokenId), after: id > tokenId ? 0 : 1 }))
+    .sort((a, b) => a.distance - b.distance || a.after - b.after || a.id - b.id)[0].id;
+}
+
+function targetForModifierSlot(exercise, slotId, tokenId) {
+  if (slotId === "objectMods") return firstTokenFromSlot(exercise, ["object", "objectA"]);
+  if (slotId === "pnMods") return firstTokenFromSlot(exercise, ["pn", "pnA", "pa", "paA"]);
+  if (slotId === "verbMods") return primaryVerbToken(exercise);
+  if (slotId === "subjectMods") {
+    const subjectCandidates = [
+      ...((slotById(exercise, "subject") || {}).expected || []),
+      ...((slotById(exercise, "subjectA") || {}).expected || []),
+      ...((slotById(exercise, "subjectB") || {}).expected || [])
+    ];
+    return closestToken(tokenId, subjectCandidates);
+  }
+  return null;
+}
+
+function compoundModifierGroups(exercise) {
+  return exercise.compoundModifiers || [];
+}
+
+function tokenForCompoundModifierTarget(exercise, group) {
+  if (group.targetToken !== undefined) return group.targetToken;
+  const targetSlot = group.targetSlot || "object";
+  return firstTokenFromSlot(exercise, [targetSlot]);
+}
+
+function diagramTargetKeyForCompoundModifier(group, byKey) {
+  const targetSlot = group.targetSlot || "object";
+  if (byKey.has(targetSlot)) return targetSlot;
+  const fallbacks = {
+    object: ["object", "objectA"],
+    subject: ["subject", "subjectA"],
+    pn: ["pn", "pnA"],
+    pa: ["pa", "paA"],
+    verb: ["verb", "verbA"]
+  };
+  const keys = fallbacks[targetSlot] || [targetSlot];
+  return keys.find(key => byKey.has(key)) || null;
+}
+
+function diagramKeyForToken(exercise, tokenId, byKey) {
+  const slotPriority = [
+    "subject", "subjectA", "subjectB",
+    "verb", "verbA", "verbB",
+    "object", "objectA", "objectB",
+    "pn", "pnA", "pnB",
+    "pa", "paA", "paB"
+  ];
+  return slotPriority.find(key => byKey.has(key) && (slotById(exercise, key) || {}).expected?.includes(tokenId)) || null;
+}
+
+function prepObjectTokenForPrep(exercise, prepToken, usedObjects) {
+  const available = roleIds(exercise, "OP").filter(id => !usedObjects.has(id));
+  if (!available.length) return null;
+  const after = available.filter(id => id > prepToken).sort((a, b) => a - b);
+  return after[0] ?? closestToken(prepToken, available);
+}
+
+function prepPhraseTargetToken(exercise, prepToken, objectToken) {
+  const mainVerb = primaryVerbToken(exercise);
+  const subjectTokens = roleIds(exercise, "S").sort((a, b) => a - b);
+  const firstSubject = subjectTokens[0] ?? null;
+  const prepText = tokenText(exercise, prepToken).toLowerCase().replace(/[^a-z]/g, "");
+  const previousNouns = nounLikeTokenIds(exercise)
+    .filter(id => id !== objectToken && id < prepToken)
+    .sort((a, b) => a - b);
+
+  if (firstSubject !== null && prepToken < firstSubject) return mainVerb;
+  if (mainVerb !== null && prepToken < mainVerb && previousNouns.length) return closestToken(prepToken, previousNouns);
+  if (["of", "in", "by"].includes(prepText) && previousNouns.length) return closestToken(prepToken, previousNouns);
+  return mainVerb ?? closestToken(prepToken, previousNouns);
+}
+
+function prepPhraseDescriptors(exercise, byKey) {
+  const usedObjects = new Set();
+  return roleIds(exercise, "PREP").map(prepToken => {
+    const objectToken = prepObjectTokenForPrep(exercise, prepToken, usedObjects);
+    if (objectToken === null || objectToken === undefined) return null;
+    usedObjects.add(objectToken);
+    const targetToken = prepPhraseTargetToken(exercise, prepToken, objectToken);
+    const targetKey = targetToken === null || targetToken === undefined ? null : diagramKeyForToken(exercise, targetToken, byKey);
+    if (!targetKey) return null;
+    const low = Math.min(prepToken, objectToken);
+    const high = Math.max(prepToken, objectToken);
+    const phraseTokens = new Set(roleIds(exercise, "PP").filter(id => id >= low && id <= high));
+    if (!phraseTokens.size) {
+      roleIds(exercise, "PP").forEach(id => phraseTokens.add(id));
+    }
+    const objectModifiers = roleIds(exercise, "ADJ").filter(id => phraseTokens.has(id) && id !== prepToken && id !== objectToken);
+    return { prepToken, objectToken, targetKey, objectModifiers };
+  }).filter(Boolean);
+}
+
+function expectedLinks(exercise) {
+  const links = [];
+  const seen = new Set();
+  const add = (type, from, to) => {
+    if (from === null || to === null || from === undefined || to === undefined) return;
+    const key = `${type}:${from}:${to}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    links.push({ type, from, to });
+  };
+
+  const primaryVerb = primaryVerbToken(exercise);
+  roleIds(exercise, "DO").forEach(id => add("DO_VERB", id, primaryVerb));
+  [...roleIds(exercise, "PN"), ...roleIds(exercise, "PA")].forEach(id => {
+    add("COMP_LV", id, roleIds(exercise, "LV")[0] ?? null);
+  });
+  roleIds(exercise, "ADV").forEach(id => add("ADV_VERB", id, closestToken(id, [
+    ...roleIds(exercise, "AV"),
+    ...roleIds(exercise, "LV"),
+    ...roleIds(exercise, "BV")
+  ])));
+  roleIds(exercise, "PREP").forEach(id => add("PREP_OP", id, closestToken(id, roleIds(exercise, "OP"))));
+
+  const adjectiveTargets = new Map();
+  ["subjectMods", "objectMods", "pnMods"].forEach(slotId => {
+    const slot = slotById(exercise, slotId);
+    if (!slot) return;
+    slot.expected.forEach(id => {
+      adjectiveTargets.set(id, targetForModifierSlot(exercise, slotId, id));
+    });
+  });
+  compoundModifierGroups(exercise).forEach(group => {
+    const target = tokenForCompoundModifierTarget(exercise, group);
+    (group.modifiers || []).forEach(id => adjectiveTargets.set(id, target));
+  });
+  roleIds(exercise, "ADJ").forEach(id => {
+    const target = adjectiveTargets.get(id) ?? closestToken(id, nounLikeTokenIds(exercise));
+    add("ADJ_NOUN", id, target);
+  });
+
+  return links;
+}
+
+function canonicalLink(link) {
+  return `${link.type}:${link.from}:${link.to}`;
+}
+
+function linksEqual(actual, expected) {
+  const actualSet = new Set(actual.map(canonicalLink));
+  const expectedSet = new Set(expected.map(canonicalLink));
+  return setsEqual(actualSet, expectedSet);
+}
+
+function linkText(exercise, link) {
+  const type = LINK_MAP[link.type] ? LINK_MAP[link.type].label : link.type;
+  return `${type}: ${tokenText(exercise, link.from)} -> ${tokenText(exercise, link.to)}`;
+}
+
+function correctDiagramShapeKey(exercise) {
+  const keys = new Set(expectedDiagramSpec(exercise).pieces.map(piece => piece.key));
+  if (keys.has("subjectB")) return keys.has("object") ? "compound-subject-do" : "compound-subject";
+  if (keys.has("verbB")) return "compound-verb";
+  if (keys.has("objectB")) return "compound-object";
+  if (keys.has("paB") || keys.has("pnB")) return "compound-complement";
+  if (keys.has("object")) return "av-do";
+  if (keys.has("pn") || keys.has("pa") || keys.has("paA") || keys.has("pnA")) return "lv-comp";
+  return "simple";
+}
+
+function diagramChoiceKeys(exercise) {
+  const correct = correctDiagramShapeKey(exercise);
+  const distractorsByShape = {
+    simple: ["av-do", "lv-comp", "compound-verb"],
+    "av-do": ["lv-comp", "simple", "compound-subject-do"],
+    "lv-comp": ["av-do", "simple", "compound-complement"],
+    "compound-subject": ["simple", "av-do", "compound-verb"],
+    "compound-subject-do": ["av-do", "compound-verb", "lv-comp"],
+    "compound-verb": ["simple", "av-do", "compound-subject-do"],
+    "compound-object": ["av-do", "compound-subject-do", "lv-comp"],
+    "compound-complement": ["lv-comp", "av-do", "compound-verb"]
+  };
+  const options = [correct, ...(distractorsByShape[correct] || ["simple", "av-do", "lv-comp"])]
+    .filter((key, index, list) => list.indexOf(key) === index)
+    .slice(0, 4);
+  const number = Number(exercise.id.replace(/\D/g, "")) || 0;
+  const offset = number % options.length;
+  return [...options.slice(offset), ...options.slice(0, offset)];
+}
+
+function headKeysForModifierChoices(exercise, shapeKey = correctDiagramShapeKey(exercise)) {
+  const model = layoutGuidedDiagram(exercise, shapeKey, { includeModifiers: false });
+  return model.targets
+    .filter(target => ["subject", "verb", "object", "complement", "compound", "prepObject"].includes(target.type))
+    .map(target => target.key);
+}
+
+function correctModifierProfile(exercise) {
+  const profile = {};
+  expectedDiagramSpec(exercise).connections
+    .forEach(connection => {
+      if (connection.type !== "modifier" && connection.type !== "modifierConjunction") return;
+      if (!profile[connection.to]) profile[connection.to] = { count: 0, compounds: 0 };
+      if (connection.type === "modifier") profile[connection.to].count++;
+      if (connection.type === "modifierConjunction") profile[connection.to].compounds++;
+    });
+  return profile;
+}
+
+function normalizeModifierProfile(profile) {
+  const normalized = {};
+  Object.entries(profile || {}).forEach(([key, value]) => {
+    const count = typeof value === "number" ? value : Number(value.count || 0);
+    const compounds = typeof value === "number" ? 0 : Number(value.compounds || 0);
+    const safeCount = Number.isFinite(count) ? Math.max(0, count) : 0;
+    const safeCompounds = Number.isFinite(compounds) ? Math.min(Math.max(0, compounds), Math.floor(safeCount / 2)) : 0;
+    if (safeCount > 0 || safeCompounds > 0) normalized[key] = { count: safeCount, compounds: safeCompounds };
+  });
+  return normalized;
+}
+
+function cloneModifierProfile(profile) {
+  const normalized = normalizeModifierProfile(profile);
+  return Object.fromEntries(Object.entries(normalized).map(([key, value]) => [key, { ...value }]));
+}
+
+function modifierProfileKey(profile) {
+  const entries = Object.entries(normalizeModifierProfile(profile))
+    .filter(([, entry]) => entry.count > 0 || entry.compounds > 0)
+    .sort(([a], [b]) => a.localeCompare(b));
+  return entries.length ? entries.map(([key, entry]) => `${key}:${entry.count}:${entry.compounds}`).join("|") : "none";
+}
+
+function profileFromKey(key) {
+  if (!key || key === "none") return {};
+  const profile = {};
+  key.split("|").forEach(part => {
+    const [targetKey, rawCount, rawCompounds] = part.split(":");
+    const count = Number(rawCount);
+    const compounds = Number(rawCompounds || 0);
+    if (targetKey && Number.isInteger(count) && count > 0) {
+      profile[targetKey] = {
+        count,
+        compounds: Number.isInteger(compounds) ? compounds : 0
+      };
+    }
+  });
+  return normalizeModifierProfile(profile);
+}
+
+function correctModifierKey(exercise) {
+  return modifierProfileKey(correctModifierProfile(exercise));
+}
+
+function modifierChoiceKeys(exercise, shapeKey) {
+  const heads = headKeysForModifierChoices(exercise, shapeKey);
+  if (!shapeKey || !heads.length) return [];
+  const headSet = new Set(heads);
+  const correctProfile = {};
+  Object.entries(correctModifierProfile(exercise)).forEach(([key, entry]) => {
+    if (headSet.has(key)) correctProfile[key] = { ...entry };
+  });
+  const options = [correctProfile];
+  const pushProfile = profile => {
+    const normalized = normalizeModifierProfile(profile);
+    const key = modifierProfileKey(normalized);
+    if (!options.some(item => modifierProfileKey(item) === key)) options.push(profile);
+  };
+  pushProfile({});
+  const profileEntries = Object.entries(normalizeModifierProfile(correctProfile));
+  if (profileEntries.length && heads.length) {
+    const shifted = {};
+    const [firstHead, entry] = profileEntries[0];
+    const alternateHead = heads.find(key => key !== firstHead) || firstHead;
+    shifted[alternateHead] = { ...entry };
+    pushProfile(shifted);
+  }
+  const unjoined = cloneModifierProfile(correctProfile);
+  const compoundHead = Object.keys(unjoined).find(key => unjoined[key].compounds > 0);
+  if (compoundHead) {
+    unjoined[compoundHead].compounds = 0;
+    pushProfile(unjoined);
+  }
+  const extra = cloneModifierProfile(correctProfile);
+  const extraHead = heads[0];
+  if (extraHead) {
+    if (!extra[extraHead]) extra[extraHead] = { count: 0, compounds: 0 };
+    extra[extraHead].count++;
+  }
+  pushProfile(extra);
+  const reduced = cloneModifierProfile(correctProfile);
+  const reducible = Object.keys(reduced).find(key => reduced[key].count > 0);
+  if (reducible) {
+    reduced[reducible].count -= 1;
+    reduced[reducible].compounds = Math.min(reduced[reducible].compounds, Math.floor(reduced[reducible].count / 2));
+    if (reduced[reducible].count === 0 && reduced[reducible].compounds === 0) delete reduced[reducible];
+    pushProfile(reduced);
+  }
+  while (options.length < 4 && heads[options.length - 1]) {
+    pushProfile({ [heads[options.length - 1]]: { count: 1, compounds: 0 } });
+  }
+  const keys = options.map(modifierProfileKey).slice(0, 4);
+  const number = Number(exercise.id.replace(/\D/g, "")) || 0;
+  const offset = keys.length ? number % keys.length : 0;
+  return [...keys.slice(offset), ...keys.slice(0, offset)];
+}
+
+function modifierPiecesForProfile(profile) {
+  const pieces = [];
+  const connections = [];
+  Object.entries(normalizeModifierProfile(profile)).forEach(([targetKey, entry]) => {
+    let standaloneCount = entry.count;
+    for (let index = 0; index < entry.compounds; index++) {
+      const groupKey = `modChoice-${targetKey}-compound-${index}`;
+      pieces.push({ key: `${groupKey}A`, type: "modifier", tokens: [], capacity: 1, label: groupKey, compoundGroup: groupKey, compoundOrder: 0 });
+      pieces.push({ key: `${groupKey}Conj`, type: "modifierConjunction", tokens: [], capacity: 1, label: groupKey, compoundGroup: groupKey });
+      pieces.push({ key: `${groupKey}B`, type: "modifier", tokens: [], capacity: 1, label: groupKey, compoundGroup: groupKey, compoundOrder: 1 });
+      connections.push({ from: `${groupKey}A`, to: targetKey, type: "modifier" });
+      connections.push({ from: `${groupKey}B`, to: targetKey, type: "modifier" });
+      connections.push({ from: `${groupKey}Conj`, to: targetKey, type: "modifierConjunction" });
+      standaloneCount -= 2;
+    }
+    for (let index = 0; index < standaloneCount; index++) {
+      const key = `modChoice-${targetKey}-${index}`;
+      pieces.push({ key, type: "modifier", tokens: [], capacity: 1, label: key });
+      connections.push({ from: key, to: targetKey, type: "modifier" });
+    }
+  });
+  return { pieces, connections };
+}
+
+function diagramSpecForShape(exercise, shapeKey) {
+  const expected = expectedDiagramSpec(exercise);
+  const correct = correctDiagramShapeKey(exercise);
+  if (!shapeKey) return { pieces: [], connections: [] };
+  if (shapeKey === correct) return expected;
+
+  const expectedByKey = new Map(expected.pieces.map(piece => [piece.key, piece]));
+  const pieces = [];
+  const connections = [];
+  const addPiece = (key, type) => {
+    const expectedPiece = expectedByKey.get(key);
+    pieces.push({
+      key,
+      type,
+      tokens: expectedPiece ? [...expectedPiece.tokens] : [],
+      capacity: expectedPiece ? Math.max(1, expectedPiece.tokens.length) : 1,
+      label: key
+    });
+  };
+  const addConnection = (from, to, type) => connections.push({ from, to, type });
+
+  if (shapeKey === "simple") {
+    addPiece("subject", "subject");
+    addPiece("verb", "verb");
+    addConnection("subject", "verb", "baseline");
+  } else if (shapeKey === "av-do") {
+    addPiece("subject", "subject");
+    addPiece("verb", "verb");
+    addPiece("object", "object");
+    addConnection("subject", "verb", "baseline");
+    addConnection("verb", "object", "directObject");
+  } else if (shapeKey === "lv-comp") {
+    addPiece("subject", "subject");
+    addPiece("verb", "verb");
+    addPiece(expectedByKey.has("pn") || expectedByKey.has("pnA") ? "pn" : "pa", "complement");
+    addConnection("subject", "verb", "baseline");
+    addConnection("verb", expectedByKey.has("pn") || expectedByKey.has("pnA") ? "pn" : "pa", "complement");
+  } else if (shapeKey === "compound-subject" || shapeKey === "compound-subject-do") {
+    addPiece("subjectA", "subject");
+    addPiece("subjectConj", "conjunction");
+    addPiece("subjectB", "compound");
+    addPiece("verb", "verb");
+    addConnection("subjectA", "verb", "baseline");
+    if (shapeKey === "compound-subject-do") {
+      addPiece("object", "object");
+      addConnection("verb", "object", "directObject");
+    }
+  } else if (shapeKey === "compound-verb") {
+    addPiece("subject", "subject");
+    addPiece("verbA", "verb");
+    addPiece("verbConj", "conjunction");
+    addPiece("verbB", "compound");
+  } else if (shapeKey === "compound-object") {
+    addPiece("subject", "subject");
+    addPiece("verb", "verb");
+    addPiece("objectA", "object");
+    addPiece("objectConj", "conjunction");
+    addPiece("objectB", "compound");
+    addConnection("subject", "verb", "baseline");
+    addConnection("verb", "objectA", "directObject");
+  } else if (shapeKey === "compound-complement") {
+    const usesPn = expectedByKey.has("pnA") || expectedByKey.has("pnB");
+    const compA = usesPn ? "pnA" : "paA";
+    const compConj = usesPn ? "pnConj" : "paConj";
+    const compB = usesPn ? "pnB" : "paB";
+    addPiece("subject", "subject");
+    addPiece("verb", "verb");
+    addPiece(compA, "complement");
+    addPiece(compConj, "conjunction");
+    addPiece(compB, "compound");
+    addConnection("subject", "verb", "baseline");
+    addConnection("verb", compA, "complement");
+  }
+
+  return { pieces, connections };
+}
+
+function expectedDiagramSpec(exercise) {
+  const pieces = [];
+  const connections = [];
+  const byKey = new Map();
+  const addPiece = (key, type, tokens, label, extra = {}) => {
+    if (!tokens || tokens.length === 0) return null;
+    const piece = { key, type, tokens: [...tokens], label: label || key, ...extra };
+    pieces.push(piece);
+    byKey.set(key, piece);
+    return piece;
+  };
+  const addConnection = (from, to, type) => {
+    if (!byKey.has(from) || !byKey.has(to)) return;
+    connections.push({ from, to, type });
+  };
+
+  const addSlotPiece = (slotId, type, key = slotId) => {
+    const slot = slotById(exercise, slotId);
+    if (!slot) return null;
+    return addPiece(key, type, slot.expected, slot.label);
+  };
+
+  addSlotPiece("subject", "subject");
+  addSlotPiece("subjectA", "subject");
+  addSlotPiece("subjectB", "compound");
+  addSlotPiece("verb", "verb");
+  addSlotPiece("verbA", "verb");
+  addSlotPiece("verbB", "compound");
+  addSlotPiece("object", "object");
+  addSlotPiece("objectA", "object");
+  addSlotPiece("objectB", "compound");
+  addSlotPiece("pn", "complement");
+  addSlotPiece("pnA", "complement");
+  addSlotPiece("pnB", "compound");
+  addSlotPiece("pa", "complement");
+  addSlotPiece("paA", "complement");
+  addSlotPiece("paB", "compound");
+  addSlotPiece("subjectConj", "conjunction");
+  addSlotPiece("verbConj", "conjunction");
+  addSlotPiece("objectConj", "conjunction");
+  addSlotPiece("pnConj", "conjunction");
+  addSlotPiece("paConj", "conjunction");
+
+  const mainSubjectKey = byKey.has("subject") ? "subject" : "subjectA";
+  const mainVerbKey = byKey.has("verb") ? "verb" : "verbA";
+  if (byKey.has(mainSubjectKey) && byKey.has(mainVerbKey)) addConnection(mainSubjectKey, mainVerbKey, "baseline");
+  if (byKey.has("object")) addConnection(mainVerbKey, "object", "directObject");
+  if (byKey.has("objectA")) addConnection(mainVerbKey, "objectA", "directObject");
+  ["pn", "pnA", "pa", "paA"].forEach(key => {
+    if (byKey.has(key)) addConnection(mainVerbKey, key, "complement");
+  });
+  if (byKey.has("subjectB")) addConnection("subjectB", "subjectA", "compound");
+  if (byKey.has("subjectConj")) addConnection("subjectConj", "subjectA", "conjunction");
+  if (byKey.has("verbB")) addConnection("verbB", "verbA", "compound");
+  if (byKey.has("verbConj")) addConnection("verbConj", "verbA", "conjunction");
+  if (byKey.has("objectB")) addConnection("objectB", "objectA", "compound");
+  if (byKey.has("objectConj")) addConnection("objectConj", "objectA", "conjunction");
+  if (byKey.has("pnB")) addConnection("pnB", "pnA", "compound");
+  if (byKey.has("pnConj")) addConnection("pnConj", "pnA", "conjunction");
+  if (byKey.has("paB")) addConnection("paB", "paA", "compound");
+  if (byKey.has("paConj")) addConnection("paConj", "paA", "conjunction");
+
+  if (!shouldIgnorePrepPhrases()) {
+    prepPhraseDescriptors(exercise, byKey).forEach(phrase => {
+      const prepKey = `prep-${phrase.prepToken}`;
+      const objectKey = `prepObj-${phrase.prepToken}`;
+      addPiece(prepKey, "preposition", [phrase.prepToken], "Preposition");
+      addPiece(objectKey, "prepObject", [phrase.objectToken], "Object of preposition");
+      addConnection(prepKey, phrase.targetKey, "preposition");
+      addConnection(objectKey, prepKey, "prepObject");
+      phrase.objectModifiers.forEach(tokenId => {
+        const key = `prepObjMods-${phrase.prepToken}-${tokenId}`;
+        addPiece(key, "modifier", [tokenId], "Object modifier");
+        addConnection(key, objectKey, "modifier");
+      });
+    });
+  }
+
+  const addModifierPieces = (slotId, targetKey) => {
+    const slot = slotById(exercise, slotId);
+    if (!slot || !byKey.has(targetKey)) return;
+    slot.expected.forEach(tokenId => {
+      const key = `${slotId}-${tokenId}`;
+      addPiece(key, "modifier", [tokenId], slot.label);
+      addConnection(key, targetKey, "modifier");
+    });
+  };
+  addModifierPieces("objectMods", byKey.has("object") ? "object" : "objectA");
+  addModifierPieces("pnMods", byKey.has("pn") ? "pn" : byKey.has("pnA") ? "pnA" : byKey.has("pa") ? "pa" : "paA");
+  addModifierPieces("verbMods", mainVerbKey);
+
+  compoundModifierGroups(exercise).forEach((group, index) => {
+    const targetKey = diagramTargetKeyForCompoundModifier(group, byKey);
+    if (!targetKey || !byKey.has(targetKey) || !group.modifiers || group.modifiers.length < 2 || group.conjunction === undefined) return;
+    const groupKey = group.id || `compoundMod-${index}`;
+    const [leftToken, rightToken] = group.modifiers;
+    const baseLabel = group.label || "Compound modifier";
+    addPiece(`${groupKey}A`, "modifier", [leftToken], baseLabel, { compoundGroup: groupKey, compoundOrder: 0 });
+    addPiece(`${groupKey}Conj`, "modifierConjunction", [group.conjunction], "Modifier connector", { compoundGroup: groupKey });
+    addPiece(`${groupKey}B`, "modifier", [rightToken], baseLabel, { compoundGroup: groupKey, compoundOrder: 1 });
+    addConnection(`${groupKey}A`, targetKey, "modifier");
+    addConnection(`${groupKey}B`, targetKey, "modifier");
+    addConnection(`${groupKey}Conj`, targetKey, "modifierConjunction");
+  });
+
+  const subjectModSlot = slotById(exercise, "subjectMods");
+  if (subjectModSlot) {
+    subjectModSlot.expected.forEach(tokenId => {
+      const targetToken = targetForModifierSlot(exercise, "subjectMods", tokenId);
+      const targetKey = byKey.has("subjectB") && (slotById(exercise, "subjectB") || {}).expected?.includes(targetToken)
+        ? "subjectB"
+        : mainSubjectKey;
+      const key = `subjectMods-${tokenId}`;
+      addPiece(key, "modifier", [tokenId], "Subject modifier");
+      addConnection(key, targetKey, "modifier");
+    });
+  }
+
+  return { pieces, connections };
+}
+
+function render() {
+  renderProgress();
+  renderExerciseSelect();
+  renderMeta();
+  document.getElementById("showAnswerBtn").textContent = state.answerOpen ? "Hide Answer" : "Show Answer";
+  renderSentence();
+  renderRoleToolbar();
+  renderPatterns();
+  renderLinkControls();
+  renderPrepPhraseOption();
+  renderDiagram();
+  renderFeedback();
+  renderProgressHistory();
+  renderAnswer();
+  document.getElementById("prevBtn").disabled = state.index === 0;
+  document.getElementById("nextBtn").disabled = state.index === EXERCISES.length - 1;
+}
+
+function renderPrepPhraseOption() {
+  document.getElementById("ignorePrepPhrasesToggle").checked = shouldIgnorePrepPhrases();
+}
+
+function renderProgress() {
+  const done = EXERCISES.filter(ex => progress.completed[ex.id]).length;
+  const total = EXERCISES.length;
+  document.getElementById("completeText").textContent = `${done}/${total} complete`;
+  document.getElementById("completeBar").style.width = `${total ? done / total * 100 : 0}%`;
+}
+
+function renderExerciseSelect() {
+  const select = document.getElementById("exerciseSelect");
+  if (select.options.length !== EXERCISES.length) {
+    select.innerHTML = EXERCISES.map((ex, index) => {
+      const done = progress.completed[ex.id] ? " [done]" : "";
+      return `<option value="${index}">Sentence ${index + 1} of ${EXERCISES.length}${done}</option>`;
+    }).join("");
+  } else {
+    EXERCISES.forEach((ex, index) => {
+      select.options[index].textContent = `Sentence ${index + 1} of ${EXERCISES.length}${progress.completed[ex.id] ? " [done]" : ""}`;
+      select.options[index].disabled = false;
+    });
+  }
+  select.value = String(state.index);
+}
+
+function renderMeta() {
+  const ex = getExercise();
+  const attempts = progress.attempts[ex.id] || 0;
+  const complete = progress.completed[ex.id] ? `<span class="badge complete">Complete</span>` : "";
+  document.getElementById("exerciseMeta").innerHTML =
+    `${complete}<span class="badge">Sentence ${state.index + 1}/${EXERCISES.length}</span><span>${attempts} checks</span>`;
+}
+
+function renderSentence() {
+  const ex = getExercise();
+  const tokens = ex.tokens.map((token, id) => {
+    const text = tokenText(ex, id);
+    const assignedRoles = ROLES
+      .filter(role => state.marking.roles[role.id].has(id))
+      .map(role => `<span class="chip ${role.className}">${role.id}</span>`)
+      .join("");
+    const active = state.marking.roles[state.selectedRole] && state.marking.roles[state.selectedRole].has(id);
+    const virtual = tokenIsVirtual(ex, id) ? " virtual" : "";
+    const linkActive = state.markMode === "links" && state.linkSource === id;
+    return `<button class="word-token${virtual}${active || linkActive ? " active-role" : ""}" type="button" data-token="${id}">
+      <span class="word-text">${escapeHtml(text)}</span>
+      <span class="role-chips">${assignedRoles}</span>
+    </button>`;
+  }).join("");
+  document.getElementById("sentenceTokens").innerHTML = tokens;
+  document.querySelectorAll(".word-token").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tokenId = Number(btn.dataset.token);
+      if (state.markMode === "links") handleLinkTokenClick(tokenId);
+      else toggleTokenRole(tokenId);
+    });
+  });
+}
+
+function renderRoleToolbar() {
+  const toolbar = document.getElementById("roleToolbar");
+  toolbar.innerHTML = ROLES.map(role => `
+    <button class="role-btn ${state.selectedRole === role.id ? "selected" : ""}" type="button" data-role="${role.id}">
+      <strong>${role.id}</strong><span>${escapeHtml(role.label)}</span>
+    </button>
+  `).join("") + `
+    <button class="role-btn ${state.selectedRole === "CLEAR" ? "selected" : ""}" type="button" data-role="CLEAR">
+      <strong>Clear</strong><span>Token roles</span>
+    </button>
+  `;
+  toolbar.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.selectedRole = btn.dataset.role;
+      renderRoleToolbar();
+      renderSentence();
+    });
+  });
+}
+
+function renderPatterns() {
+  const wrap = document.getElementById("patternButtons");
+  wrap.innerHTML = PATTERNS.map(pattern => `
+    <button class="pattern-btn ${state.marking.pattern === pattern ? "selected" : ""}" type="button" data-pattern="${pattern}">
+      ${escapeHtml(pattern)}
+    </button>
+  `).join("");
+  wrap.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.marking.pattern = btn.dataset.pattern;
+      renderPatterns();
+    });
+  });
+}
+
+function renderLinkControls() {
+  const ex = getExercise();
+  document.getElementById("roleModeBtn").className = `btn ${state.markMode === "roles" ? "primary" : ""}`;
+  document.getElementById("linkModeBtn").className = `btn ${state.markMode === "links" ? "primary" : ""}`;
+
+  const select = document.getElementById("linkTypeSelect");
+  if (select.options.length !== LINK_TYPES.length) {
+    select.innerHTML = LINK_TYPES.map(type => `<option value="${type.id}">${escapeHtml(type.label)}</option>`).join("");
+  }
+  select.value = state.linkType;
+
+  const sourceText = state.linkSource === null ? "click a source word" : `source: ${tokenText(ex, state.linkSource)}`;
+  document.getElementById("linkStatus").textContent =
+    state.markMode === "links"
+      ? `${LINK_MAP[state.linkType].label}: ${sourceText}, then click its target.`
+      : "Switch to Link Words to connect modifiers, objects, and complements.";
+
+  const list = document.getElementById("linkList");
+  if (!state.marking.links.length) {
+    list.innerHTML = `<span class="link-status">No links yet.</span>`;
+    return;
+  }
+  list.innerHTML = state.marking.links.map((link, index) => `
+    <span class="link-pill">
+      ${escapeHtml(linkText(ex, link))}
+      <button class="link-remove" type="button" data-link-index="${index}" aria-label="Remove link">x</button>
+    </span>
+  `).join("");
+  list.querySelectorAll(".link-remove").forEach(btn => {
+    btn.addEventListener("click", event => {
+      event.stopPropagation();
+      state.marking.links.splice(Number(btn.dataset.linkIndex), 1);
+      state.markingCorrect = false;
+      renderLinkControls();
+    });
+  });
+}
+
+function handleLinkTokenClick(tokenId) {
+  if (state.linkSource === null) {
+    state.linkSource = tokenId;
+    render();
+    return;
+  }
+  if (state.linkSource === tokenId) {
+    state.linkSource = null;
+    render();
+    return;
+  }
+  const link = { type: state.linkType, from: state.linkSource, to: tokenId };
+  const key = canonicalLink(link);
+  const existingIndex = state.marking.links.findIndex(item => canonicalLink(item) === key);
+  if (existingIndex >= 0) state.marking.links.splice(existingIndex, 1);
+  else state.marking.links.push(link);
+  state.linkSource = null;
+  state.markingCorrect = false;
+  render();
+}
+
+function renderDiagram() {
+  const ex = getExercise();
+  renderDiagramChoices(ex);
+  renderModifierChoices(ex);
+  const requiredIds = allDiagramTokenIds(ex);
+  const bankIds = requiredIds.filter(id => assignedPieceFor(id) === null);
+  const bank = document.getElementById("wordBank");
+  bank.innerHTML = bankIds.map(id => renderCard(ex, id)).join("");
+  bank.querySelectorAll(".word-card").forEach(card => {
+    card.addEventListener("click", event => {
+      event.stopPropagation();
+      const id = Number(card.dataset.token);
+      state.selectedDiagramToken = state.selectedDiagramToken === id ? null : id;
+      if (state.selectedDiagramToken === null) state.hoverTargetKey = null;
+      renderDiagram();
+    });
+    card.addEventListener("dragstart", event => {
+      const id = Number(card.dataset.token);
+      state.dragTokenId = id;
+      event.dataTransfer.setData("text/plain", String(id));
+    });
+    card.addEventListener("dragend", () => {
+      state.dragTokenId = null;
+      state.hoverTargetKey = null;
+      renderDiagram();
+    });
+  });
+
+  renderCanvas();
+}
+
+function renderDiagramChoices(exercise) {
+  const choices = diagramChoiceKeys(exercise);
+  const wrap = document.getElementById("diagramChoices");
+  wrap.innerHTML = choices.map((key, index) => {
+    const selected = state.selectedDiagramKey === key ? " selected" : "";
+    return `<button class="diagram-choice${selected}" type="button" data-diagram-key="${key}" aria-label="Diagram option ${index + 1}">
+      <svg viewBox="0 0 760 260" role="img" aria-hidden="true">${renderGuidedDiagramContent(exercise, {}, false, key, { includeModifiers: false })}</svg>
+    </button>`;
+  }).join("");
+  wrap.querySelectorAll(".diagram-choice").forEach(btn => {
+    btn.addEventListener("click", () => selectDiagramChoice(btn.dataset.diagramKey));
+  });
+}
+
+function renderModifierChoices(exercise) {
+  const wrap = document.getElementById("modifierChoices");
+  if (!state.selectedDiagramKey) {
+    wrap.innerHTML = "";
+    return;
+  }
+  const choices = modifierChoiceKeys(exercise, state.selectedDiagramKey);
+  wrap.innerHTML = choices.map((key, index) => {
+    const selected = state.selectedModifierKey === key ? " selected" : "";
+    return `<button class="diagram-choice${selected}" type="button" data-modifier-key="${key}" aria-label="Modifier pattern option ${index + 1}">
+      <svg viewBox="0 0 760 260" role="img" aria-hidden="true">${renderGuidedDiagramContent(exercise, {}, false, state.selectedDiagramKey, { modifierKey: key })}</svg>
+    </button>`;
+  }).join("");
+  wrap.querySelectorAll(".diagram-choice").forEach(btn => {
+    btn.addEventListener("click", () => selectModifierChoice(btn.dataset.modifierKey));
+  });
+}
+
+function renderCard(ex, tokenId) {
+  const selected = state.selectedDiagramToken === tokenId ? " selected" : "";
+  return `<button class="word-card${selected}" type="button" draggable="true" data-token="${tokenId}">${escapeHtml(tokenText(ex, tokenId))}</button>`;
+}
+
+function renderCanvas() {
+  const svg = document.getElementById("diagramCanvas");
+  if (!state.selectedDiagramKey) {
+    svg.innerHTML = `<text class="diagram-text diagram-notice" x="380" y="210">Choose a diagram shape first.</text>`;
+    svg.onclick = null;
+    svg.onpointermove = null;
+    svg.onpointerleave = null;
+    svg.ondragover = null;
+    svg.ondrop = null;
+    return;
+  }
+  if (!state.selectedModifierKey) {
+    svg.innerHTML = `<text class="diagram-text diagram-notice" x="380" y="210">Choose a modifier pattern.</text>`;
+    svg.onclick = null;
+    svg.onpointermove = null;
+    svg.onpointerleave = null;
+    svg.ondragover = null;
+    svg.ondrop = null;
+    return;
+  }
+  svg.innerHTML = renderGuidedDiagramContent(getExercise(), state.diagram.assignments, true, state.selectedDiagramKey, { modifierKey: state.selectedModifierKey });
+  svg.onpointermove = event => updateHoverTargetFromEvent(event);
+  svg.onpointerleave = () => clearHoverTarget();
+  svg.onclick = event => {
+    if (state.selectedDiagramToken === null) return;
+    const targetKey = state.hoverTargetKey || nearestTargetKeyFromEvent(event);
+    if (targetKey) assignTokenToTarget(state.selectedDiagramToken, targetKey);
+  };
+  svg.ondragover = event => {
+    event.preventDefault();
+    updateHoverTargetFromEvent(event);
+  };
+  svg.ondrop = event => {
+    event.preventDefault();
+    const tokenId = Number(event.dataTransfer.getData("text/plain"));
+    const targetKey = state.hoverTargetKey || nearestTargetKeyFromEvent(event);
+    if (Number.isInteger(tokenId) && targetKey) assignTokenToTarget(tokenId, targetKey);
+  };
+  svg.querySelectorAll(".diagram-target").forEach(group => {
+    group.addEventListener("click", event => {
+      event.stopPropagation();
+      if (state.selectedDiagramToken !== null) {
+        const targetKey = state.hoverTargetKey || nearestTargetKeyFromEvent(event) || group.dataset.targetKey;
+        assignTokenToTarget(state.selectedDiagramToken, targetKey);
+      } else {
+        handleTargetClick(group.dataset.targetKey);
+      }
+    });
+    group.addEventListener("dragover", event => {
+      event.preventDefault();
+      updateHoverTargetFromEvent(event);
+    });
+    group.addEventListener("drop", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const tokenId = Number(event.dataTransfer.getData("text/plain"));
+      const targetKey = state.hoverTargetKey || nearestTargetKeyFromEvent(event) || group.dataset.targetKey;
+      if (Number.isInteger(tokenId) && targetKey) assignTokenToTarget(tokenId, targetKey);
+    });
+  });
+}
+
+function placementPreviewActive() {
+  return state.selectedDiagramToken !== null || state.dragTokenId !== null;
+}
+
+function updateHoverTargetFromEvent(event) {
+  const targetKey = placementPreviewActive() ? nearestTargetKeyFromEvent(event) : null;
+  if (targetKey === state.hoverTargetKey) return;
+  state.hoverTargetKey = targetKey;
+  renderCanvas();
+}
+
+function clearHoverTarget() {
+  if (state.hoverTargetKey === null) return;
+  state.hoverTargetKey = null;
+  renderCanvas();
+}
+
+function renderGuidedDiagramContent(exercise, assignments, interactive = false, shapeKey = correctDiagramShapeKey(exercise), options = {}) {
+  const model = layoutGuidedDiagram(exercise, shapeKey, options);
+  const dividers = model.dividers.map(renderDiagramDivider).join("");
+  const branches = model.branches.map(branch =>
+    `<path class="diagram-branch" d="M${branch.x1},${branch.y1} L${branch.x2},${branch.y2}"></path>`
+  ).join("");
+  const guides = model.guides.map(guide =>
+    `<path class="diagram-conj-guide" d="M${guide.x1},${guide.y1} L${guide.x2},${guide.y2}"></path>`
+  ).join("");
+  const targets = model.targets.map(target => renderDiagramTarget(exercise, target, assignments, interactive)).join("");
+  return `${branches}${guides}${dividers}${targets}`;
+}
+
+function layoutGuidedDiagram(exercise, shapeKey = correctDiagramShapeKey(exercise), options = {}) {
+  let spec = diagramSpecForShape(exercise, shapeKey);
+  const isCorrectShape = shapeKey === correctDiagramShapeKey(exercise);
+  if (isCorrectShape && options.modifierKey) {
+    const basePieces = spec.pieces.filter(piece => piece.type !== "modifier" && piece.type !== "modifierConjunction");
+    const baseConnections = spec.connections.filter(connection => connection.type !== "modifier" && connection.type !== "modifierConjunction");
+    if (options.modifierKey === correctModifierKey(exercise)) {
+      spec = {
+        pieces: [...basePieces, ...spec.pieces.filter(piece => piece.type === "modifier" || piece.type === "modifierConjunction")],
+        connections: [...baseConnections, ...spec.connections.filter(connection => connection.type === "modifier" || connection.type === "modifierConjunction")]
+      };
+    } else {
+      const modifierSpec = modifierPiecesForProfile(profileFromKey(options.modifierKey));
+      spec = {
+        pieces: [...basePieces, ...modifierSpec.pieces],
+        connections: [...baseConnections, ...modifierSpec.connections]
+      };
+    }
+  }
+  const byKey = new Map(spec.pieces.map(piece => [piece.key, piece]));
+  const targets = [];
+  const targetMap = new Map();
+  const dividers = [];
+  const branches = [];
+  const guides = [];
+  const baseY = 120;
+  const subjectDividerX = 255;
+  const objectDividerX = 425;
+  const complementStartX = 445;
+
+  const hasSubjectCompound = byKey.has("subjectB");
+  const hasVerbCompound = byKey.has("verbB");
+  const hasObject = byKey.has("object") || byKey.has("objectA");
+  const hasObjectCompound = byKey.has("objectB");
+  const hasComplement = byKey.has("pn") || byKey.has("pnA") || byKey.has("pa") || byKey.has("paA");
+  const hasComplementCompound = byKey.has("paB") || byKey.has("pnB");
+  const mainSubjectKey = byKey.has("subject") ? "subject" : "subjectA";
+  const mainVerbKey = byKey.has("verb") ? "verb" : "verbA";
+
+  const addTarget = (key, shape, x1, y1, x2, y2, placeholder, targetOptions = {}) => {
+    const piece = byKey.get(key);
+    if (!piece) return null;
+    const target = {
+      ...piece,
+      shape,
+      x1,
+      y1,
+      x2,
+      y2,
+      placeholder,
+      capacity: Math.max(1, piece.capacity || piece.tokens.length || 1),
+      textX: targetOptions.textX ?? (x1 + x2) / 2,
+      textY: targetOptions.textY ?? y1 - 16,
+      rotation: targetOptions.rotation || 0,
+      width: targetOptions.width || 82,
+      height: targetOptions.height || 30
+    };
+    targets.push(target);
+    targetMap.set(key, target);
+    return target;
+  };
+
+  const addBranch = (x1, y1, x2, y2) => branches.push({ x1, y1, x2, y2 });
+  const addConjunctionGuide = (x1, y1, x2, y2) => guides.push({ x1, y1, x2, y2 });
+
+  dividers.push({
+    shape: "vertical",
+    x1: subjectDividerX,
+    y1: baseY - (hasSubjectCompound || hasVerbCompound ? 82 : 48),
+    x2: subjectDividerX,
+    y2: baseY + (hasSubjectCompound || hasVerbCompound ? 86 : 0)
+  });
+
+  if (hasSubjectCompound) {
+    addTarget("subjectA", "line", 95, baseY - 42, 225, baseY - 42, "subject");
+    addTarget("subjectB", "line", 95, baseY + 48, 225, baseY + 48, "subject");
+    addBranch(225, baseY - 42, subjectDividerX, baseY);
+    addBranch(225, baseY + 48, subjectDividerX, baseY);
+    addConjunctionGuide(218, baseY - 42, 218, baseY + 48);
+    addTarget("subjectConj", "conjunction", 218, baseY + 3, 0, 0, "and", { textX: 218, textY: baseY + 3, width: 58, height: 28 });
+  } else {
+    addTarget(mainSubjectKey, "line", 95, baseY, subjectDividerX, baseY, "subject");
+  }
+
+  if (hasVerbCompound) {
+    addTarget("verbA", "line", 292, baseY - 42, 540, baseY - 42, "verb");
+    addTarget("verbB", "line", 292, baseY + 48, 540, baseY + 48, "verb");
+    addBranch(subjectDividerX, baseY, 292, baseY - 42);
+    addBranch(subjectDividerX, baseY, 292, baseY + 48);
+    addConjunctionGuide(278, baseY - 42, 278, baseY + 48);
+    addTarget("verbConj", "conjunction", 278, baseY + 3, 0, 0, "and", { textX: 278, textY: baseY + 3, width: 58, height: 28 });
+  } else {
+    const verbEnd = hasObject || hasComplement ? objectDividerX : 585;
+    addTarget(mainVerbKey, "line", subjectDividerX, baseY, verbEnd, baseY, "verb");
+  }
+
+  if (hasObject) {
+    dividers.push({ shape: "vertical", x1: objectDividerX, y1: baseY - 48, x2: objectDividerX, y2: baseY });
+    if (hasObjectCompound) {
+      addTarget("objectA", "line", objectDividerX + 25, baseY - 42, 650, baseY - 42, "");
+      addTarget("objectB", "line", objectDividerX + 25, baseY + 48, 650, baseY + 48, "");
+      addBranch(objectDividerX, baseY, objectDividerX + 25, baseY - 42);
+      addBranch(objectDividerX, baseY, objectDividerX + 25, baseY + 48);
+      addConjunctionGuide(objectDividerX + 8, baseY - 42, objectDividerX + 8, baseY + 48);
+      addTarget("objectConj", "conjunction", objectDividerX + 8, baseY + 3, 0, 0, "", {
+        textX: objectDividerX + 8,
+        textY: baseY + 3,
+        width: 58,
+        height: 28
+      });
+    } else {
+      addTarget("object", "line", objectDividerX, baseY, 650, baseY, "");
+    }
+  }
+
+  if (hasComplement) {
+    dividers.push({ shape: "slanted", x1: objectDividerX, y1: baseY - 48, x2: complementStartX, y2: baseY });
+    if (hasComplementCompound) {
+      const compA = byKey.has("pnA") ? "pnA" : "paA";
+      const compB = byKey.has("pnB") ? "pnB" : "paB";
+      const compConj = byKey.has("pnConj") ? "pnConj" : "paConj";
+      addTarget(compA, "line", complementStartX + 25, baseY - 42, 650, baseY - 42, "");
+      addTarget(compB, "line", complementStartX + 25, baseY + 48, 650, baseY + 48, "");
+      addBranch(complementStartX, baseY, complementStartX + 25, baseY - 42);
+      addBranch(complementStartX, baseY, complementStartX + 25, baseY + 48);
+      addConjunctionGuide(complementStartX + 8, baseY - 42, complementStartX + 8, baseY + 48);
+      addTarget(compConj, "conjunction", complementStartX + 8, baseY + 3, 0, 0, "", {
+        textX: complementStartX + 8,
+        textY: baseY + 3,
+        width: 58,
+        height: 28
+      });
+    } else {
+      const complementKey = byKey.has("pn") ? "pn" : byKey.has("pnA") ? "pnA" : byKey.has("pa") ? "pa" : "paA";
+      addTarget(complementKey, "line", complementStartX, baseY, 650, baseY, "");
+    }
+  }
+
+  const includeModifiers = options.includeModifiers !== false && isCorrectShape;
+  const modifierConnections = includeModifiers
+    ? spec.connections.filter(connection => connection.type === "modifier" || connection.type === "modifierConjunction")
+    : [];
+  const prepositionConnections = spec.connections.filter(connection => connection.type === "preposition");
+  const pieceOrder = new Map(spec.pieces.map((piece, index) => [piece.key, index]));
+  const pieceTokenOrder = key => {
+    const piece = byKey.get(key);
+    return piece && piece.tokens.length ? Math.min(...piece.tokens) : pieceOrder.get(key) || 0;
+  };
+  const compoundGroups = new Map();
+  const standaloneItems = [];
+
+  modifierConnections.forEach(connection => {
+    const piece = byKey.get(connection.from);
+    if (!piece) return;
+    if (piece.compoundGroup) {
+      if (!compoundGroups.has(piece.compoundGroup)) {
+        compoundGroups.set(piece.compoundGroup, {
+          kind: "compound",
+          targetKey: connection.to,
+          order: pieceTokenOrder(piece.key),
+          modifiers: [],
+          conjunction: null
+        });
+      }
+      const group = compoundGroups.get(piece.compoundGroup);
+      group.targetKey = connection.to;
+      group.order = Math.min(group.order, pieceTokenOrder(piece.key));
+      if (connection.type === "modifierConjunction") {
+        group.conjunction = piece.key;
+      } else {
+        group.modifiers.push(piece.key);
+        group.modifiers.sort((a, b) => (byKey.get(a).compoundOrder || 0) - (byKey.get(b).compoundOrder || 0));
+      }
+      return;
+    }
+    if (connection.type === "modifier") {
+      standaloneItems.push({
+        kind: "standalone",
+        targetKey: connection.to,
+        key: piece.key,
+        order: pieceTokenOrder(piece.key)
+      });
+    }
+  });
+  prepositionConnections.forEach(connection => {
+    const objectConnection = spec.connections.find(item => item.type === "prepObject" && item.to === connection.from);
+    if (!objectConnection) return;
+    standaloneItems.push({
+      kind: "prep",
+      targetKey: connection.to,
+      key: connection.from,
+      objectKey: objectConnection.from,
+      order: pieceTokenOrder(connection.from)
+    });
+  });
+
+  const itemsByTarget = new Map();
+  const addModifierItem = item => {
+    if (!itemsByTarget.has(item.targetKey)) itemsByTarget.set(item.targetKey, []);
+    itemsByTarget.get(item.targetKey).push(item);
+  };
+  standaloneItems
+    .sort((a, b) => (a.kind === "prep" ? 0 : 1) - (b.kind === "prep" ? 0 : 1) || a.order - b.order)
+    .forEach(addModifierItem);
+  compoundGroups.forEach(group => {
+    if (group.modifiers.length >= 2 && group.conjunction) addModifierItem(group);
+    else group.modifiers.forEach(key => addModifierItem({ kind: "standalone", targetKey: group.targetKey, key, order: group.order }));
+  });
+
+  const addModifierLineTarget = (key, anchorX, anchorY) => addTarget(key, "modifier", anchorX, anchorY, anchorX - 48, anchorY + 74, "modifier", {
+    textX: anchorX - 26,
+    textY: anchorY + 50,
+    rotation: -58
+  });
+
+  itemsByTarget.forEach((items, targetKey) => {
+    const head = targetMap.get(targetKey);
+    if (!head) return;
+    const sortedItems = items.sort((a, b) => a.order - b.order);
+    const totalUnits = sortedItems.reduce((total, item) => {
+      if (item.kind === "compound") return total + 2;
+      if (item.kind === "prep") return total + 3;
+      return total + 1;
+    }, 0);
+    let cursor = 0;
+    sortedItems.forEach(item => {
+      const anchorY = Math.max(head.y1, head.y2) + 2;
+      if (item.kind === "compound") {
+        const leftOffset = (cursor - (totalUnits - 1) / 2) * 42;
+        const rightOffset = (cursor + 1 - (totalUnits - 1) / 2) * 42;
+        const leftX = head.textX + leftOffset;
+        const rightX = head.textX + rightOffset;
+        addModifierLineTarget(item.modifiers[0], leftX, anchorY);
+        addModifierLineTarget(item.modifiers[1], rightX, anchorY);
+        const conjunctionX = ((leftX - 26) + (rightX - 26)) / 2;
+        const conjunctionY = anchorY + 50;
+        addConjunctionGuide(leftX - 30, conjunctionY, rightX - 30, conjunctionY);
+        addTarget(item.conjunction, "modifierConjunction", conjunctionX, conjunctionY, 0, 0, "", {
+          textX: conjunctionX,
+          textY: conjunctionY,
+          width: 46,
+          height: 24
+        });
+        cursor += 2;
+      } else if (item.kind === "prep") {
+        const offset = (cursor + 1 - (totalUnits - 1) / 2) * 52;
+        const anchorX = head.textX + offset;
+        const prepEndX = anchorX - 48;
+        const prepEndY = anchorY + 74;
+        addTarget(item.key, "preposition", anchorX, anchorY, prepEndX, prepEndY, "", {
+          textX: anchorX - 26,
+          textY: anchorY + 50,
+          rotation: -58
+        });
+        addTarget(item.objectKey, "prepObject", prepEndX, prepEndY, prepEndX + 126, prepEndY, "", {
+          textX: prepEndX + 63,
+          textY: prepEndY - 16,
+          width: 96,
+          height: 30
+        });
+        cursor += 3;
+      } else {
+        const offset = (cursor - (totalUnits - 1) / 2) * 42;
+        addModifierLineTarget(item.key, head.textX + offset, anchorY);
+        cursor++;
+      }
+    });
+  });
+
+  return { spec, targets, targetMap, dividers, branches, guides };
+}
+
+function renderDiagramDivider(divider) {
+  return `<line class="diagram-divider" x1="${divider.x1}" y1="${divider.y1}" x2="${divider.x2}" y2="${divider.y2}"></line>`;
+}
+
+function renderDiagramTarget(exercise, target, assignments, interactive) {
+  const assigned = assignments[target.key] || [];
+  const filled = assigned.length > 0;
+  const selected = interactive && state.selectedTargetKey === target.key ? " selected" : "";
+  const hover = interactive && state.hoverTargetKey === target.key ? " drop-hover" : "";
+  const fillClass = filled ? " filled" : "";
+  const data = interactive ? ` data-target-key="${escapeHtml(target.key)}"` : "";
+  const label = filled ? formatTokens(exercise, assigned) : "";
+  const rotation = target.rotation ? ` transform="rotate(${target.rotation} ${target.textX} ${target.textY})"` : "";
+
+  if (target.shape === "conjunction" || target.shape === "modifierConjunction") {
+    const x = target.textX - target.width / 2;
+    const y = target.textY - target.height / 2;
+    return `<g class="diagram-target${selected}${hover}${fillClass}"${data}>
+      <rect class="target-hit" x="${x - 5}" y="${y - 5}" width="${target.width + 10}" height="${target.height + 10}" rx="6"></rect>
+      <rect x="${x}" y="${y}" width="${target.width}" height="${target.height}" rx="6" fill="#f8fafc" stroke="#667085"></rect>
+      <text class="diagram-text" x="${target.textX}" y="${target.textY}">${escapeHtml(label)}</text>
+    </g>`;
+  }
+
+  const textClass = target.shape === "modifier" || target.shape === "preposition" ? " diagram-modifier-text" : "";
+  const hitX = Math.min(target.x1, target.x2) - 14;
+  const hitY = Math.min(target.y1, target.y2, target.textY) - 24;
+  const hitWidth = Math.max(34, Math.abs(target.x2 - target.x1) + 28);
+  const hitHeight = Math.max(42, Math.abs(target.y2 - target.y1) + 58);
+  return `<g class="diagram-target${selected}${hover}${fillClass}"${data}>
+    <rect class="target-hit" x="${hitX}" y="${hitY}" width="${hitWidth}" height="${hitHeight}" rx="6"></rect>
+    <line class="diagram-line" x1="${target.x1}" y1="${target.y1}" x2="${target.x2}" y2="${target.y2}"></line>
+    <text class="diagram-text${textClass}" x="${target.textX}" y="${target.textY}"${rotation}>${escapeHtml(label)}</text>
+  </g>`;
+}
+
+function handleTargetClick(targetKey) {
+  if (state.selectedDiagramToken !== null) {
+    assignTokenToTarget(state.selectedDiagramToken, targetKey);
+  } else if ((state.diagram.assignments[targetKey] || []).length) {
+    delete state.diagram.assignments[targetKey];
+    state.selectedTargetKey = null;
+    state.diagramCorrect = false;
+    renderDiagram();
+  } else {
+    state.selectedTargetKey = targetKey;
+    renderDiagram();
+  }
+}
+
+function diagramPoint(event) {
+  const svg = document.getElementById("diagramCanvas");
+  const rect = svg.getBoundingClientRect();
+  return {
+    x: (event.clientX - rect.left) * (760 / rect.width),
+    y: (event.clientY - rect.top) * (430 / rect.height)
+  };
+}
+
+function pointSegmentDistance(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared === 0) return Math.hypot(px - x1, py - y1);
+  const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lengthSquared));
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+function nearestTargetKeyFromEvent(event) {
+  if (!state.selectedDiagramKey || !state.selectedModifierKey) return null;
+  const point = diagramPoint(event);
+  const targets = layoutGuidedDiagram(getExercise(), state.selectedDiagramKey, { modifierKey: state.selectedModifierKey }).targets;
+  const ranked = targets.map(target => {
+    if (target.shape === "conjunction" || target.shape === "modifierConjunction") {
+      const left = target.textX - target.width / 2;
+      const right = target.textX + target.width / 2;
+      const top = target.textY - target.height / 2;
+      const bottom = target.textY + target.height / 2;
+      const dx = Math.max(left - point.x, 0, point.x - right);
+      const dy = Math.max(top - point.y, 0, point.y - bottom);
+      return { key: target.key, distance: Math.hypot(dx, dy) };
+    }
+    return {
+      key: target.key,
+      distance: pointSegmentDistance(point.x, point.y, target.x1, target.y1, target.x2, target.y2)
+    };
+  }).sort((a, b) => a.distance - b.distance);
+  return ranked.length && ranked[0].distance <= 120 ? ranked[0].key : null;
+}
+
+function selectDiagramChoice(shapeKey) {
+  state.selectedDiagramKey = shapeKey;
+  state.selectedModifierKey = null;
+  state.diagram.assignments = {};
+  state.selectedTargetKey = null;
+  state.hoverTargetKey = null;
+  state.diagramCorrect = false;
+  renderDiagram();
+}
+
+function selectModifierChoice(modifierKey) {
+  state.selectedModifierKey = modifierKey;
+  const keys = activeTargetKeys();
+  Object.keys(state.diagram.assignments).forEach(key => {
+    if (!keys.has(key)) delete state.diagram.assignments[key];
+  });
+  state.selectedTargetKey = null;
+  state.hoverTargetKey = null;
+  state.diagramCorrect = false;
+  renderDiagram();
+}
+
+function assignmentLimit(targetKey) {
+  const target = layoutGuidedDiagram(getExercise(), state.selectedDiagramKey, { modifierKey: state.selectedModifierKey }).targets.find(item => item.key === targetKey);
+  return Math.max(1, target ? target.capacity : 1);
+}
+
+function removeTokenFromDiagram(tokenId) {
+  Object.keys(state.diagram.assignments).forEach(key => {
+    state.diagram.assignments[key] = state.diagram.assignments[key].filter(id => id !== tokenId);
+    if (state.diagram.assignments[key].length === 0) delete state.diagram.assignments[key];
+  });
+}
+
+function assignTokenToTarget(tokenId, targetKey) {
+  if (tokenId === null || tokenId === undefined || !targetKey) return;
+  removeTokenFromDiagram(tokenId);
+  const max = assignmentLimit(targetKey);
+  const current = state.diagram.assignments[targetKey] ? [...state.diagram.assignments[targetKey]] : [];
+  const next = current.length >= max ? [...current.slice(1), tokenId] : [...current, tokenId];
+  state.diagram.assignments[targetKey] = sortIds(next);
+  state.selectedDiagramToken = null;
+  state.selectedTargetKey = targetKey;
+  state.dragTokenId = null;
+  state.hoverTargetKey = null;
+  state.selectedDiagramToken = null;
+  state.diagramCorrect = false;
+  renderDiagram();
+}
+
+function renderFeedback() {
+  const feedback = document.getElementById("feedback");
+  feedback.innerHTML = state.feedback.map(item => {
+    if (item.type === "list") {
+      return `<div class="message ${item.tone || ""}"><strong>${escapeHtml(item.title)}</strong><ul class="feedback-list">${item.items.map(text => `<li>${escapeHtml(text)}</li>`).join("")}</ul></div>`;
+    }
+    return `<div class="message ${item.tone || ""}">${escapeHtml(item.text)}</div>`;
+  }).join("");
+}
+
+function exerciseProgressStatus(index) {
+  const ex = EXERCISES[index];
+  if (progress.completed[ex.id]) return "correct";
+  if (progress.started[ex.id] || progress.attempts[ex.id]) return "started";
+  return "not-started";
+}
+
+function progressStatusLabel(status) {
+  if (status === "correct") return "Correct";
+  if (status === "started") return "Started";
+  return "Not started";
+}
+
+function renderProgressHistory() {
+  const wrap = document.getElementById("progressHistory");
+  const counts = EXERCISES.reduce((acc, ex, index) => {
+    acc[exerciseProgressStatus(index)]++;
+    return acc;
+  }, { correct: 0, started: 0, "not-started": 0 });
+
+  const rows = EXERCISES.map((ex, index) => {
+    const status = exerciseProgressStatus(index);
+    const current = index === state.index ? " current" : "";
+    const attempts = progress.attempts[ex.id] || 0;
+    const attemptText = attempts === 1 ? "1 check" : `${attempts} checks`;
+    return `<button class="progress-row ${status}${current}" type="button" data-progress-index="${index}">
+      <span class="progress-dot" aria-hidden="true"></span>
+      <span>
+        <span class="progress-row-title">Sentence ${index + 1}</span>
+        <span class="progress-row-meta">${progressStatusLabel(status)} - ${attemptText}</span>
+      </span>
+    </button>`;
+  }).join("");
+
+  wrap.innerHTML = `
+    <div class="progress-summary">
+      <div class="progress-pill"><strong>${counts.correct}</strong>Correct</div>
+      <div class="progress-pill"><strong>${counts.started}</strong>Started</div>
+      <div class="progress-pill"><strong>${counts["not-started"]}</strong>Not started</div>
+    </div>
+    <div class="progress-list">${rows}</div>
+  `;
+  wrap.querySelectorAll("[data-progress-index]").forEach(btn => {
+    btn.addEventListener("click", () => goToExercise(Number(btn.dataset.progressIndex)));
+  });
+}
+
+function renderAnswer() {
+  const panel = document.getElementById("answerPanel");
+  panel.classList.toggle("open", state.answerOpen);
+  if (!state.answerOpen) return;
+  const ex = getExercise();
+  const expected = expectedRoles(ex);
+  const ignored = ignoredTokenIds(ex);
+  const linkRows = activeLinksForChecking(expectedLinks(ex), ignored).map(link => `<div>${escapeHtml(linkText(ex, link))}</div>`).join("");
+  const answerTokens = ex.tokens.map((token, id) => {
+    const chips = ROLES
+      .filter(role => !ignored.has(id) && expected[role.id].has(id))
+      .map(role => `<span class="chip ${role.className}">${role.id}</span>`)
+      .join("");
+    return `<span class="answer-token"><strong>${escapeHtml(tokenText(ex, id))}</strong><span class="role-chips">${chips}</span></span>`;
+  }).join("");
+  const omitted = shouldIgnorePrepPhrases() && ex.omitted && ex.omitted.length
+    ? `<div class="tip-box"><strong>Omit from diagram:</strong> ${escapeHtml(ex.omitted.join("; "))}</div>`
+    : "";
+  const tips = ex.tips.map(tip => `<div>${escapeHtml(tip)}</div>`).join("");
+  document.getElementById("answerBody").innerHTML = `
+    <div><strong>Pattern:</strong> ${escapeHtml(ex.pattern)}</div>
+    <div style="height:10px"></div>
+    <div class="answer-line">${answerTokens}</div>
+    <div class="tip-box"><strong>Required links:</strong>${linkRows}</div>
+    <div style="height:12px"></div>
+    ${renderAnswerDiagram(ex)}
+    ${omitted}
+    <div class="tip-box">${tips}</div>
+  `;
+}
+
+function renderAnswerDiagram(exercise) {
+  const spec = expectedDiagramSpec(exercise);
+  const assignments = {};
+  spec.pieces.forEach(piece => assignments[piece.key] = [...piece.tokens]);
+  return `<svg class="diagram-canvas answer-diagram" viewBox="0 0 760 430" role="img" aria-label="Correct sentence diagram">
+    ${renderGuidedDiagramContent(exercise, assignments, false)}
+  </svg>`;
+}
+
+function toggleTokenRole(tokenId) {
+  if (state.selectedRole === "CLEAR") {
+    ROLES.forEach(role => state.marking.roles[role.id].delete(tokenId));
+  } else {
+    const set = state.marking.roles[state.selectedRole];
+    if (set.has(tokenId)) set.delete(tokenId);
+    else set.add(tokenId);
+  }
+  state.markingCorrect = false;
+  renderSentence();
+}
+
+function returnCard(tokenId) {
+  if (tokenId !== null && tokenId !== undefined) {
+    removeTokenFromDiagram(tokenId);
+  } else if (state.selectedTargetKey) {
+    delete state.diagram.assignments[state.selectedTargetKey];
+  }
+  state.selectedDiagramToken = null;
+  state.hoverTargetKey = null;
+  state.diagramCorrect = false;
+  renderDiagram();
+}
+
+function clearConnections() {
+  state.diagram.assignments = {};
+  state.selectedDiagramKey = null;
+  state.selectedModifierKey = null;
+  state.selectedDiagramToken = null;
+  state.selectedTargetKey = null;
+  state.dragTokenId = null;
+  state.hoverTargetKey = null;
+  state.diagramCorrect = false;
+  renderDiagram();
+}
+
+function incrementAttempts() {
+  const id = getExercise().id;
+  progress.attempts[id] = (progress.attempts[id] || 0) + 1;
+  progress.started[id] = true;
+  progress.lastIndex = state.index;
+  saveProgress();
+}
+
+function checkMarking() {
+  const ex = getExercise();
+  incrementAttempts();
+  const expected = expectedRoles(ex);
+  const ignored = ignoredTokenIds(ex);
+  const errors = [];
+
+  if (state.marking.pattern !== ex.pattern) {
+    errors.push(state.marking.pattern
+      ? `Pattern should be ${ex.pattern}, not ${state.marking.pattern}.`
+      : `Choose the sentence pattern ${ex.pattern}.`);
+  }
+
+  ROLES.forEach(role => {
+    const actualSet = withoutIgnoredTokens(state.marking.roles[role.id], ignored);
+    const expectedSet = withoutIgnoredTokens(expected[role.id], ignored);
+    if (setsEqual(actualSet, expectedSet)) return;
+    const missing = differenceList(expectedSet, actualSet);
+    const extra = differenceList(actualSet, expectedSet);
+    if (missing.length) {
+      errors.push(`Mark ${formatTokens(ex, missing)} as ${role.label}.`);
+    }
+    if (extra.length) {
+      errors.push(`${formatTokens(ex, extra)} should not be marked as ${role.label}.`);
+    }
+  });
+
+  const expectedLinkList = activeLinksForChecking(expectedLinks(ex), ignored);
+  const activeMarkingLinks = activeLinksForChecking(state.marking.links, ignored);
+  const actualLinkSet = new Set(activeMarkingLinks.map(canonicalLink));
+  const expectedLinkSet = new Set(expectedLinkList.map(canonicalLink));
+  expectedLinkList.forEach(link => {
+    if (!actualLinkSet.has(canonicalLink(link))) {
+      errors.push(`Add link: ${linkText(ex, link)}.`);
+    }
+  });
+  activeMarkingLinks.forEach(link => {
+    if (!expectedLinkSet.has(canonicalLink(link))) {
+      errors.push(`Remove incorrect link: ${linkText(ex, link)}.`);
+    }
+  });
+
+  if (errors.length === 0) {
+    state.markingCorrect = true;
+    state.feedback = [{ type: "message", tone: "good", text: "Sentence marking is correct." }];
+  } else {
+    state.markingCorrect = false;
+    state.feedback = [{ type: "list", tone: "bad", title: "Marking fixes", items: errors }];
+  }
+  render();
+}
+
+function checkDiagram() {
+  const ex = getExercise();
+  incrementAttempts();
+  const errors = [];
+  const warnings = [];
+
+  if (!state.markingCorrect) {
+    warnings.push("The sentence marking is not correct yet.");
+  }
+
+  const correctShape = correctDiagramShapeKey(ex);
+  const shapeIsCorrect = state.selectedDiagramKey === correctShape;
+  const correctModifier = correctModifierKey(ex);
+  const modifierIsCorrect = state.selectedModifierKey === correctModifier;
+  if (!state.selectedDiagramKey) {
+    errors.push("Choose a diagram shape.");
+  } else if (!shapeIsCorrect) {
+    errors.push(diagramShapeFeedback(correctShape));
+  } else if (!state.selectedModifierKey) {
+    errors.push("Choose the modifier-line pattern.");
+  } else if (!modifierIsCorrect) {
+    errors.push("Choose the modifier-line pattern with the correct number of diagonal lines and connectors.");
+  }
+
+  const spec = expectedDiagramSpec(ex);
+  const expectedKeys = new Set(spec.pieces.map(piece => piece.key));
+
+  if (shapeIsCorrect && modifierIsCorrect) {
+    spec.pieces.forEach(piece => {
+      const actual = state.diagram.assignments[piece.key] || [];
+      const expected = sortIds(piece.tokens);
+      const place = diagramPlacementText(ex, spec, piece);
+      if (actual.length === 0) {
+        errors.push(`Place ${formatTokens(ex, expected)} on ${place}.`);
+      } else if (!arraysEqual(sortIds(actual), expected)) {
+        errors.push(`${formatTokens(ex, actual)} does not belong on ${place}; place ${formatTokens(ex, expected)} there.`);
+      }
+    });
+
+    Object.entries(state.diagram.assignments).forEach(([key, tokens]) => {
+      if (!expectedKeys.has(key) && tokens.length) {
+        errors.push(`${formatTokens(ex, tokens)} is on an extra diagram target.`);
+      }
+    });
+  }
+
+  if (errors.length === 0 && warnings.length === 0) {
+    state.diagramCorrect = true;
+    state.feedback = [{ type: "message", tone: "good", text: "Diagram is correct." }];
+    progress.completed[ex.id] = true;
+    progress.started[ex.id] = true;
+    progress.lastIndex = state.index;
+    saveProgress();
+  } else {
+    state.diagramCorrect = false;
+    const feedback = [];
+    if (warnings.length) feedback.push({ type: "list", tone: "warn", title: "Before the diagram is complete", items: warnings });
+    if (errors.length) feedback.push({ type: "list", tone: "bad", title: "Diagram fixes", items: errors });
+    state.feedback = feedback;
+  }
+  render();
+}
+
+function diagramShapeFeedback(shapeKey) {
+  const messages = {
+    simple: "Choose the diagram with only the main subject/predicate divider.",
+    "av-do": "Choose the diagram with a vertical divider after the verb line.",
+    "lv-comp": "Choose the diagram with a slanted divider after the linking-verb line.",
+    "compound-subject": "Choose the diagram with two subject branches before the predicate.",
+    "compound-subject-do": "Choose the diagram with two subject branches and a vertical divider after the verb line.",
+    "compound-verb": "Choose the diagram with two predicate branches after the subject divider.",
+    "compound-object": "Choose the diagram with two direct-object branches after the verb line.",
+    "compound-complement": "Choose the diagram with a slanted complement divider and two right-side branches."
+  };
+  return messages[shapeKey] || "Choose the matching diagram shape.";
+}
+
+function diagramPlacementText(exercise, spec, piece) {
+  if (piece.type === "subject") return "the subject line before the vertical subject/predicate divider";
+  if (piece.type === "verb") return "the predicate verb line after the vertical subject/predicate divider";
+  if (piece.type === "object") return "the direct object line after the vertical divider";
+  if (piece.type === "complement") return "the predicate complement line after the slanted divider";
+  if (piece.type === "preposition") return "the slanted preposition line";
+  if (piece.type === "prepObject") return "the object-of-preposition line";
+  if (piece.type === "compound") {
+    if (piece.key.startsWith("subject")) return "the lower compound subject branch";
+    if (piece.key.startsWith("verb")) return "the lower compound verb branch";
+    if (piece.key.startsWith("object")) return "the lower compound direct-object branch";
+    return "the lower compound complement branch";
+  }
+  if (piece.type === "conjunction") return "the small conjunction target between the compound branches";
+  if (piece.type === "modifierConjunction") return "the connector between the compound modifier lines";
+  if (piece.type === "modifier") {
+    const connection = spec.connections.find(item => item.from === piece.key && item.type === "modifier");
+    const head = connection ? spec.pieces.find(item => item.key === connection.to) : null;
+    return head
+      ? `the diagonal modifier line under ${formatTokens(exercise, head.tokens)}`
+      : "a diagonal modifier line";
+  }
+  return "the matching diagram target";
+}
+
+function markStarted(index) {
+  const targetIndex = Math.max(0, Math.min(EXERCISES.length - 1, index));
+  const ex = EXERCISES[targetIndex];
+  progress.started[ex.id] = true;
+  progress.lastIndex = targetIndex;
+  saveProgress();
+}
+
+function goToExercise(index) {
+  const targetIndex = Math.max(0, Math.min(EXERCISES.length - 1, index));
+  state = createFreshState(targetIndex);
+  markStarted(targetIndex);
+  render();
+}
+
+function resetCurrent() {
+  state = createFreshState(state.index);
+  markStarted(state.index);
+  render();
+}
+
+function resetProgress() {
+  if (!confirm("Reset all saved sentence diagram progress?")) return;
+  progress = { completed: {}, attempts: {}, started: {}, ignorePrepPhrases: true, lastIndex: 0 };
+  saveProgress();
+  state = createFreshState(0);
+  markStarted(0);
+  render();
+}
+
+function showAnswer() {
+  state.answerOpen = !state.answerOpen;
+  document.getElementById("showAnswerBtn").textContent = state.answerOpen ? "Hide Answer" : "Show Answer";
+  renderAnswer();
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+document.getElementById("exerciseSelect").addEventListener("change", event => goToExercise(Number(event.target.value)));
+document.getElementById("prevBtn").addEventListener("click", () => goToExercise(Math.max(0, state.index - 1)));
+document.getElementById("nextBtn").addEventListener("click", () => goToExercise(Math.min(EXERCISES.length - 1, state.index + 1)));
+document.getElementById("tryAgainBtn").addEventListener("click", resetCurrent);
+document.getElementById("showAnswerBtn").addEventListener("click", showAnswer);
+document.getElementById("resetProgressBtn").addEventListener("click", resetProgress);
+document.getElementById("checkMarkingBtn").addEventListener("click", checkMarking);
+document.getElementById("checkDiagramBtn").addEventListener("click", checkDiagram);
+document.getElementById("roleModeBtn").addEventListener("click", () => {
+  state.markMode = "roles";
+  state.linkSource = null;
+  render();
+});
+document.getElementById("linkModeBtn").addEventListener("click", () => {
+  state.markMode = "links";
+  render();
+});
+document.getElementById("ignorePrepPhrasesToggle").addEventListener("change", event => {
+  progress.ignorePrepPhrases = event.target.checked;
+  state.markingCorrect = false;
+  state.diagramCorrect = false;
+  saveProgress();
+  render();
+});
+document.getElementById("linkTypeSelect").addEventListener("change", event => {
+  state.linkType = event.target.value;
+  state.linkSource = null;
+  render();
+});
+document.getElementById("clearLinksBtn").addEventListener("click", () => {
+  state.marking.links = [];
+  state.linkSource = null;
+  state.markingCorrect = false;
+  render();
+});
+document.getElementById("clearConnectionsBtn").addEventListener("click", clearConnections);
+document.getElementById("returnCardBtn").addEventListener("click", () => {
+  returnCard();
+});
+
+const initialIndex = Math.max(0, Math.min(EXERCISES.length - 1, progress.lastIndex || 0));
+state = createFreshState(initialIndex);
+markStarted(initialIndex);
+render();
+</script>
+</body>
+</html>

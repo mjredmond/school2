@@ -1,0 +1,1725 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Abeka Language 4 Test 15 Practice</title>
+  <style>
+    :root {
+      --bg: #f4f1eb;
+      --surface: #fffdf8;
+      --ink: #1e242c;
+      --muted: #65707d;
+      --line: #d7d0c4;
+      --blue: #2f5f98;
+      --green: #357a54;
+      --amber: #9b6a17;
+      --red: #a83e36;
+      --shadow: 0 18px 44px rgba(38, 43, 51, .14);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(47, 95, 152, .08), transparent 260px),
+        var(--bg);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app-shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      margin: -22px -22px 18px;
+      padding: 18px 22px;
+      background: rgba(244, 241, 235, .95);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      color: var(--blue);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 1.1rem + 1.2vw, 2.25rem);
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.45;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--ink);
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      border-color: #9aa6b3;
+    }
+
+    .btn.primary {
+      border-color: #244f83;
+      color: #fff;
+      background: var(--blue);
+    }
+
+    .btn.danger {
+      border-color: rgba(168, 62, 54, .45);
+      color: var(--red);
+    }
+
+    .score-panel {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 18px;
+    }
+
+    .score-tile {
+      min-height: 74px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 6px 20px rgba(38, 43, 51, .06);
+    }
+
+    .score-tile strong {
+      display: block;
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+
+    .score-tile span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: .83rem;
+    }
+
+    .section {
+      margin: 0 0 22px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, .88);
+      box-shadow: var(--shadow);
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 2px dotted #beb5a8;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0;
+    }
+
+    .directions {
+      margin: 5px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .section-count {
+      min-width: 72px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--green);
+      font-size: .85rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .items {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .item-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--surface);
+    }
+
+    .item-card.wide {
+      grid-column: 1 / -1;
+    }
+
+    .item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .item-num {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--blue);
+      font-weight: 800;
+    }
+
+    .tag {
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: #f8f4ed;
+      font-size: .78rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .prompt {
+      margin: 0 0 10px;
+      line-height: 1.48;
+    }
+
+    .sentence-line {
+      margin: 8px 0 12px;
+      padding: 10px;
+      border: 1px solid #ddd4c7;
+      border-radius: var(--radius);
+      background: #fbf7ef;
+      line-height: 1.8;
+    }
+
+    .token-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .token-btn {
+      min-height: 34px;
+      border: 1px solid #bfc7d1;
+      border-radius: 7px;
+      padding: 5px 9px;
+      color: var(--ink);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .token-btn.selected {
+      border-color: #234f83;
+      color: #fff;
+      background: var(--blue);
+    }
+
+    .mode-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 10px;
+    }
+
+    .mode-btn {
+      min-height: 36px;
+      border: 1px solid #bfc7d1;
+      border-radius: 8px;
+      padding: 7px 11px;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .mode-btn.active {
+      border-color: #244f83;
+      color: #fff;
+      background: var(--blue);
+    }
+
+    .comma-mark {
+      display: inline-block;
+      min-width: .45em;
+      color: var(--red);
+      font-weight: 900;
+    }
+
+    .comma-before {
+      margin-right: 2px;
+    }
+
+    .comma-after {
+      margin-left: 1px;
+    }
+
+    .token-btn.selected .comma-mark {
+      color: #ffe08a;
+    }
+
+    .token-btn.phrase-token {
+      border-color: #c99a35;
+      background: #fff4d9;
+    }
+
+    .token-btn.object-token {
+      box-shadow: inset 0 -4px 0 rgba(155, 77, 47, .65);
+    }
+
+    .token-btn.pending-token {
+      outline: 3px solid rgba(47, 95, 152, .28);
+      outline-offset: 2px;
+    }
+
+    .token-btn.bold-token span.word-text {
+      font-weight: 900;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+    }
+
+    .mark-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+      min-height: 34px;
+      align-items: center;
+    }
+
+    .mark-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #fff;
+      color: var(--ink);
+      font-size: .84rem;
+      line-height: 1.2;
+    }
+
+    .chip-delete {
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border: 0;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--red);
+      cursor: pointer;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .field-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    label,
+    .field-title {
+      color: #394553;
+      font-size: .84rem;
+      font-weight: 800;
+    }
+
+    select,
+    input[type="text"] {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid #bac2cc;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #fff;
+    }
+
+    .checks {
+      display: grid;
+      gap: 7px;
+      margin-top: 6px;
+    }
+
+    .checks label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: var(--ink);
+      font-weight: 500;
+      line-height: 1.35;
+    }
+
+    .checks input {
+      width: 17px;
+      height: 17px;
+      margin-top: 1px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .feedback {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: var(--radius);
+      line-height: 1.4;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback.good {
+      border: 1px solid rgba(53, 122, 84, .35);
+      color: #1e573a;
+      background: rgba(53, 122, 84, .08);
+    }
+
+    .feedback.bad {
+      border: 1px solid rgba(168, 62, 54, .35);
+      color: #7c2d27;
+      background: rgba(168, 62, 54, .08);
+    }
+
+    .answer {
+      display: none;
+      margin-top: 10px;
+      padding: 11px;
+      border-left: 4px solid var(--amber);
+      background: #fff8e9;
+      line-height: 1.45;
+    }
+
+    .answer.show {
+      display: block;
+    }
+
+    .answer strong {
+      color: #704a0f;
+    }
+
+    .role-table {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .role-row {
+      display: grid;
+      grid-template-columns: minmax(90px, 1fr) 160px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .role-word {
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid #ddd4c7;
+      border-radius: 8px;
+      background: #fbf7ef;
+      font-weight: 700;
+    }
+
+    .diagram-wrap {
+      overflow-x: auto;
+      margin-top: 10px;
+      border: 1px solid #ddd4c7;
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .diagram-svg {
+      display: block;
+      width: 760px;
+      max-width: none;
+      height: 330px;
+    }
+
+    .diagram-line {
+      stroke: #263241;
+      stroke-width: 2;
+      stroke-linecap: round;
+      fill: none;
+    }
+
+    .diagram-guide {
+      stroke: #6e7b8a;
+      stroke-width: 1.5;
+      stroke-dasharray: 5 4;
+      fill: none;
+    }
+
+    .diagram-text {
+      font-size: 18px;
+      font-family: Georgia, "Times New Roman", serif;
+      fill: #1c2633;
+      text-anchor: middle;
+    }
+
+    .small-text {
+      font-size: 14px;
+      fill: #4d5967;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .pill {
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        position: static;
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+
+      .score-panel,
+      .items,
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .item-card.wide {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app-shell {
+        padding: 14px;
+      }
+
+      .topbar {
+        margin: -14px -14px 14px;
+        padding: 14px;
+      }
+
+      .section {
+        padding: 12px;
+      }
+
+      .role-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  
+    /* Test 15 integrated diagram controls */
+    .sentence { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+    .role-toolbar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }
+    .role-btn { min-height: 42px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 7px; background: #fff; cursor: pointer; }
+    .role-btn strong { display: block; font-size: 13px; }
+    .role-btn span { display: block; margin-top: 1px; color: var(--muted); font-size: 10px; line-height: 1.15; }
+    .role-btn.selected { border-color: var(--blue); background: #edf4ff; box-shadow: 0 0 0 2px rgba(47, 95, 152, .18); }
+    .word-bank { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .word-token { position: relative; display: inline-flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; min-width: 58px; min-height: 50px; border: 1px solid #c8d3df; border-radius: 6px; padding: 7px 8px 6px; background: #fff; cursor: pointer; user-select: none; }
+    .word-token:hover { border-color: var(--blue); }
+    .word-token.active-role { outline: 2px solid rgba(47, 95, 152, .28); }
+    .word-token.used-word { background: #f2f7ef; border-color: rgba(53, 122, 84, .55); }
+    .role-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; max-width: 110px; min-height: 18px; }
+    .chip { display: inline-flex; align-items: center; min-height: 18px; border-radius: 999px; padding: 1px 5px; color: #fff; font-size: 10px; font-weight: 800; }
+    .role-s { background: var(--blue); }
+    .role-av { background: var(--green); }
+    .role-lv { background: #087f8c; }
+    .role-bv { background: #596477; }
+    .role-do { background: var(--amber); }
+    .role-pn { background: #7b3f76; }
+    .role-pa { background: #a34863; }
+    .role-adj { background: #6b7d2a; }
+    .role-adv { background: #8a5c1a; }
+    .role-conj { background: #4b6f91; }
+    .role-prep { background: #4f46a5; }
+    .role-op { background: #9b4d2f; }
+    .role-omit { background: #6b7280; }
+    .diagram-target { cursor: pointer; pointer-events: all; }
+    .target-hit { fill: transparent; stroke: transparent; }
+    .diagram-target:hover .target-hit, .diagram-target.selected .target-hit { fill: rgba(155, 106, 23, .12); stroke: var(--amber); stroke-width: 3; }
+    .diagram-target.filled rect:not(.target-hit) { stroke-width: 2.5; }
+    .diagram-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 10px 0; }
+    .diagram-choice { min-height: 106px; border: 1px solid var(--line); border-radius: 8px; padding: 6px; background: #fff; cursor: pointer; transition: border-color .15s, box-shadow .15s, background .15s; }
+    .diagram-choice:hover { border-color: var(--blue); background: #f7fbff; }
+    .diagram-choice.selected { border-color: var(--blue); background: #edf4ff; box-shadow: 0 0 0 2px rgba(47, 95, 152, .18); }
+    .diagram-choice svg { display: block; width: 100%; height: 94px; }
+    @media (max-width: 900px) { .role-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .role-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Language 4 - Test 15 - Lesson 154</p>
+        <h1>Sentence Diagramming and Grammar Practice</h1>
+        <p class="subtitle">Practice the added Test 15 topics: conjunction commas, prepositional phrases, sentence patterns, adverb/preposition choices, and diagramming with conjunctions.</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="toggleAnswersBtn" type="button">Show Answers</button>
+        <button class="btn danger" id="resetBtn" type="button">Reset</button>
+      </div>
+    </header>
+
+    <section class="score-panel" aria-label="Progress summary">
+      <div class="score-tile"><strong id="scoreCorrect">0</strong><span>Correct</span></div>
+      <div class="score-tile"><strong id="scoreChecked">0</strong><span>Checked</span></div>
+      <div class="score-tile"><strong id="scoreTotal">0</strong><span>Total Items</span></div>
+      <div class="score-tile"><strong id="scorePercent">0%</strong><span>Accuracy</span></div>
+    </section>
+
+    <main id="sections"></main>
+  </div>
+
+  <script>
+const STORAGE_KEY = "abeka_la_test15_single_page_v7";
+const PATTERNS = ["S AV", "S AV DO", "S LV PN", "S LV PA", "S BV"];
+const ROLES = [
+  { id: "S", label: "Subject", className: "role-s" },
+  { id: "AV", label: "Action Verb", className: "role-av" },
+  { id: "LV", label: "Linking Verb", className: "role-lv" },
+  { id: "BV", label: "Being Verb", className: "role-bv" },
+  { id: "DO", label: "Direct Object", className: "role-do" },
+  { id: "PN", label: "Pred. Nom.", className: "role-pn" },
+  { id: "PA", label: "Pred. Adj.", className: "role-pa" },
+  { id: "ADJ", label: "Adjective", className: "role-adj" },
+  { id: "ADV", label: "Adverb", className: "role-adv" },
+  { id: "CONJ", label: "Conjunction", className: "role-conj" },
+  { id: "PREP", label: "Preposition", className: "role-prep" },
+  { id: "OP", label: "Obj. Prep.", className: "role-op" },
+  { id: "OMIT", label: "Prep phrase word", className: "role-omit" }
+];
+const ROLE_MAP = Object.fromEntries(ROLES.map(role => [role.id, role]));
+const BASIC_STRUCTURES = ["simple", "av-do", "compound-subject-do", "compound-verb"];
+const SHAPES = [
+  { id: "simple", label: "Simple subject and predicate" },
+  { id: "simple-subjectmod", label: "Simple subject and predicate with subject modifier" },
+  { id: "simple-adv", label: "Simple subject and predicate with adverb" },
+  { id: "av-do", label: "Action verb with direct object" },
+  { id: "av-do-subjectmod", label: "Action verb with direct object and subject modifier" },
+  { id: "av-do-objectmod", label: "Action verb with direct object and object modifier" },
+  { id: "av-do-adv", label: "Action verb with direct object and adverb" },
+  { id: "csdo-basic", label: "Compound subject with direct object" },
+  { id: "csdo-subject-object-adv", label: "Compound subject, direct object, and three modifiers" },
+  { id: "csdo-object2-adv", label: "Compound subject, direct object, two object modifiers, and adverb" },
+  { id: "csdo-subject2-object", label: "Compound subject, direct object, two subject modifiers, and object modifier" },
+  { id: "cv-basic", label: "Compound action verbs" },
+  { id: "cv-subject1mod", label: "Compound action verbs with one subject modifier" },
+  { id: "cv-subject2mods", label: "Compound action verbs with two subject modifiers" },
+  { id: "cv-with-object", label: "Compound action verbs with direct object divider" }
+];
+const SHAPE_MAP = Object.fromEntries(SHAPES.map(shape => [shape.id, shape]));
+const DETAIL_CHOICES = {
+  simple: ["simple", "simple-subjectmod", "simple-adv"],
+  "av-do": ["av-do", "av-do-subjectmod", "av-do-objectmod", "av-do-adv"],
+  "compound-subject-do": ["csdo-basic", "csdo-subject-object-adv", "csdo-object2-adv", "csdo-subject2-object"],
+  "compound-verb": ["cv-basic", "cv-subject1mod", "cv-subject2mods", "cv-with-object"]
+};
+const DATA = [
+  { id: "conjunctions", title: "Conjunctions and Commas", countLabel: "6 items", type: "conjunctions", directions: "Circle each conjunction. Use Add Before or Add After, then click a word to place a comma mark.", items: [
+    { id: "c1", num: 1, skill: "series plus opening word", tokens: ["Today", "we", "packed", "sandwiches", "apples", "and", "cookies"], conjunctions: [5], commaBoundaries: [1, 4, 5], answer: "Today, we packed sandwiches, apples, and cookies." },
+    { id: "c2", num: 2, skill: "compound sentence", tokens: ["Olivia", "swept", "the", "porch", "and", "Daniel", "washed", "the", "windows"], conjunctions: [4], commaBoundaries: [4], answer: "Olivia swept the porch, and Daniel washed the windows." },
+    { id: "c3", num: 3, skill: "joined modifiers", tokens: ["The", "morning", "was", "cloudy", "but", "pleasant"], conjunctions: [4], commaBoundaries: [], answer: "The morning was cloudy but pleasant." },
+    { id: "c4", num: 4, skill: "compound sentence", tokens: ["We", "waited", "for", "an", "hour", "but", "the", "bus", "never", "came"], conjunctions: [5], commaBoundaries: [5], answer: "We waited for an hour, but the bus never came." },
+    { id: "c5", num: 5, skill: "choice with or", tokens: ["Would", "you", "like", "lemonade", "or", "water", "with", "lunch"], conjunctions: [4], commaBoundaries: [], answer: "Would you like lemonade or water with lunch?" },
+    { id: "c6", num: 6, skill: "series of verbs", tokens: ["The", "children", "laughed", "jumped", "and", "splashed", "beside", "the", "dock"], conjunctions: [4], commaBoundaries: [3, 4], answer: "The children laughed, jumped, and splashed beside the dock." }
+  ] },
+  { id: "prepositions", title: "Prepositional Phrases", countLabel: "4 items", type: "phrases", directions: "Use Mark Phrase, then click the first and last word. Use Object of Prep. to mark each object.", objectsRequired: true, items: [
+    { id: "p1", num: 7, tokens: ["The", "choir", "practiced", "after", "chapel", "in", "the", "music", "room"], phraseRanges: [[3, 4], [5, 8]], objects: [4, 8] },
+    { id: "p2", num: 8, tokens: ["Before", "breakfast", "Sarah", "fed", "the", "calves"], phraseRanges: [[0, 1]], objects: [1] },
+    { id: "p3", num: 9, tokens: ["The", "flashlight", "fell", "under", "the", "back", "seat"], phraseRanges: [[3, 6]], objects: [6] },
+    { id: "p4", num: 10, tokens: ["Near", "the", "playground", "the", "families", "waited", "for", "shade"], phraseRanges: [[0, 2], [6, 7]], objects: [2, 7] }
+  ] },
+  { id: "patterns", title: "Prepositional Phrases and Sentence Patterns", countLabel: "5 items", type: "patterns", directions: "Mark each prepositional phrase, then choose the sentence pattern after ignoring those phrases.", items: [
+    { id: "sp1", num: 11, tokens: ["The", "runners", "jogged", "steadily", "around", "the", "track"], phraseRanges: [[4, 6]], pattern: "S AV" },
+    { id: "sp2", num: 12, tokens: ["Beyond", "the", "fence", "Caleb", "and", "Omar", "ran", "along", "the", "trail"], phraseRanges: [[0, 2], [7, 9]], pattern: "S AV" },
+    { id: "sp3", num: 13, tokens: ["The", "students", "finished", "the", "poster", "with", "bright", "markers"], phraseRanges: [[5, 7]], pattern: "S AV DO" },
+    { id: "sp4", num: 14, tokens: ["The", "boy", "beside", "the", "fence", "is", "my", "teammate"], phraseRanges: [[2, 4]], pattern: "S LV PN" },
+    { id: "sp5", num: 15, tokens: ["During", "recess", "we", "played", "kickball", "near", "the", "swings"], phraseRanges: [[0, 1], [5, 7]], pattern: "S AV DO" }
+  ] },
+  { id: "advprep", title: "Adverb or Preposition", countLabel: "8 items", type: "advprep", directions: "Mark every prepositional phrase, then identify the bold word as Adv. or Prep.", items: [
+    { id: "a1", num: 16, tokens: ["Please", "slide", "the", "tray", "over"], boldIndex: 4, word: "over", phraseRanges: [], answer: "Adv." },
+    { id: "a2", num: 17, tokens: ["The", "kite", "drifted", "over", "the", "barn"], boldIndex: 3, word: "over", phraseRanges: [[3, 5]], answer: "Prep." },
+    { id: "a3", num: 18, tokens: ["Mia", "stood", "near", "the", "piano"], boldIndex: 2, word: "near", phraseRanges: [[2, 4]], answer: "Prep." },
+    { id: "a4", num: 19, tokens: ["The", "puppy", "ran", "toward", "the", "porch"], boldIndex: 3, word: "toward", phraseRanges: [[3, 5]], answer: "Prep." },
+    { id: "a5", num: 20, tokens: ["The", "waves", "crashed", "against", "the", "rocks", "as", "they", "rolled", "in"], boldIndex: 9, word: "in", phraseRanges: [[3, 5]], answer: "Adv." },
+    { id: "a6", num: 21, tokens: ["The", "narrow", "bridge", "measures", "twenty", "feet", "across"], boldIndex: 6, word: "across", phraseRanges: [], answer: "Adv." },
+    { id: "a7", num: 22, tokens: ["Ethan", "found", "a", "receipt", "between", "the", "pages", "of", "a", "notebook"], boldIndex: 4, word: "between", phraseRanges: [[4, 6], [7, 9]], answer: "Prep." },
+    { id: "a8", num: 23, tokens: ["Turn", "the", "lamp", "off", "now"], boldIndex: 3, word: "off", phraseRanges: [], answer: "Adv." }
+  ] },  { id: "diagramming", title: "Sentence Diagramming", countLabel: "4 items", type: "diagram", directions: "Mark roles, choose the sentence pattern, choose the basic diagram structure, then choose its detailed version and place each word. Prepositional phrases are omitted from the diagram.", items: [
+    { id: "d1", num: 24, skill: "compound subject with direct object", sentence: "Yesterday, Leah and her brother packed their lunches before school.", tokens: ["Yesterday", "Leah", "and", "her", "brother", "packed", "their", "lunches", "before", "school"], pattern: "S AV DO", shape: "csdo-subject-object-adv", omitted: ["before school"], roles: { S: [1, 4], AV: [5], DO: [7], ADJ: [3, 6], ADV: [0], CONJ: [2], PREP: [8], OP: [9], OMIT: [] }, slots: [
+      { id: "subjectA", label: "Subject", expected: [1] }, { id: "subjectConj", label: "and", expected: [2] }, { id: "subjectB", label: "Subject", expected: [4] }, { id: "verb", label: "Action verb", expected: [5] }, { id: "object", label: "Direct object", expected: [7] }, { id: "adv", label: "Adverb", expected: [0] }, { id: "subjectMod", label: "Adjective", expected: [3] }, { id: "objectMod", label: "Adjective", expected: [6] }
+    ] },
+    { id: "d2", num: 25, skill: "compound action verbs", sentence: "The frisky squirrel scampered across the lawn and ran up the old tree.", tokens: ["The", "frisky", "squirrel", "scampered", "across", "the", "lawn", "and", "ran", "up", "the", "old", "tree"], pattern: "S AV", shape: "cv-subject2mods", omitted: ["across the lawn", "up the old tree"], roles: { S: [2], AV: [3, 8], DO: [], ADJ: [0, 1], ADV: [], CONJ: [7], PREP: [4, 9], OP: [6, 12], OMIT: [5, 10, 11] }, slots: [
+      { id: "subject", label: "Subject", expected: [2] }, { id: "verbA", label: "Action verb", expected: [3] }, { id: "verbConj", label: "and", expected: [7] }, { id: "verbB", label: "Action verb", expected: [8] }, { id: "subjectModA", label: "Adjective", expected: [0] }, { id: "subjectModB", label: "Adjective", expected: [1] }
+    ] },
+    { id: "d3", num: 26, skill: "compound subject and modifiers", sentence: "Quietly, Ben and Clara carried the heavy baskets into the pantry.", tokens: ["Quietly", "Ben", "and", "Clara", "carried", "the", "heavy", "baskets", "into", "the", "pantry"], pattern: "S AV DO", shape: "csdo-object2-adv", omitted: ["into the pantry"], roles: { S: [1, 3], AV: [4], DO: [7], ADJ: [5, 6], ADV: [0], CONJ: [2], PREP: [8], OP: [10], OMIT: [9] }, slots: [
+      { id: "subjectA", label: "Subject", expected: [1] }, { id: "subjectConj", label: "and", expected: [2] }, { id: "subjectB", label: "Subject", expected: [3] }, { id: "verb", label: "Action verb", expected: [4] }, { id: "object", label: "Direct object", expected: [7] }, { id: "adv", label: "Adverb", expected: [0] }, { id: "objectModA", label: "Adjective", expected: [5] }, { id: "objectModB", label: "Adjective", expected: [6] }
+    ] },
+    { id: "d4", num: 27, skill: "compound action verbs with phrases", sentence: "The small dog barked beside the gate and growled at the stranger.", tokens: ["The", "small", "dog", "barked", "beside", "the", "gate", "and", "growled", "at", "the", "stranger"], pattern: "S AV", shape: "cv-subject2mods", omitted: ["beside the gate", "at the stranger"], roles: { S: [2], AV: [3, 8], DO: [], ADJ: [0, 1], ADV: [], CONJ: [7], PREP: [4, 9], OP: [6, 11], OMIT: [5, 10] }, slots: [
+      { id: "subject", label: "Subject", expected: [2] }, { id: "verbA", label: "Action verb", expected: [3] }, { id: "verbConj", label: "and", expected: [7] }, { id: "verbB", label: "Action verb", expected: [8] }, { id: "subjectModA", label: "Adjective", expected: [0] }, { id: "subjectModB", label: "Adjective", expected: [1] }
+    ] }
+  ] }
+];
+let state = loadState();
+
+function loadState() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (parsed && parsed.answers && parsed.checked) return parsed;
+  } catch (error) {}
+  return { answers: {}, checked: {}, showAnswers: false };
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function allItems() {
+  return DATA.flatMap(section => section.items.map(item => ({ section, item })));
+}
+
+function getAnswer(itemId) {
+  if (!state.answers[itemId]) state.answers[itemId] = {};
+  return state.answers[itemId];
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function normalize(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/<[^>]*>/g, "")
+    .replace(/[^a-z0-9,\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function sortNumbers(values) {
+  return [...new Set((values || []).map(Number).filter(Number.isFinite))].sort((a, b) => a - b);
+}
+
+function sameSet(actual, expected) {
+  const a = sortNumbers(actual).map(String);
+  const e = sortNumbers(expected).map(String);
+  return a.length === e.length && a.every((value, index) => value === e[index]);
+}
+
+function sameRanges(actual, expected) {
+  const pack = ranges => (ranges || [])
+    .map(range => [Number(range[0]), Number(range[1])].sort((a, b) => a - b).join("-"))
+    .sort();
+  const a = pack(actual);
+  const e = pack(expected);
+  return a.length === e.length && a.every((value, index) => value === e[index]);
+}
+
+function phraseText(item, range) {
+  const [start, end] = [Number(range[0]), Number(range[1])].sort((a, b) => a - b);
+  return item.tokens.slice(start, end + 1).join(" ");
+}
+
+function tokenInRanges(index, ranges) {
+  return (ranges || []).some(range => {
+    const [start, end] = [Number(range[0]), Number(range[1])].sort((a, b) => a - b);
+    return index >= start && index <= end;
+  });
+}
+
+function commaBoundary(mark) {
+  const index = Number(mark.index);
+  return mark.position === "before" ? index : index + 1;
+}
+
+function commaBoundaryList(marks) {
+  return [...new Set((marks || []).map(commaBoundary))]
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b);
+}
+
+function hasCommaMark(marks, index, position) {
+  return (marks || []).some(mark => Number(mark.index) === index && mark.position === position);
+}
+
+function toggleCommaMark(answer, index, position) {
+  const boundary = position === "before" ? index : index + 1;
+  const current = answer.commaMarks || [];
+  const next = current.filter(mark => commaBoundary(mark) !== boundary);
+  if (next.length === current.length) next.push({ index, position });
+  answer.commaMarks = next;
+}
+
+function commaPlacementLabel(item, boundary) {
+  if (boundary <= 0) return `before ${item.tokens[0]}`;
+  if (boundary >= item.tokens.length) return `after ${item.tokens[item.tokens.length - 1]}`;
+  return `after ${item.tokens[boundary - 1]} / before ${item.tokens[boundary]}`;
+}
+
+function expectedObjects(item) {
+  if (item.objects) return item.objects;
+  return (item.phraseRanges || []).map(range => Math.max(range[0], range[1]));
+}
+
+function answerRoles(answer) {
+  const roles = {};
+  ROLES.forEach(role => roles[role.id] = sortNumbers((answer.roles && answer.roles[role.id]) || []));
+  return roles;
+}
+
+function expectedRoleSet(item, roleId) {
+  return sortNumbers((item.roles && item.roles[roleId]) || []);
+}
+
+function assignmentLabel(item, answer, slotId) {
+  const ids = sortNumbers((answer.assignments && answer.assignments[slotId]) || []);
+  if (!ids.length) return "";
+  return ids.map(id => item.tokens[id]).join(" ");
+}
+
+function slotExpectedLabel(item, slot) {
+  return slot.expected.map(index => item.tokens[index]).join(" ");
+}
+function render() {
+  document.getElementById("toggleAnswersBtn").textContent = state.showAnswers ? "Hide Answers" : "Show Answers";
+  document.getElementById("sections").innerHTML = DATA.map(renderSection).join("");
+  attachHandlers();
+  renderScores();
+}
+
+function renderSection(section) {
+  return `
+    <section class="section" id="${section.id}">
+      <div class="section-head">
+        <div>
+          <h2>${escapeHtml(section.title)}</h2>
+          <p class="directions">${escapeHtml(section.directions)}</p>
+        </div>
+        <span class="section-count">${escapeHtml(section.countLabel)}</span>
+      </div>
+      <div class="items">
+        ${section.items.map(item => renderItem(section, item)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderItem(section, item) {
+  if (section.type === "conjunctions") return renderConjunctionItem(section, item);
+  if (section.type === "phrases" || section.type === "patterns" || section.type === "advprep") return renderPhraseStyleItem(section, item);
+  return renderDiagramItem(section, item);
+}
+
+function renderTop(item, tag) {
+  return `
+    <div class="item-top">
+      <span class="item-num">${item.num}</span>
+      <span class="tag">${escapeHtml(tag)}</span>
+    </div>
+  `;
+}
+
+function renderConjunctionItem(section, item) {
+  const answer = getAnswer(item.id);
+  const selected = new Set(answer.tokens || []);
+  const commaMode = answer.commaMode || "";
+  const commaMarks = answer.commaMarks || [];
+  const placementText = item.commaBoundaries.length
+    ? item.commaBoundaries.map(boundary => commaPlacementLabel(item, boundary)).join("; ")
+    : "No comma needed.";
+  return `
+    <article class="item-card" data-card="${item.id}">
+      ${renderTop(item, item.skill)}
+      <div class="mode-row" role="group" aria-label="Comma placement mode">
+        <button class="mode-btn ${commaMode === "before" ? "active" : ""}" type="button" data-action="comma-mode" data-item="${item.id}" data-mode="before">Add Before</button>
+        <button class="mode-btn ${commaMode === "after" ? "active" : ""}" type="button" data-action="comma-mode" data-item="${item.id}" data-mode="after">Add After</button>
+      </div>
+      <div class="sentence-line">
+        <div class="token-row">
+          ${item.tokens.map((token, index) => `
+            <button class="token-btn ${selected.has(index) ? "selected" : ""}" type="button" data-action="conj-token" data-item="${item.id}" data-index="${index}">
+              <span class="comma-mark comma-before">${hasCommaMark(commaMarks, index, "before") ? "," : ""}</span><span>${escapeHtml(token)}</span><span class="comma-mark comma-after">${hasCommaMark(commaMarks, index, "after") ? "," : ""}</span>
+            </button>
+          `).join("")}
+        </div>
+      </div>
+      ${renderActions(item.id)}
+      ${renderFeedback(item.id)}
+      ${renderAnswer(item.id, `<strong>Answer:</strong> ${escapeHtml(item.answer)}<br><strong>Conjunction:</strong> ${item.conjunctions.map(i => escapeHtml(item.tokens[i])).join(", ")}<br><strong>Comma placements:</strong> ${escapeHtml(placementText)}`)}
+    </article>
+  `;
+}
+
+function renderPhraseStyleItem(section, item) {
+  const answer = getAnswer(item.id);
+  const ranges = answer.phrases || [];
+  const objects = new Set(answer.objects || []);
+  const mode = answer.mode || "";
+  const tag = section.type === "patterns" ? "phrase and pattern" : section.type === "advprep" ? item.word : "phrase and object";
+  return `
+    <article class="item-card" data-card="${item.id}">
+      ${renderTop(item, tag)}
+      ${section.type === "advprep" ? `<p class="prompt">Bold word: <strong>${escapeHtml(item.word)}</strong></p>` : ""}
+      <div class="mode-row" role="group" aria-label="Phrase marking mode">
+        <button class="mode-btn ${mode === "phrase" ? "active" : ""}" type="button" data-action="phrase-mode" data-item="${item.id}" data-mode="phrase">Mark Phrase</button>
+        <button class="mode-btn ${mode === "object" ? "active" : ""}" type="button" data-action="phrase-mode" data-item="${item.id}" data-mode="object">Object of Prep.</button>
+      </div>
+      <div class="sentence-line">
+        <div class="token-row">
+          ${item.tokens.map((token, index) => {
+            const classes = ["token-btn"];
+            if (tokenInRanges(index, ranges)) classes.push("phrase-token");
+            if (objects.has(index)) classes.push("object-token");
+            if (answer.phraseStart === index) classes.push("pending-token");
+            if (item.boldIndex === index) classes.push("bold-token");
+            return `<button class="${classes.join(" ")}" type="button" data-action="phrase-token" data-item="${item.id}" data-index="${index}"><span class="word-text">${escapeHtml(token)}</span></button>`;
+          }).join("")}
+        </div>
+      </div>
+      ${renderPhraseChips(item, answer, section)}
+      ${section.type === "patterns" ? renderPatternButtons(item, answer) : ""}
+      ${section.type === "advprep" ? renderAdvPrepButtons(item, answer) : ""}
+      ${renderActions(item.id)}
+      ${renderFeedback(item.id)}
+      ${renderPhraseAnswer(section, item)}
+    </article>
+  `;
+}
+function renderPhraseChips(item, answer, section) {
+  const phraseChips = (answer.phrases || []).map((range, index) => `
+    <span class="mark-chip">(${escapeHtml(phraseText(item, range))}) <button class="chip-delete" type="button" aria-label="Delete phrase" data-action="delete-phrase" data-item="${item.id}" data-index="${index}">x</button></span>
+  `).join("");
+  const objectChips = sortNumbers(answer.objects || []).map(index => `
+    <span class="mark-chip">OP: ${escapeHtml(item.tokens[index])} <button class="chip-delete" type="button" aria-label="Delete object" data-action="delete-object" data-item="${item.id}" data-index="${index}">x</button></span>
+  `).join("");
+  const pending = answer.phraseStart !== undefined && answer.phraseStart !== null
+    ? `<span class="mark-chip">Start: ${escapeHtml(item.tokens[answer.phraseStart])}</span>`
+    : "";
+  const text = phraseChips || objectChips || pending ? "" : `<span class="directions">No marks yet.</span>`;
+  return `<div class="mark-summary">${phraseChips}${objectChips}${pending}${text}</div>`;
+}
+
+function renderPatternButtons(item, answer) {
+  return `
+    <div class="mode-row" role="group" aria-label="Sentence pattern choices">
+      ${PATTERNS.map(pattern => `<button class="mode-btn ${answer.pattern === pattern ? "active" : ""}" type="button" data-action="pattern-choice" data-item="${item.id}" data-pattern="${escapeHtml(pattern)}">${escapeHtml(pattern)}</button>`).join("")}
+    </div>
+  `;
+}
+
+function renderAdvPrepButtons(item, answer) {
+  return `
+    <div class="mode-row" role="group" aria-label="Adverb or preposition choices">
+      <button class="mode-btn ${answer.type === "Adv." ? "active" : ""}" type="button" data-action="advprep-choice" data-item="${item.id}" data-value="Adv.">Adv.</button>
+      <button class="mode-btn ${answer.type === "Prep." ? "active" : ""}" type="button" data-action="advprep-choice" data-item="${item.id}" data-value="Prep.">Prep.</button>
+    </div>
+  `;
+}
+
+function renderPhraseAnswer(section, item) {
+  const phraseTextAnswer = item.phraseRanges.length
+    ? item.phraseRanges.map(range => `(${escapeHtml(phraseText(item, range))})`).join(" ")
+    : "No prepositional phrase.";
+  const objectText = expectedObjects(item).length ? expectedObjects(item).map(index => item.tokens[index]).join(", ") : "none";
+  let html = `<strong>Phrase(s):</strong> ${phraseTextAnswer}`;
+  if (section.type === "phrases") html += `<br><strong>Object(s):</strong> ${escapeHtml(objectText)}`;
+  if (section.type === "patterns") html += `<br><strong>Pattern:</strong> ${escapeHtml(item.pattern)}`;
+  if (section.type === "advprep") html += `<br><strong>${escapeHtml(item.word)}:</strong> ${escapeHtml(item.answer)}`;
+  return renderAnswer(item.id, html);
+}
+
+function renderDiagramItem(section, item) {
+  const answer = getAnswer(item.id);
+  if (!answer.roles) answer.roles = {};
+  if (!answer.assignments) answer.assignments = {};
+  if (answer.shape && !answer.basicShape) answer.basicShape = basicShapeForDetail(answer.shape);
+  const roles = answerRoles(answer);
+  return `
+    <article class="item-card wide" data-card="${item.id}">
+      ${renderTop(item, item.skill)}
+      <p class="prompt">${escapeHtml(item.sentence)}</p>
+      <div class="role-toolbar">
+        ${ROLES.map(role => `<button class="role-btn ${answer.selectedRole === role.id ? "selected" : ""}" type="button" data-action="diagram-role-mode" data-item="${item.id}" data-role="${role.id}"><strong>${escapeHtml(role.id)}</strong><span>${escapeHtml(role.label)}</span></button>`).join("")}
+        <button class="role-btn ${answer.selectedRole === "CLEAR" ? "selected" : ""}" type="button" data-action="diagram-role-mode" data-item="${item.id}" data-role="CLEAR"><strong>Clear</strong><span>Remove role</span></button>
+      </div>
+      <div class="sentence sentence-line">
+        ${item.tokens.map((token, index) => renderDiagramToken(item, answer, roles, token, index)).join("")}
+      </div>
+      <div class="mode-row" role="group" aria-label="Sentence pattern choices">
+        ${PATTERNS.map(pattern => `<button class="mode-btn ${answer.pattern === pattern ? "active" : ""}" type="button" data-action="diagram-pattern" data-item="${item.id}" data-pattern="${escapeHtml(pattern)}">${escapeHtml(pattern)}</button>`).join("")}
+      </div>
+      ${renderBasicStructureChoices(item, answer)}
+      ${renderDiagramStructureChoices(item, answer)}
+      <div class="legend">
+        <span class="pill">Omit: ${escapeHtml(item.omitted.join("; "))}</span>
+        <span class="pill">Selected word: ${answer.selectedWord === undefined || answer.selectedWord === null ? "none" : escapeHtml(item.tokens[answer.selectedWord])}</span>
+      </div>
+      <div class="word-bank" aria-label="Diagram word bank">
+        ${item.tokens.map((token, index) => `<button class="word-token ${answer.selectedWord === index ? "active-role" : ""} ${diagramWordUsed(answer, index) ? "used-word" : ""}" type="button" data-action="diagram-word" data-item="${item.id}" data-index="${index}"><span class="word-text">${escapeHtml(token)}</span></button>`).join("")}
+      </div>
+      <div class="diagram-wrap">${renderDiagramSvg(item, answer)}</div>
+      ${renderActions(item.id)}
+      ${renderFeedback(item.id)}
+      ${renderAnswer(item.id, renderDiagramAnswer(item))}
+    </article>
+  `;
+}
+
+function basicShapeForDetail(shapeId) {
+  if (!shapeId) return "";
+  if (shapeId === "simple" || shapeId.startsWith("simple-")) return "simple";
+  if (shapeId === "av-do" || shapeId.startsWith("av-do-")) return "av-do";
+  if (shapeId.startsWith("csdo-")) return "compound-subject-do";
+  if (shapeId.startsWith("cv-")) return "compound-verb";
+  return "";
+}
+
+function renderBasicStructureChoices(item, answer) {
+  return `
+    <div class="diagram-choices" role="group" aria-label="Basic diagram structure choices">
+      ${BASIC_STRUCTURES.map((basicId, index) => `<button class="diagram-choice ${answer.basicShape === basicId ? "selected" : ""}" type="button" aria-label="Basic diagram option ${index + 1}" data-action="diagram-basic" data-item="${item.id}" data-basic="${basicId}">
+        ${renderStructurePreview(basicId)}
+      </button>`).join("")}
+    </div>
+  `;
+}
+
+function renderDiagramStructureChoices(item, answer) {
+  const basic = answer.basicShape || "";
+  if (!basic) return "";
+  const choices = DETAIL_CHOICES[basic] || [];
+  return `
+    <div class="diagram-choices" role="group" aria-label="Detailed diagram version choices">
+      ${choices.map((shapeId, index) => `<button class="diagram-choice ${answer.shape === shapeId ? "selected" : ""}" type="button" aria-label="Detailed diagram option ${index + 1}" data-action="diagram-shape" data-item="${item.id}" data-shape="${shapeId}">
+        ${renderStructurePreview(shapeId)}
+      </button>`).join("")}
+    </div>
+  `;
+}
+
+function renderStructurePreview(shapeId) {
+  return `<svg viewBox="0 0 760 260" role="img" aria-hidden="true">${structurePreviewContent(shapeId)}</svg>`;
+}
+
+function previewModifier(x1, y1, x2, y2) {
+  return `<line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>`;
+}
+
+function splitConjunctionGuide(x, topY, bottomY, gapTop, gapBottom, controlX) {
+  return `
+    <path class="diagram-guide" d="M${x} ${topY} C${controlX} ${topY + 18} ${controlX} ${gapTop - 8} ${x + 10} ${gapTop}"></path>
+    <path class="diagram-guide" d="M${x + 10} ${gapBottom} C${controlX} ${gapBottom + 8} ${controlX} ${bottomY - 18} ${x} ${bottomY}"></path>
+  `;
+}
+
+function structurePreviewContent(shapeId) {
+  if (shapeId === "compound-subject-do") shapeId = "csdo-basic";
+  if (shapeId === "compound-verb") shapeId = "cv-basic";
+  if (shapeId === "av-do" || shapeId.startsWith("av-do-")) {
+    const mods = [];
+    if (shapeId === "av-do-subjectmod") mods.push(previewModifier(215, 130, 175, 202));
+    if (shapeId === "av-do-objectmod") mods.push(previewModifier(590, 130, 550, 202));
+    if (shapeId === "av-do-adv") mods.push(previewModifier(430, 130, 390, 202));
+    return `
+      <line class="diagram-line" x1="110" y1="130" x2="650" y2="130"></line>
+      <line class="diagram-line" x1="330" y1="88" x2="330" y2="172"></line>
+      <line class="diagram-line" x1="500" y1="88" x2="500" y2="130"></line>
+      ${mods.join("")}
+    `;
+  }
+  if (shapeId === "simple" || shapeId.startsWith("simple-")) {
+    const mods = [];
+    if (shapeId === "simple-subjectmod") mods.push(previewModifier(260, 130, 220, 202));
+    if (shapeId === "simple-adv") mods.push(previewModifier(500, 130, 460, 202));
+    return `
+      <line class="diagram-line" x1="110" y1="130" x2="650" y2="130"></line>
+      <line class="diagram-line" x1="380" y1="88" x2="380" y2="172"></line>
+      ${mods.join("")}
+    `;
+  }
+  if (shapeId.startsWith("csdo-")) {
+    const mods = [];
+    if (shapeId === "csdo-subject-object-adv") mods.push(previewModifier(420, 130, 380, 202), previewModifier(222, 178, 182, 234), previewModifier(590, 130, 550, 202));
+    if (shapeId === "csdo-object2-adv") mods.push(previewModifier(420, 130, 380, 202), previewModifier(575, 130, 535, 202), previewModifier(625, 130, 585, 202));
+    if (shapeId === "csdo-subject2-object") mods.push(previewModifier(190, 178, 150, 234), previewModifier(245, 178, 205, 234), previewModifier(590, 130, 550, 202));
+    return `
+      <line class="diagram-line" x1="90" y1="130" x2="670" y2="130"></line>
+      <line class="diagram-line" x1="330" y1="86" x2="330" y2="174"></line>
+      <line class="diagram-line" x1="500" y1="86" x2="500" y2="130"></line>
+      <line class="diagram-line" x1="140" y1="82" x2="290" y2="82"></line>
+      <line class="diagram-line" x1="140" y1="178" x2="290" y2="178"></line>
+      <line class="diagram-line" x1="290" y1="82" x2="330" y2="130"></line>
+      <line class="diagram-line" x1="290" y1="178" x2="330" y2="130"></line>
+      ${splitConjunctionGuide(210, 94, 166, 116, 144, 226)}
+      ${mods.join("")}
+    `;
+  }
+  if (shapeId.startsWith("cv-")) {
+    const mods = [];
+    if (shapeId === "cv-subject1mod") mods.push(previewModifier(210, 130, 170, 202));
+    if (shapeId === "cv-subject2mods") mods.push(previewModifier(205, 130, 165, 202), previewModifier(255, 130, 215, 202));
+    const objectDivider = shapeId === "cv-with-object" ? `<line class="diagram-line" x1="595" y1="88" x2="595" y2="178"></line>` : "";
+    return `
+      <line class="diagram-line" x1="90" y1="130" x2="670" y2="130"></line>
+      <line class="diagram-line" x1="330" y1="86" x2="330" y2="174"></line>
+      <line class="diagram-line" x1="370" y1="82" x2="560" y2="82"></line>
+      <line class="diagram-line" x1="370" y1="178" x2="560" y2="178"></line>
+      <line class="diagram-line" x1="330" y1="130" x2="370" y2="82"></line>
+      <line class="diagram-line" x1="330" y1="130" x2="370" y2="178"></line>
+      ${splitConjunctionGuide(458, 94, 166, 116, 144, 474)}
+      ${objectDivider}${mods.join("")}
+    `;
+  }
+  return `
+    <line class="diagram-line" x1="110" y1="130" x2="650" y2="130"></line>
+    <line class="diagram-line" x1="380" y1="88" x2="380" y2="172"></line>
+  `;
+}
+function diagramWordUsed(answer, index) {
+  return Object.values(answer.assignments || {}).some(ids => sortNumbers(ids).includes(index));
+}
+function renderDiagramToken(item, answer, roles, token, index) {
+  const chips = ROLES
+    .filter(role => roles[role.id].includes(index))
+    .map(role => `<span class="chip ${role.className}">${escapeHtml(role.id)}</span>`)
+    .join("");
+  return `
+    <button class="word-token" type="button" data-action="diagram-role-token" data-item="${item.id}" data-index="${index}">
+      <span class="word-text">${escapeHtml(token)}</span>
+      <span class="role-chips">${chips}</span>
+    </button>
+  `;
+}
+function renderDiagramSvg(item, answer) {
+  const shape = answer.shape;
+  if (!shape) return emptyDiagramSvg(answer.basicShape ? "Choose a detailed diagram version." : "Choose a basic diagram structure.");
+  if (shape === "simple" || shape.startsWith("simple-")) return simpleSvg(item, answer, shape);
+  if (shape === "av-do" || shape.startsWith("av-do-")) return avDoSvg(item, answer, shape);
+  if (shape.startsWith("cv-")) return compoundVerbSvg(item, answer, shape);
+  if (shape.startsWith("csdo-")) return compoundSubjectDoSvg(item, answer, shape);
+  return simpleSvg(item, answer, shape);
+}
+
+function emptyDiagramSvg(message = "Choose a diagram structure first.") {
+  return `
+    <svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas">
+      <text class="diagram-text small-text" x="380" y="195">${escapeHtml(message)}</text>
+    </svg>
+  `;
+}
+
+function targetLabel(item, answer, slotId, fallback = "") {
+  return assignmentLabel(item, answer, slotId);
+}
+
+function targetBox(item, answer, slotId, x, y, width, height, rotate = 0, fallback = "") {
+  const label = targetLabel(item, answer, slotId, fallback);
+  const filled = assignmentLabel(item, answer, slotId) ? " filled" : "";
+  const selected = answer.selectedTarget === slotId ? " selected" : "";
+  const textX = x + width / 2;
+  const textY = y + height / 2 + 6;
+  const transform = rotate ? ` transform="rotate(${rotate} ${textX} ${textY})"` : "";
+  return `
+    <g class="diagram-target${filled}${selected}" data-action="diagram-target" data-item="${item.id}" data-slot="${slotId}">
+      <rect class="target-hit" x="${x - 8}" y="${y - 8}" width="${width + 16}" height="${height + 16}" rx="7"></rect>
+      <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="6" fill="#f8fafc" stroke="#667085"></rect>
+      <text class="diagram-text small-text" x="${textX}" y="${textY}"${transform}>${escapeHtml(label)}</text>
+    </g>
+  `;
+}
+
+function modTarget(item, answer, slotId, x1, y1, x2, y2, textX, textY, rotate = -55) {
+  const label = targetLabel(item, answer, slotId);
+  const filled = assignmentLabel(item, answer, slotId) ? " filled" : "";
+  return `
+    <g class="diagram-target${filled}" data-action="diagram-target" data-item="${item.id}" data-slot="${slotId}">
+      <rect class="target-hit" x="${Math.min(x1, x2) - 16}" y="${Math.min(y1, y2) - 22}" width="${Math.abs(x2 - x1) + 48}" height="${Math.abs(y2 - y1) + 48}" rx="7"></rect>
+      <line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>
+      <text class="diagram-text small-text" x="${textX}" y="${textY}" transform="rotate(${rotate} ${textX} ${textY})">${escapeHtml(label)}</text>
+    </g>
+  `;
+}
+
+function firstExistingSlot(item, ids) {
+  return ids.find(id => item.slots.some(slot => slot.id === id)) || ids[0];
+}
+
+function existingSlots(item, prefix) {
+  return item.slots
+    .map(slot => slot.id)
+    .filter(id => id === prefix || id.startsWith(prefix));
+}
+
+function optionalModTarget(item, answer, slotId, x1, y1, x2, y2, textX, textY) {
+  return slotId ? modTarget(item, answer, slotId, x1, y1, x2, y2, textX, textY) : "";
+}
+
+function simpleSvg(item, answer, shape = answer.shape || item.shape) {
+  const subjectSlot = firstExistingSlot(item, ["subject", "subjectA"]);
+  const verbSlot = firstExistingSlot(item, ["verb", "verbA"]);
+  const subjectMods = existingSlots(item, "subjectMod");
+  const modLines = [];
+  if (shape === "simple-subjectmod") modLines.push(optionalModTarget(item, answer, subjectMods[0] || "subjectMod", 240, 170, 194, 246, 210, 224));
+  if (shape === "simple-adv") modLines.push(optionalModTarget(item, answer, firstExistingSlot(item, ["adv"]), 520, 170, 474, 246, 490, 224));
+  return `
+    <svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas">
+      <line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line>
+      <line class="diagram-line" x1="380" y1="124" x2="380" y2="216"></line>
+      ${targetBox(item, answer, subjectSlot, 166, 136, 142, 34)}
+      ${targetBox(item, answer, verbSlot, 450, 136, 142, 34)}
+      ${modLines.join("")}
+    </svg>
+  `;
+}
+
+function avDoSvg(item, answer, shape = answer.shape || item.shape) {
+  const subjectSlot = firstExistingSlot(item, ["subject", "subjectA"]);
+  const verbSlot = firstExistingSlot(item, ["verb", "verbA"]);
+  const objectSlot = firstExistingSlot(item, ["object"]);
+  const subjectMods = existingSlots(item, "subjectMod");
+  const objectMods = existingSlots(item, "objectMod");
+  const modLines = [];
+  if (shape === "av-do-subjectmod") modLines.push(optionalModTarget(item, answer, subjectMods[0] || "subjectMod", 220, 170, 174, 246, 190, 224));
+  if (shape === "av-do-objectmod") modLines.push(optionalModTarget(item, answer, objectMods[0] || "objectMod", 614, 170, 568, 246, 584, 224));
+  if (shape === "av-do-adv") modLines.push(optionalModTarget(item, answer, firstExistingSlot(item, ["adv"]), 434, 170, 388, 246, 404, 224));
+  return `
+    <svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas">
+      <line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line>
+      <line class="diagram-line" x1="330" y1="124" x2="330" y2="216"></line>
+      <line class="diagram-line" x1="510" y1="124" x2="510" y2="170"></line>
+      ${targetBox(item, answer, subjectSlot, 146, 136, 142, 34)}
+      ${targetBox(item, answer, verbSlot, 372, 136, 122, 34)}
+      ${targetBox(item, answer, objectSlot, 548, 136, 132, 34)}
+      ${modLines.join("")}
+    </svg>
+  `;
+}
+
+function compoundSubjectDoModifiers(item, answer, shape) {
+  const subjectMods = existingSlots(item, "subjectMod");
+  const objectMods = existingSlots(item, "objectMod");
+  const adv = firstExistingSlot(item, ["adv"]);
+  if (shape === "csdo-subject-object-adv") {
+    return [
+      optionalModTarget(item, answer, adv, 420, 170, 374, 246, 388, 224),
+      optionalModTarget(item, answer, subjectMods[0], 226, 224, 180, 302, 196, 278),
+      optionalModTarget(item, answer, objectMods[0], 620, 170, 574, 246, 590, 224)
+    ].join("");
+  }
+  if (shape === "csdo-object2-adv") {
+    return [
+      optionalModTarget(item, answer, adv, 420, 170, 374, 246, 388, 224),
+      optionalModTarget(item, answer, objectMods[0], 592, 170, 546, 246, 562, 224),
+      optionalModTarget(item, answer, objectMods[1], 642, 170, 596, 246, 612, 224)
+    ].join("");
+  }
+  if (shape === "csdo-subject2-object") {
+    return [
+      optionalModTarget(item, answer, subjectMods[0], 196, 224, 150, 302, 166, 278),
+      optionalModTarget(item, answer, subjectMods[1], 248, 224, 202, 302, 218, 278),
+      optionalModTarget(item, answer, objectMods[0], 620, 170, 574, 246, 590, 224)
+    ].join("");
+  }
+  return "";
+}
+
+function compoundSubjectDoSvg(item, answer, shape = answer.shape || item.shape) {
+  return `
+    <svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas">
+      <line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line>
+      <line class="diagram-line" x1="340" y1="124" x2="340" y2="216"></line>
+      <line class="diagram-line" x1="520" y1="124" x2="520" y2="170"></line>
+      <line class="diagram-line" x1="142" y1="116" x2="302" y2="116"></line>
+      <line class="diagram-line" x1="142" y1="224" x2="302" y2="224"></line>
+      <line class="diagram-line" x1="302" y1="116" x2="340" y2="170"></line>
+      <line class="diagram-line" x1="302" y1="224" x2="340" y2="170"></line>
+      ${splitConjunctionGuide(214, 126, 214, 148, 184, 232)}
+      ${targetBox(item, answer, "subjectA", 154, 82, 132, 34)}
+      ${targetBox(item, answer, "subjectConj", 196, 151, 72, 30)}
+      ${targetBox(item, answer, "subjectB", 154, 224, 132, 34)}
+      ${targetBox(item, answer, "verb", 376, 136, 122, 34)}
+      ${targetBox(item, answer, "object", 558, 136, 122, 34)}
+      ${compoundSubjectDoModifiers(item, answer, shape)}
+    </svg>
+  `;
+}
+
+function compoundVerbModifiers(item, answer, shape) {
+  const subjectMods = existingSlots(item, "subjectMod");
+  if (shape === "cv-subject1mod") {
+    return optionalModTarget(item, answer, subjectMods[0], 214, 170, 168, 246, 184, 224);
+  }
+  if (shape === "cv-subject2mods") {
+    return [
+      optionalModTarget(item, answer, subjectMods[0], 214, 170, 168, 246, 184, 224),
+      optionalModTarget(item, answer, subjectMods[1], 254, 170, 208, 246, 224, 224)
+    ].join("");
+  }
+  return "";
+}
+
+function compoundVerbSvg(item, answer, shape = answer.shape || item.shape) {
+  const objectDivider = shape === "cv-with-object" ? `<line class="diagram-line" x1="600" y1="124" x2="600" y2="224"></line>${targetBox(item, answer, "object", 612, 136, 72, 34)}` : "";
+  return `
+    <svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas">
+      <line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line>
+      <line class="diagram-line" x1="330" y1="124" x2="330" y2="216"></line>
+      <line class="diagram-line" x1="366" y1="116" x2="572" y2="116"></line>
+      <line class="diagram-line" x1="366" y1="224" x2="572" y2="224"></line>
+      <line class="diagram-line" x1="330" y1="170" x2="366" y2="116"></line>
+      <line class="diagram-line" x1="330" y1="170" x2="366" y2="224"></line>
+      ${splitConjunctionGuide(460, 126, 214, 148, 184, 478)}
+      ${objectDivider}
+      ${targetBox(item, answer, "subject", 154, 136, 132, 34)}
+      ${targetBox(item, answer, "verbA", 400, 82, 132, 34)}
+      ${targetBox(item, answer, "verbConj", 432, 151, 78, 30)}
+      ${targetBox(item, answer, "verbB", 400, 224, 132, 34)}
+      ${compoundVerbModifiers(item, answer, shape)}
+    </svg>
+  `;
+}
+function renderDiagramAnswer(item) {
+  const correct = { assignments: {}, basicShape: basicShapeForDetail(item.shape), shape: item.shape };
+  item.slots.forEach(slot => correct.assignments[slot.id] = [...slot.expected]);
+  const roleLines = ROLES
+    .map(role => {
+      const ids = expectedRoleSet(item, role.id);
+      if (!ids.length) return "";
+      return `${role.id}: ${ids.map(index => item.tokens[index]).join(", ")}`;
+    })
+    .filter(Boolean)
+    .join("; ");
+  return `
+    <strong>Pattern:</strong> ${escapeHtml(item.pattern)}<br>
+    <strong>Omit:</strong> ${escapeHtml(item.omitted.join("; "))}<br>
+    <strong>Roles:</strong> ${escapeHtml(roleLines)}
+    <div class="diagram-wrap">${renderDiagramSvg(item, correct)}</div>
+  `;
+}
+
+function renderActions(itemId) {
+  return `
+    <div class="actions">
+      <button class="btn primary" type="button" data-action="check" data-item="${itemId}">Check</button>
+      <button class="btn" type="button" data-action="clear" data-item="${itemId}">Clear</button>
+    </div>
+  `;
+}
+
+function renderFeedback(itemId) {
+  const result = state.checked[itemId];
+  if (!result) return `<div class="feedback" id="feedback-${itemId}"></div>`;
+  return `<div class="feedback show ${result.correct ? "good" : "bad"}" id="feedback-${itemId}">${escapeHtml(result.message)}</div>`;
+}
+
+function renderAnswer(itemId, html) {
+  return `<div class="answer ${state.showAnswers ? "show" : ""}" id="answer-${itemId}">${html}</div>`;
+}
+function markDirty(itemId) {
+  delete state.checked[itemId];
+  saveState();
+  render();
+}
+
+function attachHandlers() {
+  document.querySelectorAll("[data-action='comma-mode']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      answer.commaMode = answer.commaMode === button.dataset.mode ? "" : button.dataset.mode;
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='conj-token']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      const index = Number(button.dataset.index);
+      if (answer.commaMode === "before" || answer.commaMode === "after") {
+        toggleCommaMark(answer, index, answer.commaMode);
+      } else {
+        const set = new Set(answer.tokens || []);
+        if (set.has(index)) set.delete(index);
+        else set.add(index);
+        answer.tokens = [...set];
+      }
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='phrase-mode']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      answer.mode = answer.mode === button.dataset.mode ? "" : button.dataset.mode;
+      answer.phraseStart = null;
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='phrase-token']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      const index = Number(button.dataset.index);
+      if (answer.mode === "object") {
+        const objects = new Set(answer.objects || []);
+        if (objects.has(index)) objects.delete(index);
+        else objects.add(index);
+        answer.objects = sortNumbers([...objects]);
+      } else if (answer.mode === "phrase") {
+        if (answer.phraseStart === undefined || answer.phraseStart === null) {
+          answer.phraseStart = index;
+        } else {
+          const range = [answer.phraseStart, index].sort((a, b) => a - b);
+          const packed = range.join("-");
+          const ranges = answer.phrases || [];
+          if (!ranges.some(existing => [existing[0], existing[1]].sort((a, b) => a - b).join("-") === packed)) {
+            ranges.push(range);
+          }
+          answer.phrases = ranges;
+          answer.phraseStart = null;
+        }
+      }
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='delete-phrase']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      const index = Number(button.dataset.index);
+      answer.phrases = (answer.phrases || []).filter((_, current) => current !== index);
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='delete-object']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      const index = Number(button.dataset.index);
+      answer.objects = (answer.objects || []).filter(value => Number(value) !== index);
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='pattern-choice']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      answer.pattern = answer.pattern === button.dataset.pattern ? "" : button.dataset.pattern;
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='advprep-choice']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      answer.type = answer.type === button.dataset.value ? "" : button.dataset.value;
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='diagram-role-mode']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      answer.selectedRole = button.dataset.role;
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='diagram-role-token']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      if (!answer.roles) answer.roles = {};
+      const index = Number(button.dataset.index);
+      const selectedRole = answer.selectedRole || "S";
+      if (selectedRole === "CLEAR") {
+        ROLES.forEach(role => answer.roles[role.id] = (answer.roles[role.id] || []).filter(value => Number(value) !== index));
+      } else {
+        const set = new Set(answer.roles[selectedRole] || []);
+        if (set.has(index)) set.delete(index);
+        else set.add(index);
+        answer.roles[selectedRole] = sortNumbers([...set]);
+      }
+      markDirty(button.dataset.item);
+    });
+  });
+  document.querySelectorAll("[data-action='diagram-pattern']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      answer.pattern = answer.pattern === button.dataset.pattern ? "" : button.dataset.pattern;
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='diagram-basic']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      const next = answer.basicShape === button.dataset.basic ? "" : button.dataset.basic;
+      answer.basicShape = next;
+      answer.shape = "";
+      answer.assignments = {};
+      answer.selectedWord = null;
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='diagram-shape']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      const next = answer.shape === button.dataset.shape ? "" : button.dataset.shape;
+      answer.shape = next;
+      if (next) answer.basicShape = basicShapeForDetail(next);
+      answer.assignments = {};
+      answer.selectedWord = null;
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='diagram-word']").forEach(button => {
+    button.addEventListener("click", () => {
+      const answer = getAnswer(button.dataset.item);
+      const index = Number(button.dataset.index);
+      answer.selectedWord = answer.selectedWord === index ? null : index;
+      markDirty(button.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='diagram-target']").forEach(target => {
+    target.addEventListener("click", () => {
+      const answer = getAnswer(target.dataset.item);
+      if (!answer.assignments) answer.assignments = {};
+      const selected = answer.selectedWord;
+      if (selected === undefined || selected === null) {
+        delete answer.assignments[target.dataset.slot];
+      } else {
+        answer.assignments[target.dataset.slot] = [Number(selected)];
+        answer.selectedWord = null;
+      }
+      answer.selectedTarget = target.dataset.slot;
+      markDirty(target.dataset.item);
+    });
+  });
+
+  document.querySelectorAll("[data-action='check']").forEach(button => {
+    button.addEventListener("click", () => {
+      checkItem(button.dataset.item);
+      saveState();
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-action='clear']").forEach(button => {
+    button.addEventListener("click", () => {
+      delete state.answers[button.dataset.item];
+      delete state.checked[button.dataset.item];
+      saveState();
+      render();
+    });
+  });
+}
+
+function findItem(itemId) {
+  return allItems().find(entry => entry.item.id === itemId);
+}
+
+function checkItem(itemId) {
+  const entry = findItem(itemId);
+  if (!entry) return;
+  let result;
+  if (entry.section.type === "conjunctions") result = checkConjunction(entry.item);
+  else if (entry.section.type === "phrases") result = checkPhrases(entry.item, true, false);
+  else if (entry.section.type === "patterns") result = checkPhrases(entry.item, false, true);
+  else if (entry.section.type === "advprep") result = checkAdvPrep(entry.item);
+  else result = checkDiagram(entry.item);
+  state.checked[itemId] = result;
+}
+
+function checkConjunction(item) {
+  const answer = getAnswer(item.id);
+  const conjunctionOk = sameSet(answer.tokens || [], item.conjunctions);
+  const commaOk = sameSet(commaBoundaryList(answer.commaMarks || []), item.commaBoundaries);
+  const parts = [];
+  if (!conjunctionOk) parts.push("conjunction");
+  if (!commaOk) parts.push("comma placement");
+  return {
+    correct: conjunctionOk && commaOk,
+    message: conjunctionOk && commaOk ? "Correct." : `Check the ${parts.join(" and ")}.`
+  };
+}
+
+function checkPhrases(item, requireObjects, requirePattern) {
+  const answer = getAnswer(item.id);
+  const phraseOk = sameRanges(answer.phrases || [], item.phraseRanges || []);
+  const objectOk = !requireObjects || sameSet(answer.objects || [], expectedObjects(item));
+  const patternOk = !requirePattern || answer.pattern === item.pattern;
+  const parts = [];
+  if (!phraseOk) parts.push("prepositional phrase marks");
+  if (!objectOk) parts.push("object of the preposition marks");
+  if (!patternOk) parts.push("sentence pattern");
+  return {
+    correct: phraseOk && objectOk && patternOk,
+    message: phraseOk && objectOk && patternOk ? "Correct." : `Check the ${parts.join(" and ")}.`
+  };
+}
+
+function checkAdvPrep(item) {
+  const answer = getAnswer(item.id);
+  const phraseOk = sameRanges(answer.phrases || [], item.phraseRanges || []);
+  const typeOk = answer.type === item.answer;
+  const parts = [];
+  if (!phraseOk) parts.push("prepositional phrase marks");
+  if (!typeOk) parts.push("Adv./Prep. choice");
+  return {
+    correct: phraseOk && typeOk,
+    message: phraseOk && typeOk ? "Correct." : `Check the ${parts.join(" and ")}.`
+  };
+}
+function checkDiagram(item) {
+  const answer = getAnswer(item.id);
+  const roles = answerRoles(answer);
+  const roleErrors = [];
+  ROLES.forEach(role => {
+    const actual = roles[role.id];
+    const expected = expectedRoleSet(item, role.id);
+    if (!sameSet(actual, expected)) roleErrors.push(role.id);
+  });
+  const patternOk = answer.pattern === item.pattern;
+  const basicOk = answer.basicShape === basicShapeForDetail(item.shape);
+  const shapeOk = answer.shape === item.shape;
+  const slotErrors = [];
+  item.slots.forEach(slot => {
+    const actual = (answer.assignments && answer.assignments[slot.id]) || [];
+    if (!sameSet(actual, slot.expected)) slotErrors.push(slot.label);
+  });
+  const parts = [];
+  if (roleErrors.length) parts.push(`roles (${roleErrors.slice(0, 5).join(", ")}${roleErrors.length > 5 ? "..." : ""})`);
+  if (!patternOk) parts.push("sentence pattern");
+  if (!basicOk) parts.push("basic diagram structure");
+  if (!shapeOk) parts.push("detailed diagram version");
+  if (slotErrors.length) parts.push(`diagram placements (${slotErrors.slice(0, 4).join(", ")}${slotErrors.length > 4 ? "..." : ""})`);
+  const correct = !roleErrors.length && patternOk && basicOk && shapeOk && !slotErrors.length;
+  return {
+    correct,
+    message: correct ? "Correct." : `Check the ${parts.join(" and ")}.`
+  };
+}
+
+function renderScores() {
+  const total = allItems().length;
+  const checked = Object.keys(state.checked).length;
+  const correct = Object.values(state.checked).filter(result => result.correct).length;
+  const percent = checked ? Math.round((correct / checked) * 100) : 0;
+  document.getElementById("scoreCorrect").textContent = correct;
+  document.getElementById("scoreChecked").textContent = checked;
+  document.getElementById("scoreTotal").textContent = total;
+  document.getElementById("scorePercent").textContent = `${percent}%`;
+}
+
+document.getElementById("toggleAnswersBtn").addEventListener("click", () => {
+  state.showAnswers = !state.showAnswers;
+  saveState();
+  render();
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("Reset Test 15 practice progress?")) return;
+  state = { answers: {}, checked: {}, showAnswers: false };
+  saveState();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
