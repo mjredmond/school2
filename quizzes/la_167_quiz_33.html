@@ -196,21 +196,27 @@ function renderPhrase(item,v,a){
   const advprep=item.type==='advprep'?`<div class="modes"><span class="pill">Answer</span>${['Adv.','Prep.'].map(p=>`<button class="${a.advprep===p?'active':''}" data-action="set-advprep" data-id="${esc(item.id)}" data-value="${esc(p)}">${esc(p)}</button>`).join('')}</div>`:'';
   const labelChoices=Array.isArray(v.labelOptions)?`<div class="modes"><span class="pill">Noun label</span>${v.labelOptions.map(p=>`<button class="${a.label===p?'active':''}" data-action="set-label" data-id="${esc(item.id)}" data-value="${esc(p)}">${esc(p)}</button>`).join('')}</div>`:'';
   const subjectBtn=Array.isArray(v.subjectTargets)?`<button class="${a.mode==='subject'?'active':''}" data-action="phrase-mode" data-id="${esc(item.id)}" data-value="subject">Mark Subject</button>`:'';
+  // isCorrect grades v.verbTargets, so an item that defines them must offer a
+  // way to mark the verb or it can never be answered.
+  const verbBtn=Array.isArray(v.verbTargets)?`<button class="${a.mode==='verb'?'active':''}" data-action="phrase-mode" data-id="${esc(item.id)}" data-value="verb">Mark Verb</button>`:'';
+  const clearVerbs=Array.isArray(v.verbTargets)?`<button data-action="clear-verbs" data-id="${esc(item.id)}">Clear Verbs</button>`:'';
   const objectBtn=Array.isArray(v.objects)?`<button class="${a.mode==='object'?'active':''}" data-action="phrase-mode" data-id="${esc(item.id)}" data-value="object">Object of Preposition</button>`:'';
   const clearObjects=Array.isArray(v.objects)?`<button data-action="clear-objects" data-id="${esc(item.id)}">Clear Objects</button>`:'';
   const verbChoices=Array.isArray(v.verbChoices)?`<div class="modes"><span class="pill">Correct verb</span>${v.verbChoices.map(p=>`<button class="verb-choice ${a.verb===p?'active':''}" data-action="set-verb-choice" data-id="${esc(item.id)}" data-value="${esc(p)}">${esc(p)}</button>`).join('')}</div>`:'';
   if(v.separateActions)return renderSeparatedPhrase(item,v,a,pattern,advprep,labelChoices,verbChoices);
-  const modes=`<div class="modes"><button class="${a.mode==='phrase'?'active':''}" data-action="phrase-mode" data-id="${esc(item.id)}" data-value="phrase">Prepositional Phrase</button>${subjectBtn}${objectBtn}<button data-action="clear-phrases" data-id="${esc(item.id)}">Clear Phrases</button>${clearObjects}<button data-action="clear-subjects" data-id="${esc(item.id)}">Clear Subjects</button></div>`;
+  const clearSubjects=Array.isArray(v.subjectTargets)?`<button data-action="clear-subjects" data-id="${esc(item.id)}">Clear Subjects</button>`:'';
+  const modes=`<div class="modes"><button class="${a.mode==='phrase'?'active':''}" data-action="phrase-mode" data-id="${esc(item.id)}" data-value="phrase">Prepositional Phrase</button>${subjectBtn}${verbBtn}${objectBtn}<button data-action="clear-phrases" data-id="${esc(item.id)}">Clear Phrases</button>${clearObjects}${clearSubjects}${clearVerbs}</div>`;
   const tokens=renderTokens(v.tokens,(t,i)=>{
     if(t==='__VERB__')return `<span class="verb-slot">(${esc((v.verbChoices||[]).join(', '))})</span>`;
     const inPhrase=a.phrases.some(r=>i>=r.start&&i<=r.end);
     const isObject=a.objects.includes(i);
     const isSubject=(a.subjects||[]).includes(i);
+    const isVerb=(a.verbs||[]).includes(i);
     const isStart=a.phraseStart===i;
     const isBold=(v.boldIndices||[]).includes(i);
-    return `<button class="token ${inPhrase?'marked':''} ${isObject?'object':''} ${isSubject?'subject':''} ${isStart?'start':''} ${isBold?'bold-word':''}" data-action="phrase-token" data-id="${esc(item.id)}" data-index="${i}">${esc(t)}</button>`
+    return `<button class="token ${inPhrase?'marked':''} ${isObject?'object':''} ${isSubject?'subject':''} ${isVerb?'verb':''} ${isStart?'start':''} ${isBold?'bold-word':''}" data-action="phrase-token" data-id="${esc(item.id)}" data-index="${i}">${esc(t)}</button>`
   });
-  const chips=`<div class="chips">${a.phrases.map((r,i)=>`<span class="pill">phrase ${r.start+1}-${r.end+1}<button data-action="remove-phrase" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}${(a.subjects||[]).map(i=>`<span class="pill">subject ${i+1}<button data-action="remove-subject" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}</div>`;
+  const chips=`<div class="chips">${a.phrases.map((r,i)=>`<span class="pill">phrase ${r.start+1}-${r.end+1}<button data-action="remove-phrase" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}${(a.subjects||[]).map(i=>`<span class="pill">subject ${i+1}<button data-action="remove-subject" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}${(a.verbs||[]).map(i=>`<span class="pill">verb ${i+1}<button data-action="remove-verb" data-id="${esc(item.id)}" data-index="${i}">x</button></span>`).join('')}</div>`;
   return pattern+advprep+labelChoices+modes+tokens+verbChoices+chips;
 }const DIAGRAM_ROLES=[
   {id:'S',label:'Subject',className:'role-s'},
