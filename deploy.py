@@ -39,6 +39,7 @@ SUBJECTS = [
 # Key is the filename stem; anything not listed gets a label derived from the name.
 LABEL_OVERRIDES = {
     "math_167_test_17": "Test 17 — Final Exam",
+    "math_unit_conversions_practice": "Unit Conversion Drill",
     "la_169_test_17": "Test 17 — Final Exam",
     "la_154_test_15_diagrams": "Test 15 — Sentence Diagrams",
 }

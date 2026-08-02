@@ -15,3 +15,10 @@ off a graph.
 ## [Test 17 — Final Exam](quizzes/math_167_test_17.html)
 
 **Lesson 167.** Cumulative final exam practice.
+
+## [Unit Conversion Drill](quizzes/math_unit_conversions_practice.html)
+
+Measurement conversions only — metric length, capacity, and mass, customary length,
+capacity, and weight, and time. Choose which units to practice, whether you want
+single-step, mixed-unit, or equation problems, and one of four difficulty levels.
+Problems are generated fresh each round, so it never runs out.

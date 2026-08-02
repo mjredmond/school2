@@ -1,0 +1,313 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arithmetic 4 &mdash; Unit Conversion Practice</title><style>
+:root{--ink:#20242b;--line:#d7dce3;--blue:#175f9b;--good:#237241;--bad:#a5342a;--paper:#fff;--bg:#f3f5f8}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px Arial,sans-serif;color:var(--ink);line-height:1.4}.wrap{max-width:1050px;margin:auto;padding:20px}.top,.tools,.actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.top{justify-content:space-between}.top h1{font-size:25px;margin:0}.sub{color:#5f6976;margin:4px 0 0}button{font:inherit;background:#fff;border:1px solid #b9c3cf;border-radius:6px;padding:7px 10px;cursor:pointer}button:hover{border-color:var(--blue)}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}.section{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:15px;margin:15px 0}.section h2{font-size:18px;margin:0 0 3px}.directions{color:#5f6976;margin:0 0 10px}.item{border-top:1px solid var(--line);padding:14px 0}.item:first-of-type{border:0}.stem{font-weight:700;margin-bottom:8px}.tag{display:inline-block;font-size:12px;font-weight:400;color:#5f6976;background:#eef2f7;border:1px solid var(--line);border-radius:20px;padding:1px 9px;margin-left:8px;vertical-align:middle}.picker{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.picker label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:5px 12px;cursor:pointer;background:#fbfcfe;user-select:none}.picker label:hover{border-color:var(--blue)}.picker input{width:auto;margin:0}.picker label.on{background:#e8f1f9;border-color:var(--blue);font-weight:700}.picker .mini{font:inherit;font-size:14px;padding:5px 10px;border-radius:20px}.countbox{display:flex;align-items:center;gap:7px;margin:10px 0 0;font-size:14px;color:#5f6976}.countbox input{width:70px}.warn{color:var(--bad);font-weight:700;margin:10px 0 0}.subitem{display:grid;grid-template-columns:1fr minmax(145px,330px);gap:10px;align-items:center;margin:8px 0}.subitem label{white-space:pre-wrap}.subitem input,input{font:inherit;border:1px solid #aab6c4;border-radius:5px;padding:7px;width:100%}.feedback{font-weight:700}.correct .feedback{color:var(--good)}.missed .feedback{color:var(--bad)}.answer{background:#fff4dc;border:1px solid #ebd3a3;border-radius:6px;padding:8px;margin-top:8px}.ref{margin:15px 0 0;font-size:14px;color:#5f6976}.ref table{border-collapse:collapse;width:100%;margin-top:6px}.ref td{border:1px solid var(--line);padding:5px 8px}.ref td:first-child{white-space:nowrap;font-weight:700;color:var(--ink)}details summary{cursor:pointer;font-weight:700;color:var(--blue)}@media(max-width:650px){.subitem{grid-template-columns:1fr}.wrap{padding:12px}}
+</style></head><body><main class="wrap"><div class="top"><div><h1 id="title"></h1><p class="sub" id="subtitle"></p></div><div class="tools"><button class="primary" onclick="checkAll()">Check All</button><button onclick="newProblems()">New Problems</button></div></div>
+<section class="section"><h2>Choose what to practice</h2><p class="directions">Pick the units and problem styles you want. Changing a choice starts a new set.</p>
+<div><strong style="font-size:14px">Units</strong><div class="picker" id="famPicker"></div></div>
+<div style="margin-top:12px"><strong style="font-size:14px">Problem style</strong><div class="picker" id="stylePicker"></div></div>
+<div style="margin-top:12px"><strong style="font-size:14px">Level</strong><div class="picker" id="levelPicker"></div></div>
+<div class="countbox"><label for="count">How many problems:</label><input id="count" type="number" min="1" max="40" value="12"><button class="mini" onclick="newProblems()">Apply</button></div>
+<div id="warn"></div></section>
+<div id="score"></div><div id="app"></div>
+<section class="section ref"><details><summary>Conversion table</summary>
+<p style="margin:9px 0 0">Metric prefixes, largest to smallest: <strong>kilo &rarr; hecto &rarr; deca &rarr; unit &rarr; deci &rarr; centi &rarr; milli</strong></p>
+<table><tr><td>1 kilo unit</td><td>1,000 units</td></tr><tr><td>1 hecto unit</td><td>100 units</td></tr><tr><td>1 deca unit</td><td>10 units</td></tr><tr><td>1 unit</td><td>10 deci units &nbsp;&bull;&nbsp; 100 centi units &nbsp;&bull;&nbsp; 1,000 milli units</td></tr>
+<tr><td>Length</td><td>1 ft. = 12 in. &nbsp;&bull;&nbsp; 1 yd. = 3 ft. &nbsp;&bull;&nbsp; 1 mi. = 5,280 ft.</td></tr>
+<tr><td>Capacity</td><td>1 pt. = 2 c. &nbsp;&bull;&nbsp; 1 qt. = 2 pt. &nbsp;&bull;&nbsp; 1 gal. = 4 qt.</td></tr>
+<tr><td>Weight</td><td>1 lb. = 16 oz. &nbsp;&bull;&nbsp; 1 T. = 2,000 lb.</td></tr>
+<tr><td>Time</td><td>1 min. = 60 sec. &nbsp;&bull;&nbsp; 1 hr. = 60 min. &nbsp;&bull;&nbsp; 1 day = 24 hr. &nbsp;&bull;&nbsp; 1 wk. = 7 days</td></tr></table>
+</details></section>
+</main><script>
+const TITLE='Arithmetic 4 — Unit Conversion Practice';
+const SUBTITLE='Simple measurement conversions. Write the number only — the unit is already given.';
+
+/* ---- conversion tables (factors relative to the base unit of each family) ---- */
+/* Metric factors are scaled by 1000 so every value stays a whole number. */
+const MSCALE=1000;
+const METRIC=[['k',1000000],['h',100000],['da',10000],['',1000],['d',100],['c',10],['m',1]];
+const METRIC_BASES=[['m','Metric length'],['L','Metric capacity'],['g','Metric mass']];
+const CUSTOMARY={
+  'Customary length':{u:[['in.',1],['ft.',12],['yd.',36],['mi.',63360]],max:3},
+  'Customary capacity':{u:[['c.',1],['pt.',2],['qt.',4],['gal.',16]],max:3},
+  'Customary weight':{u:[['oz.',1],['lb.',16],['T.',32000]],max:2}
+};
+const TIME=[['sec.',1],['min.',60],['hr.',3600],['days',86400],['wk.',604800]];
+
+/* ---- helpers ---- */
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function norm(s){return String(s??'').toLowerCase().replace(/[\s,$.]/g,'').replace(/½/g,'1/2').replace(/¼/g,'1/4').replace(/¾/g,'3/4')}
+const ri=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const cm=n=>n.toLocaleString('en-US');
+const label=(p,b)=>p==='da'&&b==='m'?'dam':p+b;
+
+/* ---- families the user can switch on/off ---- */
+/* kind: which generators apply. metricBase / custFam identify the specific table. */
+const FAMILIES=[
+  {id:'mlen', name:'Metric length',      kind:'metric', base:'m'},
+  {id:'mcap', name:'Metric capacity',    kind:'metric', base:'L'},
+  {id:'mmas', name:'Metric mass',        kind:'metric', base:'g'},
+  {id:'clen', name:'Customary length',   kind:'cust'},
+  {id:'ccap', name:'Customary capacity', kind:'cust'},
+  {id:'cwgt', name:'Customary weight',   kind:'cust'},
+  {id:'time', name:'Time',               kind:'time'}
+];
+const STYLES=[
+  {id:'single', name:'Single step',  hint:'24 km = ___ m'},
+  {id:'mixed',  name:'Mixed units',  hint:'3 hm 25 m = ___ m'},
+  {id:'equation',name:'Equations',   hint:'6 kL + 17 hL = ___ hL'}
+];
+
+/* ---- difficulty levels ----
+   step   = how many places apart the two units may sit on the ladder
+   cap    = largest allowed answer
+   term2  = largest second term in mixed/equation problems
+   ratio  = largest big:small unit ratio inside one equation (customary) */
+const LEVELS=[
+  {id:1,name:'Level 1',hint:'next-door units',   step:1,cap:5000,  term2:20, ratio:16},
+  {id:2,name:'Level 2',hint:'up to 2 steps',     step:2,cap:20000, term2:40, ratio:100},
+  {id:3,name:'Level 3',hint:'up to 3 steps',     step:3,cap:200000,term2:99, ratio:1000},
+  {id:4,name:'Level 4',hint:'any distance',      step:9,cap:9e9,   term2:99, ratio:9e9}
+];
+let level=LEVELS[1];
+const L=()=>level;
+/* Time has no mixed/equation form in the source curriculum — single step only. */
+const STYLE_OK={metric:['single','mixed','equation'],cust:['single','mixed','equation'],time:['single']};
+
+let chosenFam=new Set(FAMILIES.map(f=>f.id));
+let chosenStyle=new Set(STYLES.map(s=>s.id));
+
+/* ---- generators: each returns {prompt, answer, tag} with answer COMPUTED ---- */
+
+/* 1. metric single step, e.g. 24 km = ___ m */
+function metricSingle(fam){
+  const base=fam.base, tag=fam.name;
+  for(let _t=0;_t<400;_t++){
+    const i=ri(0,METRIC.length-1), j=ri(0,METRIC.length-1);
+    if(i===j||Math.abs(i-j)>L().step) continue;
+    const from=METRIC[i], to=METRIC[j];
+    const n=ri(2,99), val=n*from[1];
+    if(val%to[1]) continue;
+    const ans=val/to[1];
+    if(ans<1||ans>L().cap) continue;
+    return {prompt:`${cm(n)} ${label(from[0],base)} = ___ ${label(to[0],base)}`,answer:ans,tag};
+  }
+  return null;  /* level too tight for this combination */
+}
+
+/* 2. metric mixed unit, e.g. 3 hm 25 m = ___ m */
+function metricMixed(fam){
+  const base=fam.base, tag=fam.name;
+  for(let _t=0;_t<400;_t++){
+    const i=ri(0,METRIC.length-2), j=ri(i+1,Math.min(i+L().step,METRIC.length-1));
+    const big=METRIC[i], small=METRIC[j];
+    const a=ri(2,9), b=ri(2,L().term2), val=a*big[1]+b*small[1];
+    if(val%small[1]) continue;
+    const ans=val/small[1];
+    if(ans>L().cap) continue;
+    return {prompt:`${a} ${label(big[0],base)} ${cm(b)} ${label(small[0],base)} = ___ ${label(small[0],base)}`,answer:ans,tag};
+  }
+  return null;  /* level too tight for this combination */
+}
+
+/* 3. metric equation, e.g. 6 kL + 17 hL = ___ hL  |  9,000 mg - 4 g = ___ g */
+function metricEquation(fam){
+  const base=fam.base, tag=fam.name;
+  const plus=Math.random()<0.5;
+  for(let _t=0;_t<400;_t++){
+    const i=ri(0,METRIC.length-2), j=ri(i+1,Math.min(i+L().step,METRIC.length-1));
+    const big=METRIC[i], small=METRIC[j];
+    const out=pick([big,small]);
+    let x,y,val;
+    /* term2 caps the second operand so the arithmetic stays level-appropriate */
+    if(plus){ x=ri(2,20); y=ri(2,L().term2); val=x*big[1]+y*small[1]; }
+    else{
+      // big term must dominate so the result stays positive
+      x=ri(4,30); y=ri(2,Math.max(2,Math.min(L().term2,Math.floor(x*big[1]/small[1])-1))); val=x*big[1]-y*small[1];
+    }
+    if(val<=0||val%out[1]) continue;
+    const ans=val/out[1];
+    if(ans<1||ans>L().cap) continue;
+    const t1=`${cm(x)} ${label(big[0],base)}`, t2=`${cm(y)} ${label(small[0],base)}`;
+    const [l,r]=plus&&Math.random()<0.5?[t2,t1]:[t1,t2];
+    return {prompt:`${l} ${plus?'+':'−'} ${r} = ___ ${label(out[0],base)}`,answer:ans,tag};
+  }
+  return null;  /* level too tight for this combination */
+}
+
+/* 4. customary single step, e.g. 4 ft. = ___ in.  |  48 oz. = ___ lb. */
+function customarySingle(f){
+  const tag=f.name, fam=CUSTOMARY[tag];
+  for(let _t=0;_t<400;_t++){
+    const i=ri(0,fam.u.length-1), j=ri(0,fam.u.length-1);
+    if(i===j||Math.abs(i-j)>Math.min(fam.max,L().step)) continue;
+    const from=fam.u[i], to=fam.u[j];
+    const n=ri(2,i>j?60:24), val=n*from[1];
+    if(val%to[1]) continue;
+    const ans=val/to[1];
+    if(ans<1||ans>L().cap) continue;
+    return {prompt:`${cm(n)} ${from[0]} = ___ ${to[0]}`,answer:ans,tag};
+  }
+  return null;  /* level too tight for this combination */
+}
+
+/* 5a. customary mixed unit, e.g. 4 gal. 3 qt. = ___ qt. */
+function customaryMixed(f){
+  const tag=f.name, fam=CUSTOMARY[tag];
+  for(let _t=0;_t<400;_t++){
+    const j=ri(1,fam.u.length-1), i=ri(Math.max(0,j-Math.min(fam.max,L().step)),j-1);
+    const small=fam.u[i], big=fam.u[j];
+    const a=ri(2,9), b=ri(2,Math.max(2,Math.min(L().term2,Math.floor(big[1]/small[1])-1)));
+    const val=a*big[1]+b*small[1];
+    if(val%small[1]) continue;
+    const ans=val/small[1];
+    if(ans>L().cap) continue;
+    return {prompt:`${a} ${big[0]} ${cm(b)} ${small[0]} = ___ ${small[0]}`,answer:ans,tag};
+  }
+  return null;  /* level too tight for this combination */
+}
+
+/* 5b. customary equation, e.g. 26 gal. + 10 qt. = ___ qt. */
+function customaryEquation(f){
+  const tag=f.name, fam=CUSTOMARY[tag];
+  const plus=Math.random()<0.5;
+  for(let _t=0;_t<400;_t++){
+    const i=ri(0,fam.u.length-2), j=ri(i+1,Math.min(i+Math.min(fam.max,L().step),fam.u.length-1));
+    const small=fam.u[i], big=fam.u[j];
+    /* ratio caps how far apart the two units in one equation may sit */
+    if(big[1]/small[1]>L().ratio) continue;
+    const out=pick([small,big]);
+    let x,y,val;
+    if(plus){ x=ri(2,25); y=ri(2,L().term2); val=x*big[1]+y*small[1]; }
+    else{ x=ri(4,25); y=ri(2,Math.max(2,Math.min(L().term2,Math.floor(x*big[1]/small[1])-1))); val=x*big[1]-y*small[1]; }
+    if(val<=0||val%out[1]) continue;
+    const ans=val/out[1];
+    if(ans<1||ans>L().cap) continue;
+    return {prompt:`${cm(x)} ${big[0]} ${plus?'+':'−'} ${cm(y)} ${small[0]} = ___ ${out[0]}`,answer:ans,tag};
+  }
+  return null;  /* level too tight for this combination */
+}
+
+/* 6. time, e.g. 4 hr. = ___ min. */
+function timeConv(f){
+  for(let _t=0;_t<400;_t++){
+    const i=ri(0,TIME.length-1), j=ri(0,TIME.length-1);
+    if(i===j||Math.abs(i-j)>L().step) continue;
+    const from=TIME[i], to=TIME[j];
+    const n=ri(2,i>j?12:60), val=n*from[1];
+    if(val%to[1]) continue;
+    const ans=val/to[1];
+    if(ans<1||ans>L().cap) continue;
+    return {prompt:`${cm(n)} ${from[0]} = ___ ${to[0]}`,answer:ans,tag:'Time'};
+  }
+  return null;  /* level too tight for this combination */
+}
+
+/* generator lookup: GEN[kind][style] */
+const GEN={
+  metric:{single:metricSingle,mixed:metricMixed,equation:metricEquation},
+  cust:  {single:customarySingle,mixed:customaryMixed,equation:customaryEquation},
+  time:  {single:timeConv}
+};
+
+/* every (family, style) pair currently switched on that can actually produce
+   a problem at this level — a probe rules out e.g. Customary weight/equation
+   at Level 1, where oz.->lb.->T. leaves no small enough pairing */
+function activeCombos(){
+  const out=[];
+  FAMILIES.filter(f=>chosenFam.has(f.id)).forEach(f=>{
+    STYLE_OK[f.kind].filter(s=>chosenStyle.has(s)).forEach(s=>{
+      if(GEN[f.kind][s](f)) out.push({fam:f,style:s});
+    });
+  });
+  return out;
+}
+
+function build(){
+  const combos=activeCombos();
+  if(!combos.length) return [];
+  const n=Math.max(1,Math.min(40,parseInt(count.value,10)||12));
+  const out=[], seen=new Set();
+  /* round-robin the combos so every chosen pairing shows up before any repeats */
+  const order=[];
+  while(order.length<n) combos.forEach(c=>{if(order.length<n)order.push(c)});
+  for(const c of order){
+    let p, guard=0;
+    do{ p=GEN[c.fam.kind][c.style](c.fam); }while(p&&seen.has(p.prompt)&&++guard<60);
+    if(!p) continue;               /* combo dried up at this level — skip it */
+    seen.add(p.prompt);
+    out.push(p);
+  }
+  for(let k=out.length-1;k>0;k--){const r=Math.floor(Math.random()*(k+1));[out[k],out[r]]=[out[r],out[k]]}
+  return out.map((p,i)=>({...p,id:'p'+i,num:i+1}));
+}
+
+/* ---- picker rendering ---- */
+function renderPickers(){
+  famPicker.innerHTML=FAMILIES.map(f=>{
+    const on=chosenFam.has(f.id);
+    return `<label class="${on?'on':''}"><input type="checkbox" ${on?'checked':''} onchange="toggleFam('${f.id}')">${esc(f.name)}</label>`;
+  }).join('')+`<button class="mini" onclick="setAllFam(true)">All</button><button class="mini" onclick="setAllFam(false)">None</button>`;
+  stylePicker.innerHTML=STYLES.map(s=>{
+    const on=chosenStyle.has(s.id);
+    return `<label class="${on?'on':''}" title="${esc(s.hint)}"><input type="checkbox" ${on?'checked':''} onchange="toggleStyle('${s.id}')">${esc(s.name)} <span style="color:#8a94a1;font-weight:400">${esc(s.hint)}</span></label>`;
+  }).join('');
+  levelPicker.innerHTML=LEVELS.map(v=>{
+    const on=level.id===v.id;
+    return `<label class="${on?'on':''}"><input type="radio" name="lvl" ${on?'checked':''} onchange="setLevel(${v.id})">${esc(v.name)} <span style="color:#8a94a1;font-weight:400">${esc(v.hint)}</span></label>`;
+  }).join('');
+}
+function toggleFam(id){chosenFam.has(id)?chosenFam.delete(id):chosenFam.add(id);newProblems()}
+function toggleStyle(id){chosenStyle.has(id)?chosenStyle.delete(id):chosenStyle.add(id);newProblems()}
+function setLevel(id){level=LEVELS.find(v=>v.id===id);newProblems()}
+function setAllFam(on){chosenFam=new Set(on?FAMILIES.map(f=>f.id):[]);newProblems()}
+
+/* ---- state & rendering ---- */
+let problems=[], state={answers:{},checked:{},wrong:{},reveal:{}};
+const okOne=p=>norm(state.answers[p.id])===norm(p.answer);
+
+function render(){
+  const focus=document.activeElement, fid=focus&&focus.dataset?focus.dataset.id:null;
+  const selStart=focus&&fid?focus.selectionStart:null;
+  title.textContent=TITLE; subtitle.textContent=SUBTITLE;
+  renderPickers();
+  if(!problems.length){
+    const noFam=!chosenFam.size, noStyle=!chosenStyle.size;
+    const onlyTime=chosenFam.size===1&&chosenFam.has('time')&&!chosenStyle.has('single');
+    warn.innerHTML=`<p class="warn">${
+      noFam&&noStyle?'Choose at least one unit and one problem style.':
+      noFam?'Choose at least one unit above.':
+      noStyle?'Choose at least one problem style above.':
+      onlyTime?'Time only has single-step conversions. Add "Single step", or another unit.':
+      `Nothing fits ${esc(level.name)} with those choices — the units are too far apart for this level. Try a higher level, or add another unit or style.`}</p>`;
+    app.innerHTML=''; return;
+  }
+  warn.innerHTML='';
+  app.innerHTML=`<section class="section"><h2>Solve each measurement equation.</h2><p class="directions">Write the number only. Commas are optional.</p>${problems.map(p=>{
+    const checked=state.checked[p.id], good=checked&&okOne(p), val=state.answers[p.id]||'';
+    return `<article class="item ${checked?(good?'correct':'missed'):''}"><div class="stem">${p.num}.<span class="tag">${esc(p.tag)}</span></div><div class="subitem"><label for="in-${p.id}">${esc(p.prompt)}</label><input id="in-${p.id}" data-id="${p.id}" value="${esc(val)}" inputmode="numeric" autocomplete="off"></div><div class="actions"><button onclick="checkOne('${p.id}')">${checked?'Check Again':'Check'}</button><span class="feedback" aria-live="polite">${checked?(good?'Correct.':'Try again.'):''}</span>${state.reveal[p.id]?`<span class="answer">Answer: ${cm(p.answer)}</span>`:''}${(state.wrong[p.id]||0)>=5&&!state.reveal[p.id]?`<button onclick="state.reveal['${p.id}']=1;render()">Show Answer</button>`:''}</div></article>`}).join('')}</section>`;
+  document.querySelectorAll('#app input').forEach(e=>{
+    e.oninput=()=>{state.answers[e.dataset.id]=e.value};
+    e.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();checkOne(e.dataset.id)}};
+  });
+  if(fid){const back=document.getElementById('in-'+fid);if(back){back.focus();if(selStart!=null)try{back.setSelectionRange(selStart,selStart)}catch(e){}}}
+}
+
+function checkOne(id){
+  const p=problems.find(x=>x.id===id);
+  state.checked[id]=1;
+  state.wrong[id]=okOne(p)?0:(state.wrong[id]||0)+1;
+  render();
+}
+function checkAll(){
+  if(!problems.length) return;
+  problems.forEach(p=>{state.checked[p.id]=1;if(!okOne(p))state.wrong[p.id]=(state.wrong[p.id]||0)+1});
+  const n=problems.filter(okOne).length;
+  score.innerHTML=`<section class="section"><strong>Score: ${n} of ${problems.length} correct.</strong></section>`;
+  render();
+}
+function newProblems(){
+  problems=build(); state={answers:{},checked:{},wrong:{},reveal:{}};
+  score.innerHTML=''; render();
+}
+newProblems();
+</script></body></html>
