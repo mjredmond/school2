@@ -1214,7 +1214,7 @@ function targetBox(item, answer, slotId, x, y, width, height, rotate = 0, fallba
   const transform = rotate ? ` transform="rotate(${rotate} ${textX} ${textY})"` : "";
   return `
     <g class="diagram-target${filled}${selected}" data-action="diagram-target" data-item="${item.id}" data-slot="${slotId}">
-      <rect class="target-hit" x="${x - 8}" y="${y - 8}" width="${width + 16}" height="${height + 16}" rx="7"></rect>
+      <rect class="target-hit" x="${x - 8}" y="${y - 8}" width="${width + 16}" height="${height + 8}" rx="7"></rect>
       <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="6" fill="#f8fafc" stroke="#667085"></rect>
       <text class="diagram-text small-text" x="${textX}" y="${textY}"${transform}>${escapeHtml(label)}</text>
     </g>
@@ -1226,7 +1226,7 @@ function modTarget(item, answer, slotId, x1, y1, x2, y2, textX, textY, rotate = 
   const filled = assignmentLabel(item, answer, slotId) ? " filled" : "";
   return `
     <g class="diagram-target${filled}" data-action="diagram-target" data-item="${item.id}" data-slot="${slotId}">
-      <rect class="target-hit" x="${Math.min(x1, x2) - 16}" y="${Math.min(y1, y2) - 22}" width="${Math.abs(x2 - x1) + 48}" height="${Math.abs(y2 - y1) + 48}" rx="7"></rect>
+      <rect class="target-hit" x="${Math.min(x1, x2) - 14}" y="${Math.min(y1, y2) + 6}" width="${Math.abs(x2 - x1) + 30}" height="${Math.max(Math.abs(y2 - y1) - 6, 24)}" rx="7"></rect>
       <line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>
       <text class="diagram-text small-text" x="${textX}" y="${textY}" transform="rotate(${rotate} ${textX} ${textY})">${escapeHtml(label)}</text>
     </g>
@@ -1295,21 +1295,27 @@ function compoundSubjectDoModifiers(item, answer, shape) {
   if (shape === "csdo-subject-object-adv") {
     return [
       optionalModTarget(item, answer, adv, 420, 170, 374, 246, 388, 224),
-      optionalModTarget(item, answer, subjectMods[0], 226, 224, 180, 302, 196, 278),
+      // The subjectB box hangs below its own baseline (y 224 to 258), so start
+      // the modifier under the box rather than at the line, where it covered
+      // the box's own clicks.
+      optionalModTarget(item, answer, subjectMods[0], 226, 260, 180, 330, 196, 308),
       optionalModTarget(item, answer, objectMods[0], 620, 170, 574, 246, 590, 224)
     ].join("");
   }
   if (shape === "csdo-object2-adv") {
     return [
       optionalModTarget(item, answer, adv, 420, 170, 374, 246, 388, 224),
-      optionalModTarget(item, answer, objectMods[0], 592, 170, 546, 246, 562, 224),
-      optionalModTarget(item, answer, objectMods[1], 642, 170, 596, 246, 612, 224)
+      // 80px apart so the two object modifiers' click areas stay separate.
+      optionalModTarget(item, answer, objectMods[0], 574, 170, 528, 246, 544, 224),
+      optionalModTarget(item, answer, objectMods[1], 654, 170, 608, 246, 624, 224)
     ].join("");
   }
   if (shape === "csdo-subject2-object") {
     return [
-      optionalModTarget(item, answer, subjectMods[0], 196, 224, 150, 302, 166, 278),
-      optionalModTarget(item, answer, subjectMods[1], 248, 224, 202, 302, 218, 278),
+      // Start below the subjectB box (which ends at y 258) and keep the two
+      // modifiers ~80px apart so their click areas stay separate.
+      optionalModTarget(item, answer, subjectMods[0], 196, 260, 150, 330, 166, 308),
+      optionalModTarget(item, answer, subjectMods[1], 276, 260, 230, 330, 246, 308),
       optionalModTarget(item, answer, objectMods[0], 620, 170, 574, 246, 590, 224)
     ].join("");
   }
@@ -1344,8 +1350,9 @@ function compoundVerbModifiers(item, answer, shape) {
   }
   if (shape === "cv-subject2mods") {
     return [
-      optionalModTarget(item, answer, subjectMods[0], 214, 170, 168, 246, 184, 224),
-      optionalModTarget(item, answer, subjectMods[1], 254, 170, 208, 246, 224, 224)
+      // 80px apart so the two subject modifiers' click areas stay separate.
+      optionalModTarget(item, answer, subjectMods[0], 206, 170, 160, 246, 176, 224),
+      optionalModTarget(item, answer, subjectMods[1], 286, 170, 240, 246, 256, 224)
     ].join("");
   }
   return "";

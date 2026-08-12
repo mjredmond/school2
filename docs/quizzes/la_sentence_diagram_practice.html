@@ -3011,7 +3011,10 @@ function layoutGuidedDiagram(exercise, shapeKey = correctDiagramShapeKey(exercis
     addBranch(subjectDividerX, baseY, 292, baseY - 42);
     addBranch(subjectDividerX, baseY, 292, baseY + 48);
     addConjunctionGuide(278, baseY - 42, 278, baseY + 48);
-    addTarget("verbConj", "conjunction", 278, baseY + 3, 0, 0, "and", { textX: 278, textY: baseY + 3, width: 58, height: 28 });
+    // Centre the box just right of the guide. Centred exactly on the guide its
+    // left half reached back over the subject line, which ends at 255, so the
+    // two targets fought over the same clicks.
+    addTarget("verbConj", "conjunction", 310, baseY + 3, 0, 0, "and", { textX: 310, textY: baseY + 3, width: 58, height: 28 });
   } else {
     const verbEnd = hasObject || hasComplement ? objectDividerX : 585;
     addTarget(mainVerbKey, "line", subjectDividerX, baseY, verbEnd, baseY, "verb");
@@ -3025,8 +3028,10 @@ function layoutGuidedDiagram(exercise, shapeKey = correctDiagramShapeKey(exercis
       addBranch(objectDividerX, baseY, objectDividerX + 25, baseY - 42);
       addBranch(objectDividerX, baseY, objectDividerX + 25, baseY + 48);
       addConjunctionGuide(objectDividerX + 8, baseY - 42, objectDividerX + 8, baseY + 48);
-      addTarget("objectConj", "conjunction", objectDividerX + 8, baseY + 3, 0, 0, "", {
-        textX: objectDividerX + 8,
+      // Sit right of the guide so the box does not reach back over the verb line
+      // that ends at objectDividerX and steal its clicks.
+      addTarget("objectConj", "conjunction", objectDividerX + 40, baseY + 3, 0, 0, "", {
+        textX: objectDividerX + 40,
         textY: baseY + 3,
         width: 58,
         height: 28
@@ -3047,8 +3052,9 @@ function layoutGuidedDiagram(exercise, shapeKey = correctDiagramShapeKey(exercis
       addBranch(complementStartX, baseY, complementStartX + 25, baseY - 42);
       addBranch(complementStartX, baseY, complementStartX + 25, baseY + 48);
       addConjunctionGuide(complementStartX + 8, baseY - 42, complementStartX + 8, baseY + 48);
-      addTarget(compConj, "conjunction", complementStartX + 8, baseY + 3, 0, 0, "", {
-        textX: complementStartX + 8,
+      // Sit right of the guide, clear of the verb line that ends at the divider.
+      addTarget(compConj, "conjunction", complementStartX + 40, baseY + 3, 0, 0, "", {
+        textX: complementStartX + 40,
         textY: baseY + 3,
         width: 58,
         height: 28
@@ -3130,11 +3136,24 @@ function layoutGuidedDiagram(exercise, shapeKey = correctDiagramShapeKey(exercis
     else group.modifiers.forEach(key => addModifierItem({ kind: "standalone", targetKey: group.targetKey, key, order: group.order }));
   });
 
-  const addModifierLineTarget = (key, anchorX, anchorY) => addTarget(key, "modifier", anchorX, anchorY, anchorX - 48, anchorY + 74, "modifier", {
-    textX: anchorX - 26,
-    textY: anchorY + 50,
-    rotation: -58
-  });
+  // Modifiers normally hang 74px below their word. When a compound stacks
+  // another baseline underneath (subjectA over subjectB, 90px apart), a full
+  // length slant runs through that lower line and covers its clicks, so shorten
+  // the slant to stop above whatever baseline sits below it.
+  const lowerBaselineY = (anchorY) => targets
+    .filter(t => t.shape === "line" && t.y1 > anchorY + 12)
+    .reduce((closest, t) => (closest === null || t.y1 < closest ? t.y1 : closest), null);
+  const addModifierLineTarget = (key, anchorX, anchorY) => {
+    const below = lowerBaselineY(anchorY);
+    const maxDrop = below === null ? 74 : Math.max(34, below - anchorY - 34);
+    const drop = Math.min(74, maxDrop);
+    const run = Math.round(48 * (drop / 74));
+    return addTarget(key, "modifier", anchorX, anchorY, anchorX - run, anchorY + drop, "modifier", {
+      textX: anchorX - Math.round(run * 0.54),
+      textY: anchorY + Math.round(drop * 0.68),
+      rotation: -58
+    });
+  };
 
   itemsByTarget.forEach((items, targetKey) => {
     const head = targetMap.get(targetKey);
@@ -3156,7 +3175,10 @@ function layoutGuidedDiagram(exercise, shapeKey = correctDiagramShapeKey(exercis
         addModifierLineTarget(item.modifiers[0], leftX, anchorY);
         addModifierLineTarget(item.modifiers[1], rightX, anchorY);
         const conjunctionX = ((leftX - 26) + (rightX - 26)) / 2;
-        const conjunctionY = anchorY + 50;
+        // Slants run from anchorY down to anchorY + 74. Park the conjunction
+        // below their lower ends; at +50 it sat on top of both slants and took
+        // the clicks meant for the modifiers themselves.
+        const conjunctionY = anchorY + 88;
         addConjunctionGuide(leftX - 30, conjunctionY, rightX - 30, conjunctionY);
         addTarget(item.conjunction, "modifierConjunction", conjunctionX, conjunctionY, 0, 0, "", {
           textX: conjunctionX,
@@ -3211,17 +3233,55 @@ function renderDiagramTarget(exercise, target, assignments, interactive) {
     const x = target.textX - target.width / 2;
     const y = target.textY - target.height / 2;
     return `<g class="diagram-target${selected}${hover}${fillClass}"${data}>
-      <rect class="target-hit" x="${x - 5}" y="${y - 5}" width="${target.width + 10}" height="${target.height + 10}" rx="6"></rect>
+      <rect class="target-hit" x="${x}" y="${y}" width="${target.width}" height="${target.height}" rx="6"></rect>
       <rect x="${x}" y="${y}" width="${target.width}" height="${target.height}" rx="6" fill="#f8fafc" stroke="#667085"></rect>
       <text class="diagram-text" x="${target.textX}" y="${target.textY}">${escapeHtml(label)}</text>
     </g>`;
   }
 
   const textClass = target.shape === "modifier" || target.shape === "preposition" ? " diagram-modifier-text" : "";
-  const hitX = Math.min(target.x1, target.x2) - 14;
-  const hitY = Math.min(target.y1, target.y2, target.textY) - 24;
-  const hitWidth = Math.max(34, Math.abs(target.x2 - target.x1) + 28);
-  const hitHeight = Math.max(42, Math.abs(target.y2 - target.y1) + 58);
+  // Size the hit box by shape. One shared formula used to pad every target 14px
+  // sideways and 24px up, which made adjacent baseline segments overlap each
+  // other and let modifier slants reach up over the baseline word above them —
+  // so some words had no clickable place to land.
+  const isSlant = Math.abs(target.y2 - target.y1) > 2;
+  let hitX, hitY, hitWidth, hitHeight;
+  if (isSlant) {
+    // Modifier slants hang below the baseline. Stacked modifiers are only 42px
+    // apart but each slant spans 48px horizontally, so any bounding rectangle
+    // would overlap its neighbour. Use a parallelogram that follows the slant
+    // instead, starting just below the baseline so the word above keeps its
+    // own area.
+    const sidePad = 16;
+    const topY = Math.min(target.y1, target.y2) + 4;
+    const botY = Math.max(target.y1, target.y2);
+    // Shrink toward the lower end so the box tracks the line's own slope.
+    const topX = target.y1 < target.y2 ? target.x1 : target.x2;
+    const botX = target.y1 < target.y2 ? target.x2 : target.x1;
+    const ratio = (topY - Math.min(target.y1, target.y2)) / Math.max(1, botY - Math.min(target.y1, target.y2));
+    const startX = topX + (botX - topX) * ratio;
+    const points = [
+      `${startX - sidePad},${topY}`,
+      `${startX + sidePad},${topY}`,
+      `${botX + sidePad},${botY}`,
+      `${botX - sidePad},${botY}`
+    ].join(" ");
+    return `<g class="diagram-target${selected}${hover}${fillClass}"${data}>
+    <polygon class="target-hit" points="${points}"></polygon>
+    <line class="diagram-line" x1="${target.x1}" y1="${target.y1}" x2="${target.x2}" y2="${target.y2}"></line>
+    <text class="diagram-text${textClass}" x="${target.textX}" y="${target.textY}"${rotation}>${escapeHtml(label)}</text>
+  </g>`;
+  } else {
+    // Baseline segments sit side by side and their text sits above the line.
+    // Claim the band above the segment without bleeding into either neighbour.
+    // The band starts just above the cap height of the text (not a flat 22px)
+    // so a conjunction box parked between two stacked baselines stays clickable.
+    const bandTop = Math.min(target.y1, target.y2, target.textY - 14);
+    hitX = Math.min(target.x1, target.x2) + 2;
+    hitY = bandTop;
+    hitWidth = Math.max(28, Math.abs(target.x2 - target.x1) - 4);
+    hitHeight = Math.max(24, target.y1 - bandTop);
+  }
   return `<g class="diagram-target${selected}${hover}${fillClass}"${data}>
     <rect class="target-hit" x="${hitX}" y="${hitY}" width="${hitWidth}" height="${hitHeight}" rx="6"></rect>
     <line class="diagram-line" x1="${target.x1}" y1="${target.y1}" x2="${target.x2}" y2="${target.y2}"></line>

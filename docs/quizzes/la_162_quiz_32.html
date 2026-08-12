@@ -452,13 +452,13 @@ function targetBox(v,a,slotId,x,y,width,height,rotate=0){
   const textX=x+width/2;
   const textY=y+height/2+6;
   const transform=rotate?` transform="rotate(${rotate} ${textX} ${textY})"`:'';
-  return `<g class="diagram-target${filled}${selected}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${x-8}" y="${y-8}" width="${width+16}" height="${height+16}" rx="7"></rect><rect x="${x}" y="${y}" width="${width}" height="${height}" rx="6" fill="#f8fafc" stroke="#667085"></rect><text class="diagram-text small-text" x="${textX}" y="${textY}"${transform}>${esc(label)}</text></g>`;
+  return `<g class="diagram-target${filled}${selected}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${x-8}" y="${y-8}" width="${width+16}" height="${height+8}" rx="7"></rect><rect x="${x}" y="${y}" width="${width}" height="${height}" rx="6" fill="#f8fafc" stroke="#667085"></rect><text class="diagram-text small-text" x="${textX}" y="${textY}"${transform}>${esc(label)}</text></g>`;
 }
 function modTarget(v,a,slotId,x1,y1,x2,y2,textX,textY,rotate=-55){
   if(!slotId||!diagramHasSlot(v,slotId))return '';
   const label=diagramAssignmentLabel(v,a,slotId);
   const filled=label?' filled':'';
-  return `<g class="diagram-target${filled}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${Math.min(x1,x2)-16}" y="${Math.min(y1,y2)-22}" width="${Math.abs(x2-x1)+48}" height="${Math.abs(y2-y1)+48}" rx="7"></rect><line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line><text class="diagram-text small-text" x="${textX}" y="${textY}" transform="rotate(${rotate} ${textX} ${textY})">${esc(label)}</text></g>`;
+  return `<g class="diagram-target${filled}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${Math.min(x1,x2)-14}" y="${Math.min(y1,y2)+6}" width="${Math.abs(x2-x1)+30}" height="${Math.max(Math.abs(y2-y1)-6,24)}" rx="7"></rect><line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line><text class="diagram-text small-text" x="${textX}" y="${textY}" transform="rotate(${rotate} ${textX} ${textY})">${esc(label)}</text></g>`;
 }
 function firstExistingSlot(v,ids){return ids.find(id=>diagramHasSlot(v,id))||ids[0];}
 function existingSlots(v,prefix){return diagramSlots(v).map(slot=>slot.id).filter(id=>id===prefix||id.startsWith(prefix));}

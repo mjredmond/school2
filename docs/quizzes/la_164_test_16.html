@@ -484,13 +484,24 @@ function targetBox(v,a,slotId,x,y,width,height,rotate=0){
   const textX=x+width/2;
   const textY=y+height/2+6;
   const transform=rotate?` transform="rotate(${rotate} ${textX} ${textY})"`:'';
-  return `<g class="diagram-target${filled}${selected}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${x-8}" y="${y-8}" width="${width+16}" height="${height+16}" rx="7"></rect><rect x="${x}" y="${y}" width="${width}" height="${height}" rx="6" fill="#f8fafc" stroke="#667085"></rect><text class="diagram-text small-text" x="${textX}" y="${textY}"${transform}>${esc(label)}</text></g>`;
+  // Pad the hit box on the top and sides only. Padding the bottom pushed it onto
+  // the baseline where modifier slants start, so box and slant fought over the
+  // same clicks; the visible box is already a large enough target on its own.
+  return `<g class="diagram-target${filled}${selected}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${x-8}" y="${y-8}" width="${width+16}" height="${height+8}" rx="7"></rect><rect x="${x}" y="${y}" width="${width}" height="${height}" rx="6" fill="#f8fafc" stroke="#667085"></rect><text class="diagram-text small-text" x="${textX}" y="${textY}"${transform}>${esc(label)}</text></g>`;
 }
 function modTarget(v,a,slotId,x1,y1,x2,y2,textX,textY,rotate=-55){
   if(!slotId||!diagramHasSlot(v,slotId))return '';
   const label=diagramAssignmentLabel(v,a,slotId);
   const filled=label?' filled':'';
-  return `<g class="diagram-target${filled}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${Math.min(x1,x2)-16}" y="${Math.min(y1,y2)-22}" width="${Math.abs(x2-x1)+48}" height="${Math.abs(y2-y1)+48}" rx="7"></rect><line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line><text class="diagram-text small-text" x="${textX}" y="${textY}" transform="rotate(${rotate} ${textX} ${textY})">${esc(label)}</text></g>`;
+  // The hit box must hug the slant. It used to start 22px ABOVE the baseline and
+  // run 48px wider/taller than the line, so it covered the bottom of the
+  // subject/verb/object box the slant hangs from and swallowed those clicks.
+  // Start just below the baseline instead, so every box stays fully clickable.
+  const hitX=Math.min(x1,x2)-14;
+  const hitY=Math.min(y1,y2)+6;
+  const hitW=Math.abs(x2-x1)+30;
+  const hitH=Math.max(Math.abs(y2-y1)-6,24);
+  return `<g class="diagram-target${filled}" data-action="diagram-target" data-id="${esc(a._itemId||'')}" data-slot="${esc(slotId)}"><rect class="target-hit" x="${hitX}" y="${hitY}" width="${hitW}" height="${hitH}" rx="7"></rect><line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line><text class="diagram-text small-text" x="${textX}" y="${textY}" transform="rotate(${rotate} ${textX} ${textY})">${esc(label)}</text></g>`;
 }
 function firstExistingSlot(v,ids){return ids.find(id=>diagramHasSlot(v,id))||ids[0];}
 function existingSlots(v,prefix){return diagramSlots(v).map(slot=>slot.id).filter(id=>id===prefix||id.startsWith(prefix));}
@@ -523,10 +534,12 @@ function avDoSvg(v,a,shape=a.shape||v.shape){
     // Both adverbs hang from the verb on widely separated slants; the dashed
     // guide bridges them lower down with the conjunction centred on it, so
     // nothing overlaps either slant.
+    // advB sits 106px right of advA, not 90px: each slant runs 64px wide plus
+    // side padding, so at 90px apart their click areas overlapped.
     modLines.push(modTarget(v,a,firstExistingSlot(v,['advA','adv']),408,170,344,268,352,238),
-                  modTarget(v,a,firstExistingSlot(v,['advB']),498,170,434,268,442,238),
-                  `<line class="diagram-guide" x1="352" y1="292" x2="442" y2="292"></line>`,
-                  targetBox(v,a,'advConj',341,296,112,30));
+                  modTarget(v,a,firstExistingSlot(v,['advB']),514,170,450,268,458,238),
+                  `<line class="diagram-guide" x1="352" y1="292" x2="458" y2="292"></line>`,
+                  targetBox(v,a,'advConj',349,296,112,30));
     if(objectMods[0])modLines.push(modTarget(v,a,objectMods[0],614,170,568,246,584,224));
   }
   return `<svg class="diagram-svg" viewBox="0 0 760 390" role="img" aria-label="Sentence diagram canvas"><line class="diagram-line" x1="86" y1="170" x2="684" y2="170"></line><line class="diagram-line" x1="330" y1="124" x2="330" y2="216"></line><line class="diagram-line" x1="510" y1="124" x2="510" y2="170"></line>${targetBox(v,a,subjectSlot,146,136,142,34)}${targetBox(v,a,verbSlot,372,136,122,34)}${targetBox(v,a,objectSlot,548,136,132,34)}${modLines.join('')}</svg>`;
