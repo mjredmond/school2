@@ -623,6 +623,8 @@
     .role-omit { background: #6b7280; }
     .diagram-target { cursor: pointer; pointer-events: all; }
     .target-hit { fill: transparent; stroke: transparent; }
+    .mod-slot { fill: #f8fafc; stroke: #667085; stroke-width: 1; stroke-dasharray: 4 3; }
+    .diagram-target.filled .mod-slot { stroke-dasharray: none; }
     .diagram-target:hover .target-hit, .diagram-target.selected .target-hit { fill: rgba(155, 106, 23, .12); stroke: var(--amber); stroke-width: 3; }
     .diagram-target.filled rect:not(.target-hit) { stroke-width: 2.5; }
     .diagram-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 10px 0; }
@@ -1183,14 +1185,44 @@ function renderDiagramToken(item, answer, roles, token, index) {
     </button>
   `;
 }
+// Shapes hard-code the structural lines of their own skeleton. When the chosen
+// shape has a branch this sentence does not use, that branch was drawn as a bare
+// diagonal with nothing on it. Mark every slanted line long enough to carry a
+// word but with no place on it, so no arm reads as leading nowhere.
+function markUnusedSlants(svg) {
+  const taken = [];
+  [...svg.matchAll(/<rect class="(?:mod-slot|slot-unused)"[^>]*transform="rotate\([-\d.]+ ([-\d.]+) ([-\d.]+)\)"/g)]
+    .forEach(m => taken.push([+m[1], +m[2]]));
+  [...svg.matchAll(/<rect(?![^>]*target-hit)[^>]*x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)]
+    .forEach(m => taken.push([+m[1] + +m[3] / 2, +m[2] + +m[4] / 2]));
+  const near = (x, y) => taken.some(t => Math.hypot(t[0] - x, t[1] - y) < 46);
+  let add = "";
+  [...svg.matchAll(/<line class="diagram-line" x1="([-\d.]+)" y1="([-\d.]+)" x2="([-\d.]+)" y2="([-\d.]+)"><\/line>/g)]
+    .forEach(m => {
+      const x1 = +m[1], y1 = +m[2], x2 = +m[3], y2 = +m[4];
+      const dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
+      if (dx <= 3 || dy <= 3) return;
+      // Connector arms joining a baseline to a branch never carry a word.
+      if (Math.hypot(dx, dy) < 72) return;
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      if (near(mx, my)) return;
+      let d = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+      if (d > 90) d -= 180; else if (d < -90) d += 180;
+      const w = Math.min(82, Math.hypot(dx, dy) - 6);
+      taken.push([mx, my]);
+      add += `<rect class="slot-unused" x="${mx - w / 2}" y="${my - 12}" width="${w}" height="24" rx="6" transform="rotate(${d.toFixed(2)} ${mx} ${my})"></rect>`;
+    });
+  return add ? svg.replace("</svg>", add + "</svg>") : svg;
+}
+
 function renderDiagramSvg(item, answer) {
   const shape = answer.shape;
   if (!shape) return emptyDiagramSvg(answer.basicShape ? "Choose a detailed diagram version." : "Choose a basic diagram structure.");
-  if (shape === "simple" || shape.startsWith("simple-")) return simpleSvg(item, answer, shape);
-  if (shape === "av-do" || shape.startsWith("av-do-")) return avDoSvg(item, answer, shape);
-  if (shape.startsWith("cv-")) return compoundVerbSvg(item, answer, shape);
-  if (shape.startsWith("csdo-")) return compoundSubjectDoSvg(item, answer, shape);
-  return simpleSvg(item, answer, shape);
+  if (shape === "simple" || shape.startsWith("simple-")) return markUnusedSlants(simpleSvg(item, answer, shape));
+  if (shape === "av-do" || shape.startsWith("av-do-")) return markUnusedSlants(avDoSvg(item, answer, shape));
+  if (shape.startsWith("cv-")) return markUnusedSlants(compoundVerbSvg(item, answer, shape));
+  if (shape.startsWith("csdo-")) return markUnusedSlants(compoundSubjectDoSvg(item, answer, shape));
+  return markUnusedSlants(simpleSvg(item, answer, shape));
 }
 
 function emptyDiagramSvg(message = "Choose a diagram structure first.") {
@@ -1224,11 +1256,21 @@ function targetBox(item, answer, slotId, x, y, width, height, rotate = 0, fallba
 function modTarget(item, answer, slotId, x1, y1, x2, y2, textX, textY, rotate = -55) {
   const label = targetLabel(item, answer, slotId);
   const filled = assignmentLabel(item, answer, slotId) ? " filled" : "";
+  // Draw a placeholder box on the slant. Without this a modifier slot was just a
+  // bare diagonal line: subject/verb/object slots showed an obvious empty box,
+  // but adjectives and adverbs had no visible spot to put the word. Keep the
+  // angle in the readable half turn -- the raw slope points down-left (~122
+  // deg), which would render the word upside down.
+  let slantDeg = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+  if (slantDeg > 90) slantDeg -= 180; else if (slantDeg < -90) slantDeg += 180;
+  const midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
+  const slotW = Math.min(82, Math.hypot(x2 - x1, y2 - y1) - 6), slotH = 24;
   return `
     <g class="diagram-target${filled}" data-action="diagram-target" data-item="${item.id}" data-slot="${slotId}">
       <rect class="target-hit" x="${Math.min(x1, x2) - 14}" y="${Math.min(y1, y2) + 6}" width="${Math.abs(x2 - x1) + 30}" height="${Math.max(Math.abs(y2 - y1) - 6, 24)}" rx="7"></rect>
       <line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>
-      <text class="diagram-text small-text" x="${textX}" y="${textY}" transform="rotate(${rotate} ${textX} ${textY})">${escapeHtml(label)}</text>
+      <rect class="mod-slot" x="${midX - slotW / 2}" y="${midY - slotH / 2}" width="${slotW}" height="${slotH}" rx="6" transform="rotate(${slantDeg.toFixed(2)} ${midX} ${midY})"></rect>
+      <text class="diagram-text small-text" x="${midX}" y="${midY + 5}" transform="rotate(${slantDeg.toFixed(2)} ${midX} ${midY})">${escapeHtml(label)}</text>
     </g>
   `;
 }
@@ -1244,7 +1286,17 @@ function existingSlots(item, prefix) {
 }
 
 function optionalModTarget(item, answer, slotId, x1, y1, x2, y2, textX, textY) {
-  return slotId ? modTarget(item, answer, slotId, x1, y1, x2, y2, textX, textY) : "";
+  if (slotId) return modTarget(item, answer, slotId, x1, y1, x2, y2, textX, textY);
+  // No slot here for this sentence: still draw the slant with an inert
+  // placeholder, so the branch does not read as a line leading nowhere.
+  let d = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+  if (d > 90) d -= 180; else if (d < -90) d += 180;
+  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+  const w = Math.min(82, Math.hypot(x2 - x1, y2 - y1) - 6);
+  return `
+    <line class="diagram-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>
+    <rect class="slot-unused" x="${mx - w / 2}" y="${my - 12}" width="${w}" height="24" rx="6" transform="rotate(${d.toFixed(2)} ${mx} ${my})"></rect>
+  `;
 }
 
 function simpleSvg(item, answer, shape = answer.shape || item.shape) {
