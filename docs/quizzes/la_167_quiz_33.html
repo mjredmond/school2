@@ -687,6 +687,28 @@ function diagramAnswerHtml(item,v){
   const omitted=diagramOmitted(v);
   return `<strong>Pattern:</strong> ${esc(v.pattern||'')}<br>${omitted.length?`<strong>Omit:</strong> ${esc(omitted.join('; '))}<br>`:''}<strong>Roles:</strong> ${esc(roleLines)}<div class="diagram-wrap">${renderDiagramSvg(v,correct)}</div>`;
 }
+// Answers used to print raw token indices ("subject 2; phrases 4-6; objects"),
+// which meant nothing to a student and left empty parts dangling. Name the
+// actual words instead, and drop any part with nothing in it.
+function phraseAnswerWords(v,indices){
+  return (indices||[]).map(i=>(v.tokens||[])[i]).filter(t=>t&&t!=='__VERB__').map(t=>`"${t}"`).join(', ');
+}
+function phraseAnswerText(v){
+  const parts=[];
+  if(v.pattern)parts.push(v.pattern);
+  if(v.answer)parts.push(v.answer);
+  const phrases=(v.phrases||[]).map(r=>(v.tokens||[]).slice(r.start,r.end+1).filter(t=>t!=='__VERB__').join(' ')).filter(Boolean);
+  if(phrases.length)parts.push(`${phrases.length>1?'phrases':'phrase'} ${phrases.map(p=>`"(${p})"`).join(', ')}`);
+  const subj=phraseAnswerWords(v,v.subjectTargets);
+  if(subj)parts.push(`subject ${subj}`);
+  // Fill-in items carry the verb as text; marked items point at a token.
+  if(v.correctVerb)parts.push(`verb "${v.correctVerb}"`);
+  else{const vb=phraseAnswerWords(v,v.verbTargets);if(vb)parts.push(`verb ${vb}`);}
+  const obj=phraseAnswerWords(v,v.objects);
+  if(obj)parts.push(`${(v.objects||[]).length>1?'objects':'object'} ${obj}`);
+  if(v.labelAnswer)parts.push(`label ${v.labelAnswer}`);
+  return parts.join('; ');
+}
 function renderAnswer(item,v){
   let text='';
   if(item.type==='choice')text=Array.isArray(v.items)?v.items.map(sub=>`${sub.prompt||'Answer'}: ${(sub.choices||[])[sub.answer]||''}`).join('; '):((v.choices||[])[v.answer]||'');
@@ -695,7 +717,7 @@ function renderAnswer(item,v){
   else if(item.type==='edit-text')text=v.answer;
   else if(item.type==='word-mark')text=(v.targets||[]).map(i=>(v.tokens||[])[i]).join(', ');
   else if(item.type==='comma')text=`Comma boundaries: ${(v.commaBoundaries||[]).join(', ')}`;
-  else if(['phrase','pattern','advprep'].includes(item.type))text=[v.pattern,v.answer,v.correctVerb?`verb ${v.correctVerb}`:'',Array.isArray(v.subjectTargets)?`subject ${(v.subjectTargets||[]).map(i=>i+1).join(', ')}`:'',Array.isArray(v.verbTargets)?`verb ${(v.verbTargets||[]).map(i=>i+1).join(', ')}`:'',`phrases ${(v.phrases||[]).map(r=>`${r.start+1}-${r.end+1}`).join(', ')}`,`objects ${(v.objects||[]).map(i=>i+1).join(', ')}`,v.labelAnswer?`label ${v.labelAnswer}`:''].filter(Boolean).join('; ');
+  else if(['phrase','pattern','advprep'].includes(item.type))text=phraseAnswerText(v);
   else if(item.type==='diagram')return `<div class="answer"><strong>Answer:</strong> ${diagramAnswerHtml(item,v)}</div>`;
   return `<div class="answer"><strong>Answer:</strong> ${esc(text)}</div>`;
 }function sortedRanges(ranges){return (ranges||[]).map(r=>({start:Number(r.start),end:Number(r.end)})).sort((a,b)=>a.start-b.start||a.end-b.end);}
