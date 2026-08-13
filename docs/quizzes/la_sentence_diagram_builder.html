@@ -804,9 +804,17 @@ document.addEventListener('click',e=>{
   }
   else if(action==='word'){
     const i=Number(btn.dataset.index);
-    if(nodeForToken(i)){                       // already placed: take it off
-      removeNode(nodeForToken(i).id);
-      state.feedback=null; state.hint='';
+    if(nodeForToken(i)){
+      // Already on the diagram. Taking it off also removes anything hanging
+      // from it, so say what happened rather than silently dropping words.
+      const n=nodeForToken(i);
+      const kids=childrenOf(n.id).length;
+      removeNode(n.id);
+      state.roles[i]=state.roles[i];           // keep its label for re-placing
+      state.selectedWord=null; state.selectedRole=null; state.feedback=null;
+      state.hint='Took "'+tokenText(i)+'" off the diagram'+
+        (kids?' (and the '+kids+' word'+(kids>1?'s':'')+' under it)':'')+
+        '. Pick its job again to put it back.';
     }else if(state.selectedRole){
       state.roles[i]=state.selectedRole;       // tag it
       state.selectedWord=i;
@@ -826,10 +834,14 @@ document.addEventListener('click',e=>{
     const n=nodeById(btn.dataset.node);
     if(!n)return;
     if(state.selectedWord!=null&&state.selectedRole){
-      // attaching to an existing word
-      const z=legalZones(state.selectedRole).find(x=>x.kind==='attach'&&x.parent===n.id);
+      const zones=legalZones(state.selectedRole);
+      let z=zones.find(x=>x.kind==='attach'&&x.parent===n.id);
+      // Clicking a word that already hangs off something is the natural way to
+      // ask for a SIBLING there ("another adjective on this noun"), so fall
+      // back to that word's parent before refusing.
+      if(!z&&n.parentId)z=zones.find(x=>x.kind==='attach'&&x.parent===n.parentId);
       if(z)place(z);
-      else state.hint='That word cannot go under "'+tokenText(n.tokenIndex)+'".';
+      else state.hint='"'+tokenText(state.selectedWord)+'" cannot go there. '+whyBlocked(state.selectedRole);
     }else{
       removeNode(n.id); state.feedback=null; state.hint='';
     }
