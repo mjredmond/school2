@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentence Diagram Builder</title>
+<style>
+:root{--ink:#202124;--muted:#636a73;--line:#d7dbe2;--paper:#fff;--bg:#f4f6f8;--accent:#245d8f;--accent2:#477a43;--bad:#a3372a;--good:#217044;--warn:#b7791f;--soft:#eaf2fb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.35}
+.wrap{max-width:1100px;margin:0 auto;padding:18px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.title h1{font-size:24px;margin:0 0 4px}
+.title p{margin:0;color:var(--muted)}
+button{font:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;padding:7px 10px;cursor:pointer}
+button:hover:not(:disabled){border-color:#9aa6b5}
+button:disabled{opacity:.45;cursor:default}
+.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.section{background:var(--paper);border:1px solid var(--line);border-radius:8px;margin:14px 0;padding:14px}
+.section h2{font-size:16px;margin:0 0 6px}
+.directions{margin:0 0 12px;color:var(--muted)}
+.sentence-strip{font-size:20px;font-family:Georgia,"Times New Roman",serif;margin:6px 0 14px;line-height:1.6}
+.step{display:flex;align-items:center;gap:8px;margin:10px 0;flex-wrap:wrap}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;flex:none}
+.step-label{font-weight:700;font-size:13px}
+.step-hint{color:var(--muted);font-size:13px}
+/* role toolbar */
+.role-toolbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:7px;margin:8px 0}
+.role-btn{min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px solid #c8d3df;background:#fff;border-radius:6px}
+.role-btn strong{font-size:13px}
+.role-btn span{font-size:11px;color:var(--muted)}
+.role-btn.selected{border-color:var(--accent);background:var(--soft);box-shadow:0 0 0 2px rgba(36,93,143,.15)}
+/* word bank */
+.word-bank{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
+.word-token{position:relative;display:inline-flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;min-width:58px;min-height:50px;border:1px solid #c8d3df;border-radius:6px;padding:6px 8px;background:#fff;cursor:pointer;user-select:none}
+.word-token:hover{border-color:var(--accent)}
+.word-token.selected{outline:3px solid rgba(36,93,143,.35);border-color:var(--accent);background:var(--soft)}
+.word-token.placed{background:#f2f7ef;border-color:rgba(53,122,84,.55);opacity:.6}
+.word-token.synthetic{border-style:dashed;font-style:italic}
+.word-token.v-ok{border-color:var(--good);box-shadow:inset 0 -3px 0 var(--good)}
+.word-token.v-wrongRole{border-color:var(--warn);box-shadow:inset 0 -3px 0 var(--warn)}
+.word-token.v-misplaced,.word-token.v-extra{border-color:var(--bad);box-shadow:inset 0 -3px 0 var(--bad)}
+.word-token.v-missing{border-color:var(--bad);border-style:dashed}
+.word-text{font-family:Georgia,"Times New Roman",serif;font-size:15px}
+.role-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;min-height:16px}
+.chip{display:inline-flex;align-items:center;min-height:16px;border-radius:999px;padding:1px 5px;color:#fff;font-size:10px;font-weight:800}
+.role-s{background:#2f5f98}.role-av,.role-lv,.role-bv{background:#9b5f1a}
+.role-do,.role-pn,.role-pa{background:#357a54}.role-adj{background:#6b5ca5}
+.role-adv{background:#7f4b77}.role-conj{background:#b34d37}
+.role-prep,.role-op{background:#637083}
+/* diagram canvas */
+.diagram-wrap{overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.diagram-svg{display:block;height:auto;max-width:none}
+.diagram-line{stroke:#263241;stroke-width:2;stroke-linecap:round;fill:none}
+.diagram-guide{stroke:#6e7b8a;stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.diagram-text{font-size:17px;font-family:Georgia,"Times New Roman",serif;fill:#1c2633;text-anchor:middle}
+.small-text{font-size:13px}
+.diagram-target{cursor:pointer;pointer-events:all}
+.target-hit{fill:transparent;stroke:transparent}
+.diagram-target:hover .target-hit{fill:rgba(155,106,23,.12);stroke:#bc7f1a;stroke-width:2}
+.ghost{fill:#fbfcfd;stroke:#8ea3bb;stroke-width:1.5;stroke-dasharray:5 4}
+.ghost-label{font-size:12px;fill:#5b6b7e;text-anchor:middle;font-family:Arial,Helvetica,sans-serif;pointer-events:none}
+.ghost-g{cursor:pointer}
+.ghost-g:hover .ghost{fill:var(--soft);stroke:var(--accent);stroke-width:2.5}
+.word-box{fill:#f8fafc;stroke:#667085;stroke-width:1.6}
+.word-box.v-ok{stroke:var(--good);stroke-width:2.5}
+.word-box.v-wrongRole{stroke:var(--warn);stroke-width:2.5}
+.word-box.v-misplaced{stroke:var(--bad);stroke-width:2.5}
+.hint{margin-top:8px;color:var(--bad);font-weight:700;min-height:20px}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;background:#f8efe0;border:1px solid #ecd8b9;color:#3e2e13}
+.feedback.all-ok{background:#e6f4ec;border-color:#bfe0cd;color:#14532d}
+.feedback ul{margin:6px 0 0;padding-left:20px}
+.feedback li{margin:2px 0}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend b{font-weight:700}
+.nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nav .count{color:var(--muted);font-size:13px}
+@media(max-width:640px){.wrap{padding:12px}.title h1{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="title">
+      <h1>Sentence Diagram Builder</h1>
+      <p>Build each diagram yourself &mdash; no shapes to choose from.</p>
+    </div>
+    <div class="nav">
+      <button data-action="prev">&larr; Back</button>
+      <span class="count" id="count"></span>
+      <button data-action="next">Next &rarr;</button>
+    </div>
+  </div>
+  <div id="app"></div>
+</div>
+<script>
+/* ============================================================ constants */
+const STORAGE_KEY="sentence_diagram_builder_v1";
+
+const DIAGRAM_ROLES=[
+  {id:'S',   label:'Subject',      className:'role-s'},
+  {id:'AV',  label:'Action Verb',  className:'role-av'},
+  {id:'LV',  label:'Linking Verb', className:'role-lv'},
+  {id:'DO',  label:'Direct Object',className:'role-do'},
+  {id:'PN',  label:'Pred. Nom.',   className:'role-pn'},
+  {id:'PA',  label:'Pred. Adj.',   className:'role-pa'},
+  {id:'ADJ', label:'Adjective',    className:'role-adj'},
+  {id:'ADV', label:'Adverb',       className:'role-adv'},
+  {id:'CONJ',label:'Conjunction',  className:'role-conj'},
+  {id:'PREP',label:'Preposition',  className:'role-prep'},
+  {id:'OP',  label:'Obj. of Prep.',className:'role-op'}
+];
+const ROLE_MAP=Object.fromEntries(DIAGRAM_ROLES.map(r=>[r.id,r]));
+const VERB_ROLES=['AV','LV'];
+const NOUN_ROLES=['S','DO','PN','OP'];
+
+/* Layout constants. The slant proportions (48 run / 74 drop / 126 arm / -58 deg
+   text) are carried over from the existing practice file so the diagrams read
+   the same. SLANT_CLEAR is the vertical band a slant owns: the old code proved
+   that anything closer than ~88 steals the modifier's clicks. */
+const BASE_X=90, BASE_Y=150;
+const SEG_MIN=132, SEG_PAD=26, DIVIDER_H=46, HALF_DIV=23;
+/* MOD_PITCH must exceed the slant hit polygon's full width (2*15 pad + the
+   48 run) or two modifiers under one word fight over the same clicks. */
+const SLANT_RUN=48, SLANT_DROP=74, SLANT_CLEAR=88, MOD_PITCH=84;
+const PREP_ARM=126, ARM_LIFT=16;
+const FORK_RISE=54, FORK_RUN=40;
+const CHAR_W=9.2, TEXT_PAD=30;
+
+/* ============================================================ sentences */
+/* `expected` uses token indices for `parent`, which keeps it human-writable.
+   parent:null means the node sits on its clause's main line. */
+const SENTENCES=[
+  {id:'s1', sentence:'Mason watched three playful dolphins.',
+   tokens:['Mason','watched','three','playful','dolphins'],
+   expected:[{t:0,role:'S',slot:'subject',parent:null},{t:1,role:'AV',slot:'verb',parent:null},
+             {t:4,role:'DO',slot:'object',parent:1},{t:2,role:'ADJ',slot:'mod',parent:4},
+             {t:3,role:'ADJ',slot:'mod',parent:4}]},
+
+  {id:'s2', sentence:'The weather today is warm and windy.',
+   tokens:['The','weather','today','is','warm','and','windy'],
+   expected:[{t:1,role:'S',slot:'subject',parent:null},{t:3,role:'LV',slot:'verb',parent:null},
+             {t:4,role:'PA',slot:'complement',parent:3,branch:0},
+             {t:6,role:'PA',slot:'complement',parent:3,branch:1},
+             {t:5,role:'CONJ',slot:'conj',parent:3},
+             {t:0,role:'ADJ',slot:'mod',parent:1},{t:2,role:'ADV',slot:'mod',parent:3}]},
+
+  {id:'s3', sentence:'Climb the ladder to the treehouse carefully.',
+   tokens:['(You)','Climb','the','ladder','to','the','treehouse','carefully'],
+   synthetic:[0],
+   expected:[{t:0,role:'S',slot:'subject',parent:null},{t:1,role:'AV',slot:'verb',parent:null},
+             {t:3,role:'DO',slot:'object',parent:1},{t:2,role:'ADJ',slot:'mod',parent:3},
+             {t:7,role:'ADV',slot:'mod',parent:1},
+             {t:4,role:'PREP',slot:'prep',parent:1},{t:6,role:'OP',slot:'prepObject',parent:4},
+             {t:5,role:'ADJ',slot:'mod',parent:6}]},
+
+  {id:'s4', sentence:'Joseph threw the baseball to Isaiah quickly and accurately.',
+   tokens:['Joseph','threw','the','baseball','to','Isaiah','quickly','and','accurately'],
+   expected:[{t:0,role:'S',slot:'subject',parent:null},{t:1,role:'AV',slot:'verb',parent:null},
+             {t:3,role:'DO',slot:'object',parent:1},{t:2,role:'ADJ',slot:'mod',parent:3},
+             {t:6,role:'ADV',slot:'mod',parent:1},{t:8,role:'ADV',slot:'mod',parent:1},
+             {t:7,role:'CONJ',slot:'modConj',parent:1},
+             {t:4,role:'PREP',slot:'prep',parent:1},{t:5,role:'OP',slot:'prepObject',parent:4}]},
+
+  {id:'s5', sentence:'Quietly, Ben and Clara carried the heavy baskets into the pantry.',
+   tokens:['Quietly','Ben','and','Clara','carried','the','heavy','baskets','into','the','pantry'],
+   expected:[{t:1,role:'S',slot:'subject',parent:null,branch:0},
+             {t:3,role:'S',slot:'subject',parent:null,branch:1},
+             {t:2,role:'CONJ',slot:'conj',parent:null},
+             {t:4,role:'AV',slot:'verb',parent:null},
+             {t:7,role:'DO',slot:'object',parent:4},
+             {t:5,role:'ADJ',slot:'mod',parent:7},{t:6,role:'ADJ',slot:'mod',parent:7},
+             {t:0,role:'ADV',slot:'mod',parent:4},
+             {t:8,role:'PREP',slot:'prep',parent:4},{t:10,role:'OP',slot:'prepObject',parent:8},
+             {t:9,role:'ADJ',slot:'mod',parent:10}]},
+
+  {id:'s6', sentence:'The small dog barked beside the gate and growled at the stranger.',
+   tokens:['The','small','dog','barked','beside','the','gate','and','growled','at','the','stranger'],
+   expected:[{t:2,role:'S',slot:'subject',parent:null},
+             {t:3,role:'AV',slot:'verb',parent:null,branch:0},
+             {t:8,role:'AV',slot:'verb',parent:null,branch:1},
+             {t:7,role:'CONJ',slot:'conj',parent:null},
+             {t:0,role:'ADJ',slot:'mod',parent:2},{t:1,role:'ADJ',slot:'mod',parent:2},
+             {t:4,role:'PREP',slot:'prep',parent:3},{t:6,role:'OP',slot:'prepObject',parent:4},
+             {t:5,role:'ADJ',slot:'mod',parent:6},
+             {t:9,role:'PREP',slot:'prep',parent:8},{t:11,role:'OP',slot:'prepObject',parent:9},
+             {t:10,role:'ADJ',slot:'mod',parent:11}]}
+];
+
+/* ============================================================ state */
+let state={index:0, nodes:[], roles:{}, selectedWord:null, selectedRole:null,
+           feedback:null, hint:'', seq:1, revealed:false};
+
+function sentence(){return SENTENCES[state.index];}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function tokenText(i){return sentence().tokens[i]||'';}
+function isSynthetic(i){return (sentence().synthetic||[]).includes(i);}
+function textWidth(s){return Math.max(56, String(s).length*CHAR_W+TEXT_PAD);}
+
+function freshState(index){
+  return {index, nodes:[], roles:{}, selectedWord:null, selectedRole:null,
+          feedback:null, hint:'', seq:1, revealed:false};
+}
+function save(){
+  try{
+    const all=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+    all[sentence().id]={nodes:state.nodes, roles:state.roles, seq:state.seq};
+    all._last=state.index;
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(all));
+  }catch(e){/* locked-down profile: run without persistence */}
+}
+function load(index){
+  const s=freshState(index);
+  try{
+    const all=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+    const saved=all[SENTENCES[index].id];
+    if(saved){s.nodes=saved.nodes||[];s.roles=saved.roles||{};s.seq=saved.seq||1;}
+  }catch(e){}
+  return s;
+}
+
+/* ============================================================ tree model */
+function nodeById(id){return state.nodes.find(n=>n.id===id)||null;}
+function nodeForToken(t){return state.nodes.find(n=>n.tokenIndex===t)||null;}
+function childrenOf(id){return state.nodes.filter(n=>n.parentId===id);}
+function rootNodes(){return state.nodes.filter(n=>n.parentId===null);}
+function nodeInSlot(slot,parentId){return state.nodes.filter(n=>n.slot===slot&&n.parentId===parentId);}
+function roleOf(t){return state.roles[t]||null;}
+
+function addNode(tokenIndex,role,slot,parentId,branch){
+  const n={id:'n'+(state.seq++), tokenIndex, role, slot, parentId:parentId==null?null:parentId,
+           branch:branch||0};
+  state.nodes.push(n);
+  return n;
+}
+/* Removing a word takes everything hanging off it: pulling "ladder" must take
+   "the" with it, or the diagram is left with orphans pointing at nothing. */
+function removeNode(id){
+  const doomed=[id];
+  for(let i=0;i<doomed.length;i++)childrenOf(doomed[i]).forEach(c=>doomed.push(c.id));
+  state.nodes=state.nodes.filter(n=>!doomed.includes(n.id));
+}
+
+/* ============================================================ layout
+   Two passes. measure() reports a subtree's footprint bottom-up; because
+   modifiers hang down AND to the left, it returns left/right extents
+   separately -- a single symmetric width lets a word with three adjectives
+   collide with whatever sits to its left. place() then walks top-down. */
+function modChildren(id){
+  return childrenOf(id).filter(n=>n.slot==='mod'||n.slot==='prep')
+    .sort((a,b)=>a.tokenIndex-b.tokenIndex);
+}
+/* measure() returns the footprint a node needs beneath and beside itself, and
+   memoises the horizontal offset of each hanging child on the node itself. */
+function measure(node){
+  const kids=modChildren(node.id);
+  const m={own:textWidth(tokenText(node.tokenIndex)), left:0, right:0, depth:0};
+  node._slots=[];
+  if(!kids.length)return m;
+  let cursor=0;
+  kids.forEach(k=>{
+    const km=measure(k);
+    const objW=(k.slot==='prep')?prepObjectWidth(k):0;
+    const need=(k.slot==='prep')?Math.max(MOD_PITCH,SLANT_RUN+objW+km.right+16):MOD_PITCH;
+    node._slots.push({node:k, offset:cursor, m:km, need});
+    cursor+=need;
+    // A slant owns SLANT_CLEAR of vertical band; anything under it starts below.
+    m.depth=Math.max(m.depth, (km.depth?SLANT_CLEAR:SLANT_DROP)+km.depth);
+  });
+  // Centre the fan on the head word.
+  const last=node._slots[node._slots.length-1];
+  const shift=(cursor-last.need)/2;
+  node._slots.forEach(s=>{s.offset-=shift;});
+  node._slots.forEach(s=>{
+    m.left =Math.max(m.left,  -s.offset+SLANT_RUN+s.m.left);
+    m.right=Math.max(m.right,  s.offset+s.need);
+  });
+  return m;
+}
+function prepObjectWidth(prepNode){
+  const obj=childrenOf(prepNode.id).find(c=>c.slot==='prepObject');
+  return obj?Math.max(PREP_ARM,textWidth(tokenText(obj.tokenIndex))+30):PREP_ARM;
+}
+
+/* place(): assign coordinates. `maxDrop` lets a caller shorten a slant so it
+   does not run through a baseline stacked below it. */
+function placeSlant(node,anchorX,anchorY,out,maxDrop){
+  const drop=(maxDrop==null)?SLANT_DROP:Math.max(34,Math.min(SLANT_DROP,maxDrop));
+  const run=Math.round(SLANT_RUN*(drop/SLANT_DROP));
+  const x2=anchorX-run, y2=anchorY+drop;
+  let deg=Math.atan2(drop,-run)*180/Math.PI;
+  if(deg>90)deg-=180; else if(deg<-90)deg+=180;   // keep the word readable
+  node.line={x1:anchorX,y1:anchorY,x2,y2};
+  // Sit the word beside the slant, not on it: text-anchor is middle, so a point
+  // taken on the line itself puts the glyphs straight across the stroke.
+  // Offset perpendicular (the slant runs down-left, so push down-right).
+  const len=Math.hypot(run,drop)||1;
+  const nx=drop/len, ny=run/len;          // unit normal of the slant
+  const mx=anchorX-run*0.5, my=anchorY+drop*0.5;
+  node.textX=mx+nx*15; node.textY=my+ny*15+4; node.rotation=deg;
+  node.hit='slant';
+  out.targets.push(node);
+  return {x2,y2};
+}
+/* Hang every modifier / prep phrase beneath `head`, fanned around centerX. */
+function placeMods(head,centerX,anchorY,out,maxDrop){
+  (head._slots||[]).forEach(s=>{
+    const ax=centerX+s.offset;
+    const foot=placeSlant(s.node,ax,anchorY,out,maxDrop);
+    if(s.node.slot==='prep'){
+      const obj=childrenOf(s.node.id).find(c=>c.slot==='prepObject');
+      if(obj){
+        // Start the object's word clear of the slant's foot, or the
+        // preposition's own label sits underneath it.
+        const w=prepObjectWidth(s.node);
+        obj.line={x1:foot.x2,y1:foot.y2,x2:foot.x2+w,y2:foot.y2};
+        obj.textX=foot.x2+34+(w-34)/2; obj.textY=foot.y2-ARM_LIFT; obj.rotation=0;
+        obj.hit='arm';
+        out.targets.push(obj);
+        placeMods(obj,obj.textX,foot.y2,out,null);   // the object takes its own modifiers
+      }
+    }else{
+      placeMods(s.node,s.node.textX,anchorY+SLANT_CLEAR,out,null);
+    }
+  });
+}
+
+/* ---- the main line -------------------------------------------------------
+   Structure is never stored: we ask the node set what exists and draw the
+   divider that answers. Subject+verb -> the full S/V divider. A DO child of
+   the verb -> a vertical divider that stops at the baseline. A PN/PA child ->
+   a slanted one. Two nodes sharing a slot -> a fork. */
+function subjectNodes(){return nodeInSlot('subject',null).sort((a,b)=>a.branch-b.branch);}
+function verbNodes(){return nodeInSlot('verb',null).sort((a,b)=>a.branch-b.branch);}
+function objectNodes(){const v=verbNodes()[0];return v?nodeInSlot('object',v.id).sort((a,b)=>a.branch-b.branch):[];}
+function complementNodes(){const v=verbNodes()[0];return v?nodeInSlot('complement',v.id).sort((a,b)=>a.branch-b.branch):[];}
+function conjFor(slot){
+  return state.nodes.find(n=>n.slot==='conj'&&n._for===slot)||
+         state.nodes.find(n=>n.slot==='conj');
+}
+
+/* Two different widths, and conflating them was a bug: the SEGMENT is the
+   clickable slot on the line and must stay about as wide as its own word, or
+   its hit box swallows the slants hanging beneath. The RESERVE is how much
+   horizontal room the subtree needs so neighbouring groups don't collide. */
+function segWidth(group){
+  if(!group.length)return SEG_MIN;
+  let w=0;
+  group.forEach(n=>{w=Math.max(w,measure(n).own);});
+  return Math.max(SEG_MIN,w+SEG_PAD);
+}
+function reserveWidth(group){
+  if(!group.length)return SEG_MIN;
+  let w=0;
+  group.forEach(n=>{const m=measure(n);w=Math.max(w,m.own,m.left+m.right);});
+  return Math.max(SEG_MIN,w+SEG_PAD);
+}
+
+function layout(){
+  const out={targets:[],lines:[],ghosts:[],width:760,height:330};
+  const subj=subjectNodes(), verb=verbNodes();
+  const obj=objectNodes(), comp=complementNodes();
+  const y=BASE_Y;
+  let x=BASE_X;
+
+  const mk=(key,nodes)=>({key,nodes,w:segWidth(nodes),reserve:reserveWidth(nodes)});
+  const groups=[mk('subject',subj),mk('verb',verb)];
+  if(obj.length)groups.push(mk('object',obj));
+  else if(comp.length)groups.push(mk('complement',comp));
+
+  let maxDepth=0, minX=BASE_X;
+  groups.forEach((g,gi)=>{
+    // the drawn segment is centred inside the space the subtree reserves
+    const slack=Math.max(0,g.reserve-g.w);
+    g.x1=x+slack/2; g.x2=g.x1+g.w; g.mid=g.x1+g.w/2;
+    x=x+Math.max(g.w,g.reserve);
+    if(gi<groups.length-1)x+=6;
+  });
+  const lineEnd=Math.max(x+30, BASE_X+3*SEG_MIN);
+  out.lines.push({cls:'diagram-line',x1:BASE_X-4,y1:y,x2:lineEnd,y2:y});
+
+  // dividers sit midway between one segment's end and the next one's start
+  groups.forEach((g,gi)=>{
+    if(gi===0)return;
+    const dx=Math.round((groups[gi-1].x2+g.x1)/2);
+    if(g.key==='verb')
+      out.lines.push({cls:'diagram-line',x1:dx,y1:y-DIVIDER_H,x2:dx,y2:y+DIVIDER_H});
+    else if(g.key==='object')
+      out.lines.push({cls:'diagram-line',x1:dx,y1:y-DIVIDER_H,x2:dx,y2:y});
+    else if(g.key==='complement'){
+      // The complement divider leans back from the baseline. When the
+      // complement is compound the two arms fork from this slant's BOTTOM end,
+      // so stop it there rather than drawing through the fork.
+      g.slantTop={x:dx-14,y:y-DIVIDER_H}; g.slantFoot={x:dx+6,y};
+      out.lines.push({cls:'diagram-line',x1:dx-14,y1:y-DIVIDER_H,x2:dx+6,y2:y});
+    }
+  });
+
+  // place each group's word(s): single word on the line, or a fork
+  groups.forEach(g=>{
+    if(!g.nodes.length)return;
+    if(g.nodes.length===1){
+      const n=g.nodes[0];
+      n.line={x1:g.x1,y1:y,x2:g.x2,y2:y};
+      n.textX=g.mid; n.textY=y-ARM_LIFT; n.rotation=0; n.hit='seg';
+      out.targets.push(n);
+      measure(n);
+      placeMods(n,n.textX,y,out,null);
+      maxDepth=Math.max(maxDepth,measure(n).depth);
+    }else{
+      // compound: two stacked arms forking off the main line. When the upper
+      // arm carries a phrase, lift it far enough that the phrase clears the
+      // baseline instead of running through it.
+      const forkX=g.x1+FORK_RUN;
+      const upperDepth=g.nodes[0]?measure(g.nodes[0]).depth:0;
+      const rise=Math.max(FORK_RISE, upperDepth+34);
+      const topY=y-rise, botY=y+FORK_RISE;
+      // A compound complement forks from the foot of its slanted divider; every
+      // other position forks from the baseline itself.
+      const fx=g.slantFoot?g.slantFoot.x:g.x1, fy=g.slantFoot?g.slantFoot.y:y;
+      out.lines.push({cls:'diagram-line',x1:forkX,y1:topY,x2:g.x2,y2:topY});
+      out.lines.push({cls:'diagram-line',x1:forkX,y1:botY,x2:g.x2,y2:botY});
+      out.lines.push({cls:'diagram-line',x1:fx,y1:fy,x2:forkX,y2:topY});
+      out.lines.push({cls:'diagram-line',x1:fx,y1:fy,x2:forkX,y2:botY});
+      // The conjunction rides a dashed guide near the fork, not mid-arm:
+      // modifiers and phrases hang from the middle of each arm, and a centred
+      // conjunction box lands right on top of them.
+      const mid=forkX+26;
+      out.lines.push({cls:'diagram-guide',x1:mid,y1:topY,x2:mid,y2:botY});
+      const armMid=(forkX+g.x2)/2;
+      g.nodes.slice(0,2).forEach((n,i)=>{
+        const ay=i===0?topY:botY;
+        n.line={x1:forkX,y1:ay,x2:g.x2,y2:ay};
+        n.textX=armMid; n.textY=ay-ARM_LIFT; n.rotation=0; n.hit='seg';
+        out.targets.push(n);
+        const nm=measure(n);
+        // Hang this arm's modifiers past the conjunction guide, not over it.
+        const anchor=Math.max(n.textX, mid+40+nm.left);
+        // The upper arm sits above the main line, so anything hanging from it
+        // must stop short of the baseline instead of crossing it and the lower
+        // arm below that.
+        placeMods(n,anchor,ay,out, i===0?(y-ay-30):null);
+        maxDepth=Math.max(maxDepth,(i===1?FORK_RISE+nm.depth:0));
+      });
+      // the conjunction that belongs to THIS pair shares their parent
+      const cj=state.nodes.find(n=>n.slot==='conj'&&n.parentId===(g.nodes[0].parentId||null))
+            || state.nodes.find(n=>n.slot==='conj');
+      if(cj){
+        cj.box={x:mid-34,y:y-14,w:68,h:28};
+        cj.textX=mid; cj.textY=y+5; cj.rotation=0; cj.hit='box';
+        out.targets.push(cj);
+      }
+    }
+  });
+
+  // conjunction joining two sibling modifiers (e.g. "quickly and accurately")
+  const modConj=state.nodes.find(n=>n.slot==='modConj');
+  if(modConj){
+    const sibs=out.targets.filter(t=>t.slot==='mod'&&t.parentId===modConj.parentId);
+    if(sibs.length>=2){
+      const a=sibs[0],b=sibs[sibs.length-1];
+      const gy=Math.max(a.line.y2,b.line.y2)+24;
+      out.lines.push({cls:'diagram-guide',x1:a.line.x2,y1:gy,x2:b.line.x2,y2:gy});
+      modConj.box={x:(a.line.x2+b.line.x2)/2-32,y:gy+6,w:64,h:26};
+      modConj.textX=(a.line.x2+b.line.x2)/2; modConj.textY=gy+24; modConj.rotation=0; modConj.hit='box';
+      out.targets.push(modConj);
+      maxDepth=Math.max(maxDepth,gy+40-BASE_Y);
+    }
+  }
+
+  out.targets.forEach(t=>{
+    const ys=t.box?[t.box.y+t.box.h]:[t.line.y1,t.line.y2,t.textY+8];
+    maxDepth=Math.max(maxDepth,Math.max.apply(null,ys)-BASE_Y);
+    const xs=t.box?[t.box.x]:[t.line.x1,t.line.x2];
+    minX=Math.min(minX,Math.min.apply(null,xs));
+  });
+  out.width=Math.max(760,lineEnd+40);
+  out.height=Math.max(300,BASE_Y+maxDepth+56);
+  out.minX=Math.min(0,minX-30);
+  return out;
+}
+
+/* ============================================================ drop zones
+   What the canvas offers depends on the role the student picked, so an
+   S-tagged word only ever sees subject positions. */
+function legalZones(role){
+  const z=[];
+  const subj=subjectNodes(), verb=verbNodes();
+  const obj=objectNodes(), comp=complementNodes();
+  if(role==='S'){
+    if(!subj.length)z.push({kind:'slot',slot:'subject',parent:null,branch:0,label:'Subject'});
+    else if(subj.length===1)z.push({kind:'slot',slot:'subject',parent:null,branch:1,label:'2nd subject'});
+  }
+  if(VERB_ROLES.includes(role)){
+    if(!verb.length)z.push({kind:'slot',slot:'verb',parent:null,branch:0,label:'Verb'});
+    else if(verb.length===1)z.push({kind:'slot',slot:'verb',parent:null,branch:1,label:'2nd verb'});
+  }
+  if(role==='DO'&&verb.length&&!comp.length){
+    if(!obj.length)z.push({kind:'slot',slot:'object',parent:verb[0].id,branch:0,label:'Direct object'});
+    else if(obj.length===1)z.push({kind:'slot',slot:'object',parent:verb[0].id,branch:1,label:'2nd object'});
+  }
+  if((role==='PN'||role==='PA')&&verb.length&&!obj.length){
+    if(!comp.length)z.push({kind:'slot',slot:'complement',parent:verb[0].id,branch:0,
+                            label:role==='PN'?'Pred. nominative':'Pred. adjective'});
+    else if(comp.length===1)z.push({kind:'slot',slot:'complement',parent:verb[0].id,branch:1,label:'2nd complement'});
+  }
+  if(role==='CONJ'){
+    // joins whichever position already has two arms. The conjunction belongs to
+    // the same parent as the pair it joins, so an object/complement conjunction
+    // hangs off the verb, not off the clause.
+    [['subject',subj],['verb',verb],['object',obj],['complement',comp]].forEach(([k,g])=>{
+      if(g.length===2&&!state.nodes.some(n=>n.slot==='conj'))
+        z.push({kind:'slot',slot:'conj',parent:g[0].parentId,branch:0,label:'Joins the two '+k+'s'});
+    });
+    // or joins two modifiers under one word
+    state.nodes.forEach(n=>{
+      const mods=childrenOf(n.id).filter(c=>c.slot==='mod');
+      if(mods.length===2&&!state.nodes.some(x=>x.slot==='modConj'))
+        z.push({kind:'slot',slot:'modConj',parent:n.id,branch:0,label:'Joins the two modifiers'});
+    });
+  }
+  // modifiers and prep phrases attach to a word already on the diagram
+  if(role==='ADJ')
+    state.nodes.filter(n=>NOUN_ROLES.includes(n.role)).forEach(n=>z.push({kind:'attach',slot:'mod',parent:n.id}));
+  if(role==='ADV')
+    state.nodes.filter(n=>VERB_ROLES.includes(n.role)||n.role==='ADJ'||n.role==='ADV')
+      .forEach(n=>z.push({kind:'attach',slot:'mod',parent:n.id}));
+  if(role==='PREP')
+    state.nodes.filter(n=>VERB_ROLES.includes(n.role)||NOUN_ROLES.includes(n.role))
+      .forEach(n=>z.push({kind:'attach',slot:'prep',parent:n.id}));
+  if(role==='OP')
+    state.nodes.filter(n=>n.role==='PREP'&&!childrenOf(n.id).some(c=>c.slot==='prepObject'))
+      .forEach(n=>z.push({kind:'attach',slot:'prepObject',parent:n.id}));
+  return z;
+}
+function whyBlocked(role){
+  if(role==='DO'&&!verbNodes().length)return 'Place the verb first, then its direct object.';
+  if((role==='PN'||role==='PA')&&!verbNodes().length)return 'Place the linking verb first.';
+  if(role==='DO'&&complementNodes().length)return 'This sentence already has a predicate word after the verb.';
+  if((role==='PN'||role==='PA')&&objectNodes().length)return 'This sentence already has a direct object.';
+  if(role==='ADJ')return 'Adjectives go under a noun. Place the noun first, then click it.';
+  if(role==='ADV')return 'Adverbs go under a verb (or another modifier). Place that word first.';
+  if(role==='PREP')return 'A phrase hangs under the word it tells about. Place that word first.';
+  if(role==='OP')return 'Place the preposition first, then its object.';
+  if(role==='CONJ')return 'A conjunction joins two words that are both already on the diagram.';
+  return 'There is nowhere for that word yet.';
+}
+
+/* ============================================================ grading
+   Order-independent: children are sorted by token index before the path is
+   built, so building the same diagram in a different order compares equal. */
+function expectedNodes(){
+  const s=sentence();
+  const byToken={};
+  s.expected.forEach(e=>{byToken[e.t]={...e,id:'e'+e.t,
+    parentId:e.parent==null?null:'e'+e.parent, branch:e.branch||0};});
+  return Object.values(byToken);
+}
+function pathMap(nodes){
+  const kids={};
+  nodes.forEach(n=>{(kids[n.parentId]=kids[n.parentId]||[]).push(n);});
+  Object.values(kids).forEach(a=>a.sort((x,y)=>x.tokenIndex!=null&&y.tokenIndex!=null
+    ? x.tokenIndex-y.tokenIndex : 0));
+  const map={};
+  function walk(n,prefix){
+    const seg=n.slot+(n.branch?'#'+n.branch:'');
+    const p=prefix?prefix+'/'+seg:seg;
+    map[n.tokenIndex]=p;
+    (kids[n.id]||[]).forEach(c=>walk(c,p));
+  }
+  (kids[null]||[]).sort((a,b)=>a.tokenIndex-b.tokenIndex).forEach(r=>walk(r,''));
+  return map;
+}
+function grade(){
+  const exp=expectedNodes();
+  exp.forEach(e=>{e.tokenIndex=e.t;});
+  const expPath=pathMap(exp);
+  const stuPath=pathMap(state.nodes.map(n=>({...n})));
+  const expRole={}; exp.forEach(e=>{expRole[e.t]=e.role;});
+  const verdicts={};
+  const tokens=sentence().tokens;
+  for(let t=0;t<tokens.length;t++){
+    const e=expPath[t], s=stuPath[t];
+    if(e==null&&s==null){verdicts[t]='ok';continue;}     // correctly left off
+    if(e==null&&s!=null){verdicts[t]='extra';continue;}
+    if(e!=null&&s==null){verdicts[t]='missing';continue;}
+    if(e!==s){verdicts[t]='misplaced';continue;}
+    verdicts[t]=(roleOf(t)===expRole[t])?'ok':'wrongRole';
+  }
+  return verdicts;
+}
+function verdictSummary(v){
+  const c={ok:0,wrongRole:0,misplaced:0,extra:0,missing:0};
+  Object.values(v).forEach(x=>c[x]++);
+  return c;
+}
+
+/* ============================================================ render */
+function renderRoleToolbar(){
+  const btns=DIAGRAM_ROLES.map(r=>
+    `<button class="role-btn ${state.selectedRole===r.id?'selected':''}" data-action="role" data-value="${r.id}">
+       <strong>${esc(r.id)}</strong><span>${esc(r.label)}</span></button>`).join('');
+  return `<div class="role-toolbar">${btns}</div>`;
+}
+function renderBank(){
+  const s=sentence();
+  const v=state.feedback;
+  const cells=s.tokens.map((tok,i)=>{
+    const placed=!!nodeForToken(i);
+    const role=roleOf(i);
+    const cls=['word-token'];
+    if(state.selectedWord===i)cls.push('selected');
+    if(placed)cls.push('placed');
+    if(isSynthetic(i))cls.push('synthetic');
+    if(v&&v[i]&&v[i]!=='ok')cls.push('v-'+v[i]);
+    else if(v&&v[i]==='ok')cls.push('v-ok');
+    const chip=role?`<span class="chip ${ROLE_MAP[role].className}">${esc(role)}</span>`:'';
+    return `<button class="${cls.join(' ')}" data-action="word" data-index="${i}">
+      <span class="word-text">${esc(tok)}</span><span class="role-chips">${chip}</span></button>`;
+  }).join('');
+  return `<div class="word-bank">${cells}</div>`;
+}
+function renderTargetSvg(n,verdicts){
+  const t=n.tokenIndex;
+  const label=esc(tokenText(t));
+  const vd=verdicts?verdicts[t]:null;
+  const vcls=vd&&vd!=='missing'&&vd!=='extra'?' '+('v-'+vd):'';
+  if(n.hit==='box'){
+    return `<g class="diagram-target" data-action="node" data-node="${n.id}">
+      <rect class="target-hit" x="${n.box.x-6}" y="${n.box.y-6}" width="${n.box.w+12}" height="${n.box.h+12}" rx="6"></rect>
+      <rect class="word-box${vcls}" x="${n.box.x}" y="${n.box.y}" width="${n.box.w}" height="${n.box.h}" rx="6"></rect>
+      <text class="diagram-text small-text" x="${n.textX}" y="${n.textY}">${label}</text></g>`;
+  }
+  if(n.hit==='slant'){
+    // Start below the baseline and stop above the foot: a prep slant lands on
+    // the arm it feeds, and touching it would steal the arm's clicks.
+    const {x1,y1,x2,y2}=n.line;
+    const pad=15, tail=(n.slot==='prep')?10:0;
+    const fx=x2+(x1-x2)*(tail/Math.max(1,y2-y1)), fy=y2-tail;
+    const pts=[[x1+pad,y1+5],[x1-pad,y1+5],[fx-pad,fy],[fx+pad,fy]]
+      .map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    return `<g class="diagram-target" data-action="node" data-node="${n.id}">
+      <polygon class="target-hit" points="${pts}"></polygon>
+      <line class="diagram-line${vcls?' '+vcls:''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+        ${vd==='misplaced'?'stroke="#a3372a"':vd==='ok'?'stroke="#217044"':vd==='wrongRole'?'stroke="#b7791f"':''}></line>
+      <text class="diagram-text small-text" x="${n.textX}" y="${n.textY}"
+        transform="rotate(${n.rotation.toFixed(1)} ${n.textX} ${n.textY})">${label}</text></g>`;
+  }
+  // horizontal segment (main line or object-of-preposition arm).
+  // On a prep arm the slant that feeds it lands at x1, so start the hit box
+  // clear of that junction or the two fight over the same clicks.
+  const {x1,y1,x2}=n.line;
+  const top=(n.hit==='arm')?n.textY-12:Math.min(y1,n.textY)-16;
+  const left=(n.hit==='arm')?x1+34:x1+2;
+  return `<g class="diagram-target" data-action="node" data-node="${n.id}">
+    <rect class="target-hit" x="${left}" y="${top}" width="${Math.max(28,x2-left-2)}" height="${y1-top}" rx="5"></rect>
+    <text class="diagram-text${vcls}" x="${n.textX}" y="${n.textY}"
+      ${vd==='misplaced'?'fill="#a3372a"':vd==='ok'?'fill="#217044"':vd==='wrongRole'?'fill="#b7791f"':''}>${label}</text></g>`;
+}
+function renderGhosts(L){
+  if(state.selectedWord==null||!state.selectedRole)return '';
+  const zones=legalZones(state.selectedRole);
+  const out=[];
+  zones.forEach((z,i)=>{
+    if(z.kind==='attach'){
+      const host=L.targets.find(t=>t.id===z.parent);
+      if(!host)return;
+      const hx=host.textX, hy=host.box?host.box.y+host.box.h:Math.max(host.line.y1,host.line.y2);
+      out.push(`<g class="ghost-g" data-action="drop" data-zone="${i}">
+        <rect class="ghost" x="${hx-34}" y="${hy+10}" width="68" height="22" rx="5"></rect>
+        <text class="ghost-label" x="${hx}" y="${hy+25}">here</text></g>`);
+    }else{
+      const g=ghostSlotBox(z,L);
+      if(!g)return;
+      out.push(`<g class="ghost-g" data-action="drop" data-zone="${i}">
+        <rect class="ghost" x="${g.x}" y="${g.y}" width="${g.w}" height="${g.h}" rx="6"></rect>
+        <text class="ghost-label" x="${g.x+g.w/2}" y="${g.y+g.h/2+4}">${esc(z.label)}</text></g>`);
+    }
+  });
+  return out.join('');
+}
+/* Where an empty slot's ghost box goes, before anything is placed there. */
+function ghostSlotBox(z,L){
+  const y=BASE_Y, w=136, h=28;
+  const subj=subjectNodes(), verb=verbNodes(), obj=objectNodes(), comp=complementNodes();
+  const after=(nodes,fallbackX)=>{
+    const t=nodes.length?L.targets.find(x=>x.id===nodes[0].id):null;
+    return t?Math.max(t.line.x2,t.textX+40)+16:fallbackX;
+  };
+  if(z.slot==='subject')
+    return {x:z.branch?BASE_X+10:BASE_X+6, y:z.branch?y+FORK_RISE-14:y-h-4, w, h};
+  if(z.slot==='verb')
+    return {x:after(subj,BASE_X+SEG_MIN)+10, y:z.branch?y+FORK_RISE-14:y-h-4, w, h};
+  if(z.slot==='object'||z.slot==='complement')
+    return {x:after(verb,BASE_X+2*SEG_MIN)+30, y:z.branch?y+FORK_RISE-14:y-h-4, w, h};
+  if(z.slot==='conj'){
+    const g=[subj,verb,obj,comp].find(a=>a.length===2);
+    const t=g?L.targets.find(x=>x.id===g[0].id):null;
+    return {x:(t?t.textX:BASE_X+140)-34, y:y-14, w:68, h:28};
+  }
+  if(z.slot==='modConj'){
+    const host=L.targets.find(t=>t.id===z.parent);
+    const mods=L.targets.filter(t=>t.slot==='mod'&&t.parentId===z.parent);
+    if(!mods.length)return null;
+    const mx=(mods[0].line.x2+mods[mods.length-1].line.x2)/2;
+    const my=Math.max.apply(null,mods.map(m=>m.line.y2))+30;
+    return {x:mx-32, y:my, w:64, h:26};
+  }
+  return null;
+}
+
+function renderCanvas(){
+  const L=layout();
+  const lines=L.lines.map(l=>
+    `<line class="${l.cls}" x1="${l.x1}" y1="${l.y1}" x2="${l.x2}" y2="${l.y2}"></line>`).join('');
+  const targets=L.targets.map(t=>renderTargetSvg(t,state.feedback)).join('');
+  const ghosts=renderGhosts(L);
+  const vb=`${L.minX} 0 ${L.width-L.minX} ${L.height}`;
+  return `<div class="diagram-wrap"><svg class="diagram-svg" viewBox="${vb}"
+    width="${L.width-L.minX}" height="${L.height}" preserveAspectRatio="xMidYMin meet"
+    role="img" aria-label="Sentence diagram">${lines}${targets}${ghosts}</svg></div>`;
+}
+function renderFeedback(){
+  if(!state.feedback)return '';
+  const c=verdictSummary(state.feedback);
+  const wrong=Object.entries(state.feedback).filter(([t,v])=>v!=='ok');
+  if(!wrong.length)
+    return `<div class="feedback all-ok"><strong>Correct.</strong> Every word is in the right place with the right label.</div>`;
+  const names={wrongRole:'right place, but check the label',misplaced:'in the wrong place',
+               extra:'should not be on the diagram',missing:'still needs to go on the diagram'};
+  const items=wrong.map(([t,v])=>`<li><b>${esc(tokenText(t))}</b> &mdash; ${names[v]}</li>`).join('');
+  return `<div class="feedback"><strong>${c.ok} right.</strong> Fix these and check again:<ul>${items}</ul></div>`;
+}
+function render(){
+  const s=sentence();
+  document.getElementById('count').textContent=`Sentence ${state.index+1} of ${SENTENCES.length}`;
+  const placedAll=s.tokens.every((t,i)=>nodeForToken(i)||!expectedHas(i));
+  document.getElementById('app').innerHTML=`
+  <div class="section">
+    <h2>${esc(s.sentence)}</h2>
+    <p class="directions">Give each word its job, then put it on the diagram. The diagram grows as you build it.</p>
+    <div class="step"><span class="step-num">1</span><span class="step-label">Pick a job</span>
+      <span class="step-hint">${state.selectedRole?'Now click the word that does this job.':'Choose what the next word does in the sentence.'}</span></div>
+    ${renderRoleToolbar()}
+    <div class="step"><span class="step-num">2</span><span class="step-label">Pick the word</span>
+      <span class="step-hint">${state.selectedWord!=null?'Now click a dashed spot on the diagram.':'Click a word to label it.'}</span></div>
+    ${renderBank()}
+    <div class="step"><span class="step-num">3</span><span class="step-label">Place it</span>
+      <span class="step-hint">Click a dashed spot, or click a word already on the diagram to hang this one under it.</span></div>
+    ${renderCanvas()}
+    <div class="hint">${esc(state.hint)}</div>
+    ${renderFeedback()}
+    <div class="toolbar">
+      <button class="primary" data-action="check">Check my diagram</button>
+      <button data-action="undo">Remove last</button>
+      <button data-action="clear">Start over</button>
+      <button data-action="reveal">Show answer</button>
+    </div>
+    <div class="legend"><span><b>Tip:</b> click a word on the diagram to take it off again.</span></div>
+  </div>`;
+}
+function expectedHas(t){return sentence().expected.some(e=>e.t===t);}
+
+/* ============================================================ interaction */
+function place(zone){
+  const t=state.selectedWord, role=state.selectedRole;
+  const n=addNode(t,role,zone.slot,zone.parent,zone.branch||0);
+  if(zone.slot==='conj')n._for=zone.forKey||'';
+  state.selectedWord=null; state.selectedRole=null; state.hint=''; state.feedback=null;
+  save();
+}
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-action]');
+  if(!btn)return;
+  const action=btn.dataset.action;
+
+  if(action==='role'){
+    state.selectedRole=(state.selectedRole===btn.dataset.value)?null:btn.dataset.value;
+    state.hint='';
+  }
+  else if(action==='word'){
+    const i=Number(btn.dataset.index);
+    if(nodeForToken(i)){                       // already placed: take it off
+      removeNode(nodeForToken(i).id);
+      state.feedback=null; state.hint='';
+    }else if(state.selectedRole){
+      state.roles[i]=state.selectedRole;       // tag it
+      state.selectedWord=i;
+      const zones=legalZones(state.selectedRole);
+      state.hint=zones.length?'':whyBlocked(state.selectedRole);
+      if(!zones.length)state.selectedWord=null;
+    }else{
+      state.hint='Pick what this word does in the sentence first (step 1).';
+    }
+  }
+  else if(action==='drop'){
+    const zones=legalZones(state.selectedRole);
+    const z=zones[Number(btn.dataset.zone)];
+    if(z)place(z);
+  }
+  else if(action==='node'){
+    const n=nodeById(btn.dataset.node);
+    if(!n)return;
+    if(state.selectedWord!=null&&state.selectedRole){
+      // attaching to an existing word
+      const z=legalZones(state.selectedRole).find(x=>x.kind==='attach'&&x.parent===n.id);
+      if(z)place(z);
+      else state.hint='That word cannot go under "'+tokenText(n.tokenIndex)+'".';
+    }else{
+      removeNode(n.id); state.feedback=null; state.hint='';
+    }
+  }
+  else if(action==='check'){state.feedback=grade(); state.hint='';}
+  else if(action==='undo'){
+    if(state.nodes.length){removeNode(state.nodes[state.nodes.length-1].id);state.feedback=null;}
+  }
+  else if(action==='clear'){
+    state.nodes=[];state.roles={};state.selectedWord=null;state.selectedRole=null;
+    state.feedback=null;state.hint='';
+  }
+  else if(action==='reveal'){
+    state.nodes=[];state.roles={};state.seq=1;
+    const exp=expectedNodes();
+    const idMap={};
+    // parents before children
+    const ordered=[]; const seen=new Set();
+    function push(e){
+      if(seen.has(e.t))return; seen.add(e.t);
+      const p=exp.find(x=>'e'+x.t===e.parentId);
+      if(p)push(p);
+      ordered.push(e);
+    }
+    exp.forEach(push);
+    ordered.forEach(e=>{
+      const n=addNode(e.t,e.role,e.slot,e.parentId?idMap[e.parentId]:null,e.branch||0);
+      idMap['e'+e.t]=n.id;
+      state.roles[e.t]=e.role;
+    });
+    state.feedback=null;state.hint='';state.revealed=true;
+  }
+  else if(action==='next'||action==='prev'){
+    save();
+    const d=action==='next'?1:-1;
+    const i=(state.index+d+SENTENCES.length)%SENTENCES.length;
+    state=load(i);
+  }
+  else return;
+  save(); render();
+});
+
+/* ============================================================ boot */
+(function init(){
+  let start=0;
+  try{const all=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+      if(Number.isInteger(all._last))start=Math.min(all._last,SENTENCES.length-1);}catch(e){}
+  state=load(start);
+  render();
+})();
+</script>
+</script>
+</body>
+</html>
