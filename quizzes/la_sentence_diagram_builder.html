@@ -666,10 +666,33 @@ function renderGhosts(L){
     if(z.kind==='attach'){
       const host=L.targets.find(t=>t.id===z.parent);
       if(!host)return;
-      const hx=host.textX, hy=host.box?host.box.y+host.box.h:Math.max(host.line.y1,host.line.y2);
+      const hy=host.box?host.box.y+host.box.h:Math.max(host.line.y1,host.line.y2);
+      // Put the ghost where this modifier will actually land, not on the head
+      // word: anchored at the head, a second adjective's ghost sits on top of
+      // the first one's slant and is nearly impossible to see or hit.
+      const sibs=L.targets.filter(t=>t.parentId===z.parent&&(t.slot==='mod'||t.slot==='prep'));
+      let hx=host.textX;
+      if(sibs.length){
+        // Step left past everything already hanging here, measured from each
+        // slant's ANCHOR (its top, on the parent) rather than its foot -- the
+        // foot already leans left, so stepping from it overshoots badly.
+        const anchors=sibs.map(t=>t.line.x1);
+        hx=Math.min.apply(null,anchors)-MOD_PITCH;
+      }
+      // Several hosts can be offered at once, and their ghosts must not land on
+      // some other word's slant. Nudge down a little if one is in the way, but
+      // stay near the host or the spot stops reading as belonging to it.
+      let gy=hy+12;
+      const clash=()=>L.targets.some(t=>{
+        if(t.box)return false;
+        const x1=Math.min(t.line.x1,t.line.x2),x2=Math.max(t.line.x1,t.line.x2);
+        const y1=Math.min(t.line.y1,t.line.y2),y2=Math.max(t.line.y1,t.line.y2);
+        return x2>hx-36&&x1<hx+36&&y2>gy-2&&y1<gy+24;
+      });
+      for(let guard=0;guard<2&&clash();guard++)gy+=26;
       out.push(`<g class="ghost-g" data-action="drop" data-zone="${i}">
-        <rect class="ghost" x="${hx-34}" y="${hy+10}" width="68" height="22" rx="5"></rect>
-        <text class="ghost-label" x="${hx}" y="${hy+25}">here</text></g>`);
+        <rect class="ghost" x="${hx-34}" y="${gy}" width="68" height="22" rx="5"></rect>
+        <text class="ghost-label" x="${hx}" y="${gy+15}">here</text></g>`);
     }else{
       const g=ghostSlotBox(z,L);
       if(!g)return;
