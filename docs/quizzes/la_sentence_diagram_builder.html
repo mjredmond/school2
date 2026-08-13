@@ -640,7 +640,7 @@ const TOOLS=[
   {id:'div:do',        label:'V | DO', hint:'Direct object divider (stops at the line)'},
   {id:'div:complement',label:'V \\ PN', hint:'Predicate word divider (slanted)'},
   {id:'fork',          label:'Compound', hint:'Split one spot into two'},
-  {id:'conj',          label:'Join with',hint:'Put a conjunction between two words'}
+  {id:'conj',          label:'Join with',hint:'Pick the joining word, then the two it joins'}
 ];
 function toolArmed(id){return state.sel&&state.sel.kind==='tool'&&state.sel.tool===id;}
 
@@ -664,6 +664,7 @@ function renderBank(){
     const placed=!!nodeForToken(i), role=roleOf(i);
     const cls=['word-token'];
     if(state.sel&&state.sel.kind==='word'&&state.sel.tokenIndex===i)cls.push('selected');
+    if(state.conjWord===i)cls.push('selected');   // armed as the joining word
     if(placed)cls.push('placed');
     if(isSynthetic(i))cls.push('synthetic');
     if(v&&v[i])cls.push('v-'+v[i]);
@@ -786,9 +787,11 @@ function toolHint(){
   if(state.sel.kind==='word')return 'Click the line to put it there, click a word to hang it underneath, or an empty arm to fill it.';
   if(state.sel.kind==='tool'){
     if(state.sel.tool==='fork')return 'Click a word on the line to split its spot in two.';
-    if(state.sel.tool==='conj')return state.conjWord!=null
-      ? 'Now click the compound spot (or a modifier) that "'+tokenText(state.conjWord)+'" joins.'
-      : 'Pick the joining word in the list above first, then click this tool again.';
+    if(state.sel.tool==='conj'){
+      if(state.conjWord==null)return 'Click the joining word (like "and") in the word list.';
+      if(!state.pending)return 'Now click the FIRST word that "'+tokenText(state.conjWord)+'" joins.';
+      return 'Now click the SECOND word.';
+    }
     return state.pending?'Now click the word on the RIGHT of the divider.':'Click the word on the LEFT of the divider.';
   }
   return '';
@@ -849,11 +852,9 @@ document.addEventListener('click',e=>{
   }
   else if(action==='tool'){
     const t=btn.dataset.value;
-    // Arming "join with" while holding a word carries that word as the
-    // conjunction, so the student never has to guess which word it will use.
-    if(t==='conj'&&state.sel&&state.sel.kind==='word')state.conjWord=state.sel.tokenIndex;
     state.sel=toolArmed(t)?null:{kind:'tool',tool:t};
     state.pending=null;
+    if(t==='conj')state.conjWord=null;   // each join starts fresh
   }
   else if(action==='word'){
     const i=Number(btn.dataset.index);
@@ -861,6 +862,9 @@ document.addEventListener('click',e=>{
       state.roles[i]=(state.roles[i]===state.sel.role)?undefined:state.sel.role;
       if(state.roles[i]===undefined)delete state.roles[i];
       // deliberately keep the role armed
+    }else if(state.sel&&state.sel.kind==='tool'&&state.sel.tool==='conj'&&state.conjWord==null){
+      // "Join with" is armed and waiting for its conjunction: this is it.
+      state.conjWord=i; state.pending=null;
     }else if(nodeForToken(i)){
       const n=nodeForToken(i), kids=childrenOf(n.id).length;
       removeNode(n.id);
@@ -899,18 +903,25 @@ document.addEventListener('click',e=>{
         }
         clearSel();
       }else if(tool==='conj'){
-        // Guessing which word is "the conjunction" was the bug: pick the word
-        // first, then click what it joins. Two clicks, same as a divider.
+        // Join with -> the conjunction -> the two words it joins.
         if(state.conjWord==null){
-          state.hint='First click the joining word in the list above, then this tool.';
-          clearSel();
-        }else{
-          const t=state.conjWord, ci=cellIndexOfNode(n.id);
-          if(ci>=0&&isFork(state.line[ci])){
+          state.hint='Click the joining word (like "and") in the word list first.';
+          return;
+        }
+        if(!state.pending){state.pending=n.id; state.hint='';}
+        else if(state.pending!==n.id){
+          const t=state.conjWord;
+          const a=nodeById(state.pending), b=n;
+          const ci=cellIndexOfNode(a.id), cj=cellIndexOfNode(b.id);
+          if(ci>=0&&ci===cj&&isFork(state.line[ci])){
+            // both words are arms of one compound: the conjunction rides its guide
             const cn=addNode(t,'conj',null); state.line[ci].conjId=cn.id;
+          }else if(a.parentId&&a.parentId===b.parentId){
+            // two modifiers under the same word
+            addNode(t,'conj',a.parentId);
           }else{
-            // joining two modifiers: hang it off the word they share
-            addNode(t,'conj',n.parentId||null);
+            // anything else: hang it off the first word clicked, and let Check judge
+            addNode(t,'conj',a.parentId||null);
           }
           state.conjWord=null; clearSel();
         }
