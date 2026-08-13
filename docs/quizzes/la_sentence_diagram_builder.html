@@ -198,6 +198,7 @@ function freshState(index){
   return {index, nodes:[], line:[], dividers:[], roles:{},
           sel:null,            // {kind:'role'|'word'|'tool', ...} -- one at a time
           pending:null,        // first word clicked while a 2-click tool is armed
+          conjWord:null,       // the word being used as a joining conjunction
           feedback:null, hint:'', seq:1};
 }
 function sentence(){return SENTENCES[state.index];}
@@ -359,7 +360,7 @@ function placeMods(head,centerX,anchorY,out,maxDrop){
    appears only in the gap the student named. */
 function layout(){
   const out={geom:new Map(), slots:new Map(), targets:[], lines:[], dividers:[],
-             gaps:[], width:760, height:320, minX:0, top:0};
+             gaps:[], slotsOpen:[], width:760, height:320, minX:0, top:0};
   const y=BASE_Y;
   let x=BASE_X, maxDepth=0, minX=BASE_X, topY=y;
 
@@ -413,9 +414,16 @@ function layout(){
       out.lines.push({cls:'diagram-guide',x1:gx,y1:topArm,x2:gx,y2:botArm});
       const armMid=(x1+FORK_RUN+x2)/2;
       c.cell.arms.forEach((id,ai)=>{
-        if(!id)return;
-        const n=nodeById(id); if(!n)return;
         const ay=ai===0?topArm:botArm;
+        // An empty arm needs a visible, clickable slot or the fork is a dead
+        // end: the student can split a spot but has nowhere to put the second
+        // word. Draw the arm plus an open slot on it.
+        if(!id){
+          out.slotsOpen.push({forkId:c.cell.id, arm:ai,
+            x:x1+FORK_RUN, x2:x2, y:ay, mid:armMid});
+          return;
+        }
+        const n=nodeById(id); if(!n)return;
         out.geom.set(id,{line:{x1:x1+FORK_RUN,y1:ay,x2:x2,y2:ay},
           textX:armMid, textY:ay-ARM_LIFT, rotation:0, hit:'seg', attach:'line'});
         out.targets.push(n);
@@ -707,6 +715,13 @@ function renderTargetSvg(n,g){
     '<rect class="target-hit" x="'+left+'" y="'+top+'" width="'+Math.max(28,L.x2-left-2)+'" height="'+(L.y1-top)+'" rx="5"></rect>'+
     '<text class="diagram-text" x="'+g.textX+'" y="'+g.textY+'"'+vfill(n.tokenIndex)+'>'+label+'</text></g>';
 }
+/* An empty fork arm: the line is already drawn, so add a dashed slot on it that
+   says "a word goes here" and can be clicked. */
+function renderOpenArm(a){
+  return '<g class="ghost-g" data-action="fillarm" data-arm="'+a.forkId+':'+a.arm+'">'+
+    '<rect class="ghost" x="'+(a.mid-42)+'" y="'+(a.y-24)+'" width="84" height="22" rx="5"></rect>'+
+    '<text class="ghost-label" x="'+a.mid+'" y="'+(a.y-9)+'">word here</text></g>';
+}
 function renderDividerSvg(D){
   const d=D.d, y=D.y, x=D.dx;
   const v=state.feedback?state.feedback.divs[d.id]:null;
@@ -726,6 +741,7 @@ function renderCanvas(){
   const lines=L.lines.map(l=>'<line class="'+l.cls+'" x1="'+l.x1+'" y1="'+l.y1+'" x2="'+l.x2+'" y2="'+l.y2+'"></line>').join('');
   const divs=L.dividers.map(renderDividerSvg).join('');
   const targets=L.targets.map(n=>{const g=L.geom.get(n.id);return g?renderTargetSvg(n,g):'';}).join('');
+  const openArms=L.slotsOpen.map(renderOpenArm).join('');
   // one wide strip over the baseline: click it to drop the carried word there
   const armed=state.sel&&state.sel.kind==='word';
   const strip=armed?'<rect class="baseline-hit" data-action="baseline" x="'+(L.minX)+'" y="'+(L.baseY-22)+'" width="'+(L.width-L.minX)+'" height="44" fill="rgba(36,93,143,.05)"></rect>':'';
@@ -733,7 +749,7 @@ function renderCanvas(){
   const vb=L.minX+' '+top+' '+(L.width-L.minX)+' '+(L.height-top);
   return '<div class="diagram-wrap"><svg class="diagram-svg" id="canvas" viewBox="'+vb+'" '+
     'width="'+(L.width-L.minX)+'" height="'+(L.height-top)+'" preserveAspectRatio="xMidYMin meet" '+
-    'role="img" aria-label="Sentence diagram">'+strip+lines+divs+targets+'</svg></div>';
+    'role="img" aria-label="Sentence diagram">'+strip+lines+divs+targets+openArms+'</svg></div>';
 }
 function renderFeedback(){
   const f=state.feedback; if(!f)return '';
@@ -767,10 +783,12 @@ function renderFeedback(){
 function toolHint(){
   if(!state.sel)return 'Tag a word’s job, put words on the line, then add the dividers.';
   if(state.sel.kind==='role')return 'Click each word that is a '+ROLE_MAP[state.sel.role].label.toLowerCase()+'. The tool stays on.';
-  if(state.sel.kind==='word')return 'Click the line to put it there, or click a word already on the diagram to hang it underneath.';
+  if(state.sel.kind==='word')return 'Click the line to put it there, click a word to hang it underneath, or an empty arm to fill it.';
   if(state.sel.kind==='tool'){
     if(state.sel.tool==='fork')return 'Click a word on the line to split its spot in two.';
-    if(state.sel.tool==='conj')return state.pending?'Now click the second word.':'Click the two words this joins.';
+    if(state.sel.tool==='conj')return state.conjWord!=null
+      ? 'Now click the compound spot (or a modifier) that "'+tokenText(state.conjWord)+'" joins.'
+      : 'Pick the joining word in the list above first, then click this tool again.';
     return state.pending?'Now click the word on the RIGHT of the divider.':'Click the word on the LEFT of the divider.';
   }
   return '';
@@ -831,6 +849,9 @@ document.addEventListener('click',e=>{
   }
   else if(action==='tool'){
     const t=btn.dataset.value;
+    // Arming "join with" while holding a word carries that word as the
+    // conjunction, so the student never has to guess which word it will use.
+    if(t==='conj'&&state.sel&&state.sel.kind==='word')state.conjWord=state.sel.tokenIndex;
     state.sel=toolArmed(t)?null:{kind:'tool',tool:t};
     state.pending=null;
   }
@@ -878,18 +899,20 @@ document.addEventListener('click',e=>{
         }
         clearSel();
       }else if(tool==='conj'){
-        if(!state.pending){state.pending=n.id;}
-        else if(state.pending!==n.id){
-          // the conjunction is whichever word is currently tagged CONJ and unplaced
-          const t=sentence().tokens.findIndex((w,i)=>roleOf(i)==='CONJ'&&!nodeForToken(i));
-          const ci=cellIndexOfNode(state.pending), cj=cellIndexOfNode(n.id);
-          if(t>=0&&ci>=0&&isFork(state.line[ci])){
-            const cn=addNode(t,'conj',null); state.line[ci].conjId=cn.id;
-          }else if(t>=0){
-            const host=nodeById(state.pending);
-            addNode(t,'conj',host?host.parentId:null);
-          }else state.hint='Tag a word CONJ first, then join.';
+        // Guessing which word is "the conjunction" was the bug: pick the word
+        // first, then click what it joins. Two clicks, same as a divider.
+        if(state.conjWord==null){
+          state.hint='First click the joining word in the list above, then this tool.';
           clearSel();
+        }else{
+          const t=state.conjWord, ci=cellIndexOfNode(n.id);
+          if(ci>=0&&isFork(state.line[ci])){
+            const cn=addNode(t,'conj',null); state.line[ci].conjId=cn.id;
+          }else{
+            // joining two modifiers: hang it off the word they share
+            addNode(t,'conj',n.parentId||null);
+          }
+          state.conjWord=null; clearSel();
         }
       }else{
         // divider tools: two clicks, both on words
