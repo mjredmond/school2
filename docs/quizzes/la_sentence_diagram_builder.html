@@ -96,7 +96,7 @@ button:disabled{opacity:.45;cursor:default}
 </div>
 <script>
 /* ============================================================ constants */
-const STORAGE_KEY="sentence_diagram_builder_v1";
+const STORAGE_KEY="sentence_diagram_builder_v2";
 
 const DIAGRAM_ROLES=[
   {id:'S',   label:'Subject',      className:'role-s'},
@@ -124,8 +124,8 @@ const SEG_MIN=132, SEG_PAD=26, DIVIDER_H=46, HALF_DIV=23;
 /* MOD_PITCH must exceed the slant hit polygon's full width (2*15 pad + the
    48 run) or two modifiers under one word fight over the same clicks. */
 const SLANT_RUN=48, SLANT_DROP=74, SLANT_CLEAR=88, MOD_PITCH=84;
+const DIVIDER_GAP=44, FORK_RISE=54, FORK_RUN=40;
 const PREP_ARM=126, ARM_LIFT=16;
-const FORK_RISE=54, FORK_RUN=40;
 const CHAR_W=9.2, TEXT_PAD=30;
 
 /* ============================================================ sentences */
@@ -188,24 +188,31 @@ const SENTENCES=[
              {t:10,role:'ADJ',slot:'mod',parent:11}]}
 ];
 
-/* ============================================================ state */
-let state={index:0, nodes:[], roles:{}, selectedWord:null, selectedRole:null,
-           feedback:null, hint:'', seq:1, revealed:false};
+/* ============================================================ state
+   Three authored collections. `line` is the baseline the student built, in the
+   order they chose; `nodes` holds every word plus what it hangs off; `dividers`
+   and forks are things the student drew, not things the app inferred. */
+let state=freshState(0);
 
+function freshState(index){
+  return {index, nodes:[], line:[], dividers:[], roles:{},
+          sel:null,            // {kind:'role'|'word'|'tool', ...} -- one at a time
+          pending:null,        // first word clicked while a 2-click tool is armed
+          feedback:null, hint:'', seq:1};
+}
 function sentence(){return SENTENCES[state.index];}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function tokenText(i){return sentence().tokens[i]||'';}
 function isSynthetic(i){return (sentence().synthetic||[]).includes(i);}
 function textWidth(s){return Math.max(56, String(s).length*CHAR_W+TEXT_PAD);}
 
-function freshState(index){
-  return {index, nodes:[], roles:{}, selectedWord:null, selectedRole:null,
-          feedback:null, hint:'', seq:1, revealed:false};
-}
 function save(){
   try{
     const all=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
-    all[sentence().id]={nodes:state.nodes, roles:state.roles, seq:state.seq};
+    // persist only declared fields -- layout geometry lives in a side map now
+    all[sentence().id]={
+      nodes:state.nodes.map(n=>({id:n.id,tokenIndex:n.tokenIndex,attach:n.attach,parentId:n.parentId})),
+      line:state.line, dividers:state.dividers, roles:state.roles, seq:state.seq};
     all._last=state.index;
     localStorage.setItem(STORAGE_KEY,JSON.stringify(all));
   }catch(e){/* locked-down profile: run without persistence */}
@@ -214,675 +221,754 @@ function load(index){
   const s=freshState(index);
   try{
     const all=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
-    const saved=all[SENTENCES[index].id];
-    if(saved){s.nodes=saved.nodes||[];s.roles=saved.roles||{};s.seq=saved.seq||1;}
+    const v=all[SENTENCES[index].id];
+    if(v){s.nodes=v.nodes||[];s.line=v.line||[];s.dividers=v.dividers||[];
+          s.roles=v.roles||{};s.seq=v.seq||1;}
   }catch(e){}
   return s;
 }
 
-/* ============================================================ tree model */
+/* ============================================================ tree ops */
 function nodeById(id){return state.nodes.find(n=>n.id===id)||null;}
 function nodeForToken(t){return state.nodes.find(n=>n.tokenIndex===t)||null;}
 function childrenOf(id){return state.nodes.filter(n=>n.parentId===id);}
-function rootNodes(){return state.nodes.filter(n=>n.parentId===null);}
-function nodeInSlot(slot,parentId){return state.nodes.filter(n=>n.slot===slot&&n.parentId===parentId);}
 function roleOf(t){return state.roles[t]||null;}
+function newId(p){return p+(state.seq++);}
 
-function addNode(tokenIndex,role,slot,parentId,branch){
-  const n={id:'n'+(state.seq++), tokenIndex, role, slot, parentId:parentId==null?null:parentId,
-           branch:branch||0};
+function addNode(tokenIndex,attach,parentId){
+  const n={id:newId('n'), tokenIndex, attach, parentId:parentId==null?null:parentId};
   state.nodes.push(n);
   return n;
 }
-/* Removing a word takes everything hanging off it: pulling "ladder" must take
-   "the" with it, or the diagram is left with orphans pointing at nothing. */
+/* A cell is one baseline position: either a plain node id, or a fork holding
+   two arms plus the conjunction that joins them. */
+function cellAt(i){return state.line[i];}
+function isFork(c){return c&&typeof c==='object'&&c.kind==='fork';}
+function cellTokens(c){
+  if(!c)return [];
+  if(isFork(c))return c.arms.filter(Boolean).map(id=>nodeById(id)).filter(Boolean).map(n=>n.tokenIndex);
+  const n=nodeById(c); return n?[n.tokenIndex]:[];
+}
+function cellIndexOfNode(id){
+  return state.line.findIndex(c=>isFork(c)?c.arms.includes(id):c===id);
+}
+function lineNodeIds(){
+  const out=[];
+  state.line.forEach(c=>{ if(isFork(c))c.arms.filter(Boolean).forEach(a=>out.push(a)); else if(c)out.push(c); });
+  return out;
+}
+function isOnLine(id){return lineNodeIds().includes(id);}
+
+/* Removing a word takes its subtree, its place on the line, and any divider or
+   conjunction that named it -- a dangling id would crash layout, and silently
+   re-binding one would rewrite the student's answer. */
 function removeNode(id){
   const doomed=[id];
   for(let i=0;i<doomed.length;i++)childrenOf(doomed[i]).forEach(c=>doomed.push(c.id));
-  state.nodes=state.nodes.filter(n=>!doomed.includes(n.id));
+  const gone=new Set(doomed);
+  state.nodes=state.nodes.filter(n=>!gone.has(n.id));
+  state.line=state.line.map(c=>{
+    if(isFork(c)){
+      const arms=c.arms.map(a=>gone.has(a)?null:a);
+      const kept=arms.filter(Boolean);
+      if(!kept.length)return null;
+      if(kept.length===1&&gone.has(c.conjId))return kept[0];   // fork collapses
+      return {...c, arms, conjId:gone.has(c.conjId)?null:c.conjId};
+    }
+    return gone.has(c)?null:c;
+  }).filter(Boolean);
+  state.dividers=state.dividers.filter(d=>!gone.has(d.leftId)&&!gone.has(d.rightId));
 }
+function removeDivider(id){state.dividers=state.dividers.filter(d=>d.id!==id);}
 
 /* ============================================================ layout
-   Two passes. measure() reports a subtree's footprint bottom-up; because
-   modifiers hang down AND to the left, it returns left/right extents
-   separately -- a single symmetric width lets a word with three adjectives
-   collide with whatever sits to its left. place() then walks top-down. */
+   measure() reports a subtree's footprint bottom-up. Because modifiers hang
+   down AND to the left it returns left/right extents separately -- one
+   symmetric width lets a word with three adjectives collide with whatever sits
+   to its left. Geometry goes into a side map keyed by node id, never grafted
+   onto the nodes themselves (v1 did that and serialized it to localStorage). */
 function modChildren(id){
-  return childrenOf(id).filter(n=>n.slot==='mod'||n.slot==='prep')
+  return childrenOf(id).filter(n=>n.attach==='mod'||n.attach==='prep')
     .sort((a,b)=>a.tokenIndex-b.tokenIndex);
 }
-/* measure() returns the footprint a node needs beneath and beside itself, and
-   memoises the horizontal offset of each hanging child on the node itself. */
-function measure(node){
+function prepObjectWidth(prepNode){
+  const obj=childrenOf(prepNode.id).find(c=>c.attach==='prepObject');
+  return obj?Math.max(PREP_ARM,textWidth(tokenText(obj.tokenIndex))+30):PREP_ARM;
+}
+function measure(node,slots){
   const kids=modChildren(node.id);
   const m={own:textWidth(tokenText(node.tokenIndex)), left:0, right:0, depth:0};
-  node._slots=[];
+  slots.set(node.id,[]);
   if(!kids.length)return m;
   let cursor=0;
+  const list=[];
   kids.forEach(k=>{
-    const km=measure(k);
-    const objW=(k.slot==='prep')?prepObjectWidth(k):0;
-    const need=(k.slot==='prep')?Math.max(MOD_PITCH,SLANT_RUN+objW+km.right+16):MOD_PITCH;
-    node._slots.push({node:k, offset:cursor, m:km, need});
+    const km=measure(k,slots);
+    const objW=(k.attach==='prep')?prepObjectWidth(k):0;
+    const need=(k.attach==='prep')?Math.max(MOD_PITCH,SLANT_RUN+objW+km.right+16):MOD_PITCH;
+    list.push({node:k, offset:cursor, m:km, need});
     cursor+=need;
-    // A slant owns SLANT_CLEAR of vertical band; anything under it starts below.
-    m.depth=Math.max(m.depth, (km.depth?SLANT_CLEAR:SLANT_DROP)+km.depth);
+    m.depth=Math.max(m.depth,(km.depth?SLANT_CLEAR:SLANT_DROP)+km.depth);
   });
-  // Centre the fan on the head word.
-  const last=node._slots[node._slots.length-1];
-  const shift=(cursor-last.need)/2;
-  node._slots.forEach(s=>{s.offset-=shift;});
-  node._slots.forEach(s=>{
+  const shift=(cursor-list[list.length-1].need)/2;   // centre the fan on the head
+  list.forEach(s=>{s.offset-=shift;});
+  list.forEach(s=>{
     m.left =Math.max(m.left,  -s.offset+SLANT_RUN+s.m.left);
     m.right=Math.max(m.right,  s.offset+s.need);
   });
+  slots.set(node.id,list);
   return m;
 }
-function prepObjectWidth(prepNode){
-  const obj=childrenOf(prepNode.id).find(c=>c.slot==='prepObject');
-  return obj?Math.max(PREP_ARM,textWidth(tokenText(obj.tokenIndex))+30):PREP_ARM;
-}
+function clampReadable(d){ if(d>90)d-=180; else if(d<-90)d+=180; return d; }
 
-/* place(): assign coordinates. `maxDrop` lets a caller shorten a slant so it
-   does not run through a baseline stacked below it. */
 function placeSlant(node,anchorX,anchorY,out,maxDrop){
   const drop=(maxDrop==null)?SLANT_DROP:Math.max(34,Math.min(SLANT_DROP,maxDrop));
   const run=Math.round(SLANT_RUN*(drop/SLANT_DROP));
   const x2=anchorX-run, y2=anchorY+drop;
-  let deg=Math.atan2(drop,-run)*180/Math.PI;
-  if(deg>90)deg-=180; else if(deg<-90)deg+=180;   // keep the word readable
-  node.line={x1:anchorX,y1:anchorY,x2,y2};
+  const deg=clampReadable(Math.atan2(drop,-run)*180/Math.PI);
   // Sit the word beside the slant, not on it: text-anchor is middle, so a point
   // taken on the line itself puts the glyphs straight across the stroke.
-  // Offset perpendicular (the slant runs down-left, so push down-right).
-  const len=Math.hypot(run,drop)||1;
-  const nx=drop/len, ny=run/len;          // unit normal of the slant
+  const len=Math.hypot(run,drop)||1, nx=drop/len, ny=run/len;
   const mx=anchorX-run*0.5, my=anchorY+drop*0.5;
-  node.textX=mx+nx*15; node.textY=my+ny*15+4; node.rotation=deg;
-  node.hit='slant';
+  out.geom.set(node.id,{line:{x1:anchorX,y1:anchorY,x2:x2,y2:y2},
+    textX:mx+nx*15, textY:my+ny*15+4, rotation:deg, hit:'slant', attach:node.attach});
   out.targets.push(node);
-  return {x2,y2};
+  return {x2:x2,y2:y2};
 }
-/* Hang every modifier / prep phrase beneath `head`, fanned around centerX. */
 function placeMods(head,centerX,anchorY,out,maxDrop){
-  (head._slots||[]).forEach(s=>{
+  (out.slots.get(head.id)||[]).forEach(s=>{
     const ax=centerX+s.offset;
     const foot=placeSlant(s.node,ax,anchorY,out,maxDrop);
-    if(s.node.slot==='prep'){
-      const obj=childrenOf(s.node.id).find(c=>c.slot==='prepObject');
+    if(s.node.attach==='prep'){
+      const obj=childrenOf(s.node.id).find(c=>c.attach==='prepObject');
       if(obj){
-        // Start the object's word clear of the slant's foot, or the
-        // preposition's own label sits underneath it.
         const w=prepObjectWidth(s.node);
-        obj.line={x1:foot.x2,y1:foot.y2,x2:foot.x2+w,y2:foot.y2};
-        obj.textX=foot.x2+34+(w-34)/2; obj.textY=foot.y2-ARM_LIFT; obj.rotation=0;
-        obj.hit='arm';
+        out.geom.set(obj.id,{line:{x1:foot.x2,y1:foot.y2,x2:foot.x2+w,y2:foot.y2},
+          textX:foot.x2+34+(w-34)/2, textY:foot.y2-ARM_LIFT, rotation:0, hit:'arm', attach:'prepObject'});
         out.targets.push(obj);
-        placeMods(obj,obj.textX,foot.y2,out,null);   // the object takes its own modifiers
+        placeMods(obj,out.geom.get(obj.id).textX,foot.y2,out,null);
       }
     }else{
-      placeMods(s.node,s.node.textX,anchorY+SLANT_CLEAR,out,null);
+      placeMods(s.node,out.geom.get(s.node.id).textX,anchorY+SLANT_CLEAR,out,null);
     }
   });
 }
 
-/* ---- the main line -------------------------------------------------------
-   Structure is never stored: we ask the node set what exists and draw the
-   divider that answers. Subject+verb -> the full S/V divider. A DO child of
-   the verb -> a vertical divider that stops at the baseline. A PN/PA child ->
-   a slanted one. Two nodes sharing a slot -> a fork. */
-function subjectNodes(){return nodeInSlot('subject',null).sort((a,b)=>a.branch-b.branch);}
-function verbNodes(){return nodeInSlot('verb',null).sort((a,b)=>a.branch-b.branch);}
-function objectNodes(){const v=verbNodes()[0];return v?nodeInSlot('object',v.id).sort((a,b)=>a.branch-b.branch):[];}
-function complementNodes(){const v=verbNodes()[0];return v?nodeInSlot('complement',v.id).sort((a,b)=>a.branch-b.branch):[];}
-function conjFor(slot){
-  return state.nodes.find(n=>n.slot==='conj'&&n._for===slot)||
-         state.nodes.find(n=>n.slot==='conj');
-}
-
-/* Two different widths, and conflating them was a bug: the SEGMENT is the
-   clickable slot on the line and must stay about as wide as its own word, or
-   its hit box swallows the slants hanging beneath. The RESERVE is how much
-   horizontal room the subtree needs so neighbouring groups don't collide. */
-function segWidth(group){
-  if(!group.length)return SEG_MIN;
-  let w=0;
-  group.forEach(n=>{w=Math.max(w,measure(n).own);});
-  return Math.max(SEG_MIN,w+SEG_PAD);
-}
-function reserveWidth(group){
-  if(!group.length)return SEG_MIN;
-  let w=0;
-  group.forEach(n=>{const m=measure(n);w=Math.max(w,m.own,m.left+m.right);});
-  return Math.max(SEG_MIN,w+SEG_PAD);
-}
-
+/* The baseline is a left-to-right walk over the cells the student built. No
+   groups, no inferred structure: a cell sits where it was placed, and a divider
+   appears only in the gap the student named. */
 function layout(){
-  const out={targets:[],lines:[],ghosts:[],width:760,height:330};
-  const subj=subjectNodes(), verb=verbNodes();
-  const obj=objectNodes(), comp=complementNodes();
+  const out={geom:new Map(), slots:new Map(), targets:[], lines:[], dividers:[],
+             gaps:[], width:760, height:320, minX:0, top:0};
   const y=BASE_Y;
-  let x=BASE_X;
+  let x=BASE_X, maxDepth=0, minX=BASE_X, topY=y;
 
-  const mk=(key,nodes)=>({key,nodes,w:segWidth(nodes),reserve:reserveWidth(nodes)});
-  const groups=[mk('subject',subj),mk('verb',verb)];
-  if(obj.length)groups.push(mk('object',obj));
-  else if(comp.length)groups.push(mk('complement',comp));
-
-  let maxDepth=0, minX=BASE_X;
-  groups.forEach((g,gi)=>{
-    // the drawn segment is centred inside the space the subtree reserves
-    const slack=Math.max(0,g.reserve-g.w);
-    g.x1=x+slack/2; g.x2=g.x1+g.w; g.mid=g.x1+g.w/2;
-    x=x+Math.max(g.w,g.reserve);
-    if(gi<groups.length-1)x+=6;
-  });
-  const lineEnd=Math.max(x+30, BASE_X+3*SEG_MIN);
-  out.lines.push({cls:'diagram-line',x1:BASE_X-4,y1:y,x2:lineEnd,y2:y});
-
-  // dividers sit midway between one segment's end and the next one's start
-  groups.forEach((g,gi)=>{
-    if(gi===0)return;
-    const dx=Math.round((groups[gi-1].x2+g.x1)/2);
-    if(g.key==='verb')
-      out.lines.push({cls:'diagram-line',x1:dx,y1:y-DIVIDER_H,x2:dx,y2:y+DIVIDER_H});
-    else if(g.key==='object')
-      out.lines.push({cls:'diagram-line',x1:dx,y1:y-DIVIDER_H,x2:dx,y2:y});
-    else if(g.key==='complement'){
-      // The complement divider leans back from the baseline. When the
-      // complement is compound the two arms fork from this slant's BOTTOM end,
-      // so stop it there rather than drawing through the fork.
-      g.slantTop={x:dx-14,y:y-DIVIDER_H}; g.slantFoot={x:dx+6,y};
-      out.lines.push({cls:'diagram-line',x1:dx-14,y1:y-DIVIDER_H,x2:dx+6,y2:y});
-    }
+  const cells=state.line.map(c=>{
+    const ids=isFork(c)?c.arms.filter(Boolean):[c];
+    const ms=ids.map(id=>{const n=nodeById(id);
+      return n?measure(n,out.slots):{own:SEG_MIN,left:0,right:0,depth:0};});
+    if(!ms.length)ms.push({own:SEG_MIN,left:0,right:0,depth:0});
+    const own=Math.max.apply(null,ms.map(m=>m.own));
+    return {cell:c, ids:ids, ms:ms,
+            w:Math.max(SEG_MIN,own+SEG_PAD),
+            reserve:Math.max(SEG_MIN,Math.max.apply(null,ms.map(m=>Math.max(m.own,m.left+m.right)))+SEG_PAD),
+            depth:Math.max.apply(null,ms.map(m=>m.depth)),
+            left:Math.max.apply(null,ms.map(m=>m.left))};
   });
 
-  // place each group's word(s): single word on the line, or a fork
-  groups.forEach(g=>{
-    if(!g.nodes.length)return;
-    if(g.nodes.length===1){
-      const n=g.nodes[0];
-      n.line={x1:g.x1,y1:y,x2:g.x2,y2:y};
-      n.textX=g.mid; n.textY=y-ARM_LIFT; n.rotation=0; n.hit='seg';
-      out.targets.push(n);
-      measure(n);
-      placeMods(n,n.textX,y,out,null);
-      maxDepth=Math.max(maxDepth,measure(n).depth);
-    }else{
-      // compound: two stacked arms forking off the main line. When the upper
-      // arm carries a phrase, lift it far enough that the phrase clears the
-      // baseline instead of running through it.
-      const forkX=g.x1+FORK_RUN;
-      const upperDepth=g.nodes[0]?measure(g.nodes[0]).depth:0;
-      const rise=Math.max(FORK_RISE, upperDepth+34);
-      const topY=y-rise, botY=y+FORK_RISE;
-      // A compound complement forks from the foot of its slanted divider; every
-      // other position forks from the baseline itself.
-      const fx=g.slantFoot?g.slantFoot.x:g.x1, fy=g.slantFoot?g.slantFoot.y:y;
-      out.lines.push({cls:'diagram-line',x1:forkX,y1:topY,x2:g.x2,y2:topY});
-      out.lines.push({cls:'diagram-line',x1:forkX,y1:botY,x2:g.x2,y2:botY});
-      out.lines.push({cls:'diagram-line',x1:fx,y1:fy,x2:forkX,y2:topY});
-      out.lines.push({cls:'diagram-line',x1:fx,y1:fy,x2:forkX,y2:botY});
-      // The conjunction rides a dashed guide near the fork, not mid-arm:
-      // modifiers and phrases hang from the middle of each arm, and a centred
-      // conjunction box lands right on top of them.
-      const mid=forkX+26;
-      out.lines.push({cls:'diagram-guide',x1:mid,y1:topY,x2:mid,y2:botY});
-      const armMid=(forkX+g.x2)/2;
-      g.nodes.slice(0,2).forEach((n,i)=>{
-        const ay=i===0?topY:botY;
-        n.line={x1:forkX,y1:ay,x2:g.x2,y2:ay};
-        n.textX=armMid; n.textY=ay-ARM_LIFT; n.rotation=0; n.hit='seg';
+  // A divider claims room in the gap between the two cells it names. Endpoints
+  // inside one cell (both arms of a fork) name no gap and are drawn dangling.
+  const gapOf=d=>{
+    const a=cellIndexOfNode(d.leftId), b=cellIndexOfNode(d.rightId);
+    if(a<0||b<0)return -1;
+    if(a===b)return -1;
+    return Math.max(a,b);
+  };
+  const byGap=new Map();
+  state.dividers.forEach(d=>{
+    const g=gapOf(d);
+    if(g<1)return;
+    const arr=byGap.get(g)||[]; arr.push(d); byGap.set(g,arr);
+  });
+
+  cells.forEach((c,i)=>{
+    const here=byGap.get(i)||[];
+    if(i>0)x+=here.length?here.length*DIVIDER_GAP:14;
+    const slack=Math.max(0,c.reserve-c.w);
+    const x1=x+slack/2, x2=x1+c.w, mid=(x1+x2)/2;
+    c.x1=x1; c.x2=x2; c.mid=mid;
+    here.forEach((d,k)=>{
+      const dx=Math.round(x - (here.length-k)*DIVIDER_GAP + DIVIDER_GAP/2);
+      const a=cellIndexOfNode(d.leftId), b=cellIndexOfNode(d.rightId);
+      out.dividers.push({d:d, dx:dx, y:y, adjacent:Math.abs(a-b)===1});
+    });
+    if(isFork(c.cell)){
+      const rise=Math.max(FORK_RISE,(c.ms[0]?c.ms[0].depth:0)+34);
+      const topArm=y-rise, botArm=y+FORK_RISE;
+      out.lines.push({cls:'diagram-line',x1:x1+FORK_RUN,y1:topArm,x2:x2,y2:topArm});
+      out.lines.push({cls:'diagram-line',x1:x1+FORK_RUN,y1:botArm,x2:x2,y2:botArm});
+      out.lines.push({cls:'diagram-line',x1:x1,y1:y,x2:x1+FORK_RUN,y2:topArm});
+      out.lines.push({cls:'diagram-line',x1:x1,y1:y,x2:x1+FORK_RUN,y2:botArm});
+      const gx=x1+FORK_RUN+24;
+      out.lines.push({cls:'diagram-guide',x1:gx,y1:topArm,x2:gx,y2:botArm});
+      const armMid=(x1+FORK_RUN+x2)/2;
+      c.cell.arms.forEach((id,ai)=>{
+        if(!id)return;
+        const n=nodeById(id); if(!n)return;
+        const ay=ai===0?topArm:botArm;
+        out.geom.set(id,{line:{x1:x1+FORK_RUN,y1:ay,x2:x2,y2:ay},
+          textX:armMid, textY:ay-ARM_LIFT, rotation:0, hit:'seg', attach:'line'});
         out.targets.push(n);
-        const nm=measure(n);
-        // Hang this arm's modifiers past the conjunction guide, not over it.
-        const anchor=Math.max(n.textX, mid+40+nm.left);
-        // The upper arm sits above the main line, so anything hanging from it
-        // must stop short of the baseline instead of crossing it and the lower
-        // arm below that.
-        placeMods(n,anchor,ay,out, i===0?(y-ay-30):null);
-        maxDepth=Math.max(maxDepth,(i===1?FORK_RISE+nm.depth:0));
+        const anchor=Math.max(armMid,gx+42+(c.ms[ai]?c.ms[ai].left:0));
+        placeMods(n,anchor,ay,out, ai===0?(y-ay-30):null);
       });
-      // the conjunction that belongs to THIS pair shares their parent
-      const cj=state.nodes.find(n=>n.slot==='conj'&&n.parentId===(g.nodes[0].parentId||null))
-            || state.nodes.find(n=>n.slot==='conj');
-      if(cj){
-        cj.box={x:mid-34,y:y-14,w:68,h:28};
-        cj.textX=mid; cj.textY=y+5; cj.rotation=0; cj.hit='box';
-        out.targets.push(cj);
+      if(c.cell.conjId){
+        const cj=nodeById(c.cell.conjId);
+        if(cj){
+          out.geom.set(cj.id,{box:{x:gx-34,y:y-14,w:68,h:28},
+            textX:gx, textY:y+5, rotation:0, hit:'box', attach:'conj'});
+          out.targets.push(cj);
+        }
+      }
+      topY=Math.min(topY,topArm-26);
+      maxDepth=Math.max(maxDepth,FORK_RISE+(c.ms[1]?c.ms[1].depth:0));
+      minX=Math.min(minX,x1-c.left);
+    }else if(c.cell){
+      const n=nodeById(c.cell);
+      if(n){
+        out.geom.set(n.id,{line:{x1:x1,y1:y,x2:x2,y2:y},textX:mid,textY:y-ARM_LIFT,
+          rotation:0,hit:'seg',attach:'line'});
+        out.targets.push(n);
+        placeMods(n,mid,y,out,null);
+        maxDepth=Math.max(maxDepth,c.depth);
+        minX=Math.min(minX,x1-c.left);
       }
     }
+    out.gaps.push({index:i, x:x1-slack/2-8});
+    x=x1-slack/2+Math.max(c.w,c.reserve);
   });
+  out.gaps.push({index:cells.length, x:x+12});
 
-  // conjunction joining two sibling modifiers (e.g. "quickly and accurately")
-  const modConj=state.nodes.find(n=>n.slot==='modConj');
-  if(modConj){
-    const sibs=out.targets.filter(t=>t.slot==='mod'&&t.parentId===modConj.parentId);
-    if(sibs.length>=2){
-      const a=sibs[0],b=sibs[sibs.length-1];
-      const gy=Math.max(a.line.y2,b.line.y2)+24;
-      out.lines.push({cls:'diagram-guide',x1:a.line.x2,y1:gy,x2:b.line.x2,y2:gy});
-      modConj.box={x:(a.line.x2+b.line.x2)/2-32,y:gy+6,w:64,h:26};
-      modConj.textX=(a.line.x2+b.line.x2)/2; modConj.textY=gy+24; modConj.rotation=0; modConj.hit='box';
-      out.targets.push(modConj);
-      maxDepth=Math.max(maxDepth,gy+40-BASE_Y);
-    }
-  }
+  const lineEnd=Math.max(x+40,BASE_X+3*SEG_MIN);
+  out.lines.unshift({cls:'diagram-line',x1:BASE_X-4,y1:y,x2:lineEnd,y2:y});
+  out.lineEnd=lineEnd; out.baseY=y;
 
   out.targets.forEach(t=>{
-    const ys=t.box?[t.box.y+t.box.h]:[t.line.y1,t.line.y2,t.textY+8];
-    maxDepth=Math.max(maxDepth,Math.max.apply(null,ys)-BASE_Y);
-    const xs=t.box?[t.box.x]:[t.line.x1,t.line.x2];
+    const g=out.geom.get(t.id); if(!g)return;
+    const ys=g.box?[g.box.y,g.box.y+g.box.h]:[g.line.y1,g.line.y2,g.textY+8];
+    maxDepth=Math.max(maxDepth,Math.max.apply(null,ys)-y);
+    topY=Math.min(topY,Math.min.apply(null,ys)-20);
+    const xs=g.box?[g.box.x]:[g.line.x1,g.line.x2];
     minX=Math.min(minX,Math.min.apply(null,xs));
   });
   out.width=Math.max(760,lineEnd+40);
-  out.height=Math.max(300,BASE_Y+maxDepth+56);
   out.minX=Math.min(0,minX-30);
+  out.top=Math.min(0,topY-BASE_Y)+BASE_Y-BASE_Y;
+  out.topY=Math.min(0,topY);
+  out.height=Math.max(300,maxDepth+BASE_Y-Math.min(0,out.topY)+56);
   return out;
 }
 
-/* ============================================================ drop zones
-   What the canvas offers depends on the role the student picked, so an
-   S-tagged word only ever sees subject positions. */
-function legalZones(role){
-  const z=[];
-  const subj=subjectNodes(), verb=verbNodes();
-  const obj=objectNodes(), comp=complementNodes();
-  if(role==='S'){
-    if(!subj.length)z.push({kind:'slot',slot:'subject',parent:null,branch:0,label:'Subject'});
-    else if(subj.length===1)z.push({kind:'slot',slot:'subject',parent:null,branch:1,label:'2nd subject'});
+/* ============================================================ expectations
+   Nothing about dividers or forks is hand-authored: the six sentences already
+   carry a `slot` per token, and subject/verb/object/complement membership
+   implies exactly which pair each divider separates. Collapsing a compound into
+   ONE cell first is what lets a divider be graded against the whole fork -- in
+   "Ben and Clara carried", the S|V divider may fairly be drawn from either
+   Ben or Clara. */
+const ZONE={subject:'S', verb:'V', object:'O', complement:'C'};
+const ZONE_DIVIDER={SV:'sv', VO:'do', VC:'complement'};
+
+function expectedModel(){
+  const s=sentence();
+  const onLine=s.expected.filter(e=>ZONE[e.slot]).sort((a,b)=>a.t-b.t);
+  const cells=[];
+  onLine.forEach(e=>{
+    const last=cells[cells.length-1];
+    if(last&&last.slot===e.slot)last.toks.push(e.t);      // compound: same cell
+    else cells.push({slot:e.slot, toks:[e.t]});
+  });
+  const dividers=[];
+  for(let i=0;i<cells.length-1;i++){
+    const k=ZONE[cells[i].slot]+ZONE[cells[i+1].slot];
+    if(ZONE_DIVIDER[k])
+      dividers.push({kind:ZONE_DIVIDER[k], left:cells[i].toks.slice(), right:cells[i+1].toks.slice()});
   }
-  if(VERB_ROLES.includes(role)){
-    if(!verb.length)z.push({kind:'slot',slot:'verb',parent:null,branch:0,label:'Verb'});
-    else if(verb.length===1)z.push({kind:'slot',slot:'verb',parent:null,branch:1,label:'2nd verb'});
-  }
-  if(role==='DO'&&verb.length&&!comp.length){
-    if(!obj.length)z.push({kind:'slot',slot:'object',parent:verb[0].id,branch:0,label:'Direct object'});
-    else if(obj.length===1)z.push({kind:'slot',slot:'object',parent:verb[0].id,branch:1,label:'2nd object'});
-  }
-  if((role==='PN'||role==='PA')&&verb.length&&!obj.length){
-    if(!comp.length)z.push({kind:'slot',slot:'complement',parent:verb[0].id,branch:0,
-                            label:role==='PN'?'Pred. nominative':'Pred. adjective'});
-    else if(comp.length===1)z.push({kind:'slot',slot:'complement',parent:verb[0].id,branch:1,label:'2nd complement'});
-  }
-  if(role==='CONJ'){
-    // joins whichever position already has two arms. The conjunction belongs to
-    // the same parent as the pair it joins, so an object/complement conjunction
-    // hangs off the verb, not off the clause.
-    [['subject',subj],['verb',verb],['object',obj],['complement',comp]].forEach(([k,g])=>{
-      if(g.length===2&&!state.nodes.some(n=>n.slot==='conj'))
-        z.push({kind:'slot',slot:'conj',parent:g[0].parentId,branch:0,label:'Joins the two '+k+'s'});
-    });
-    // or joins two modifiers under one word
-    state.nodes.forEach(n=>{
-      const mods=childrenOf(n.id).filter(c=>c.slot==='mod');
-      if(mods.length===2&&!state.nodes.some(x=>x.slot==='modConj'))
-        z.push({kind:'slot',slot:'modConj',parent:n.id,branch:0,label:'Joins the two modifiers'});
-    });
-  }
-  // modifiers and prep phrases attach to a word already on the diagram
-  if(role==='ADJ')
-    state.nodes.filter(n=>NOUN_ROLES.includes(n.role)).forEach(n=>z.push({kind:'attach',slot:'mod',parent:n.id}));
-  if(role==='ADV')
-    state.nodes.filter(n=>VERB_ROLES.includes(n.role)||n.role==='ADJ'||n.role==='ADV')
-      .forEach(n=>z.push({kind:'attach',slot:'mod',parent:n.id}));
-  if(role==='PREP')
-    state.nodes.filter(n=>VERB_ROLES.includes(n.role)||NOUN_ROLES.includes(n.role))
-      .forEach(n=>z.push({kind:'attach',slot:'prep',parent:n.id}));
-  if(role==='OP')
-    state.nodes.filter(n=>n.role==='PREP'&&!childrenOf(n.id).some(c=>c.slot==='prepObject'))
-      .forEach(n=>z.push({kind:'attach',slot:'prepObject',parent:n.id}));
-  return z;
-}
-function whyBlocked(role){
-  if(role==='DO'&&!verbNodes().length)return 'Place the verb first, then its direct object.';
-  if((role==='PN'||role==='PA')&&!verbNodes().length)return 'Place the linking verb first.';
-  if(role==='DO'&&complementNodes().length)return 'This sentence already has a predicate word after the verb.';
-  if((role==='PN'||role==='PA')&&objectNodes().length)return 'This sentence already has a direct object.';
-  if(role==='ADJ')return 'Adjectives go under a noun. Place the noun first, then click it.';
-  if(role==='ADV')return 'Adverbs go under a verb (or another modifier). Place that word first.';
-  if(role==='PREP')return 'A phrase hangs under the word it tells about. Place that word first.';
-  if(role==='OP')return 'Place the preposition first, then its object.';
-  if(role==='CONJ')return 'A conjunction joins two words that are both already on the diagram.';
-  return 'There is nowhere for that word yet.';
+  const conj=s.expected.find(e=>e.slot==='conj');
+  const modConj=s.expected.find(e=>e.slot==='modConj');
+  const attach={}, roles={};
+  s.expected.forEach(e=>{
+    roles[e.t]=e.role;
+    if(ZONE[e.slot])attach[e.t]='line';
+    else if(e.slot==='conj')attach[e.t]='conj';
+    else if(e.slot==='modConj')attach[e.t]='conj@'+e.parent;
+    else if(e.slot==='prepObject')attach[e.t]='prepObject@'+e.parent;
+    else if(e.slot==='prep')attach[e.t]='prep@'+e.parent;
+    else attach[e.t]='mod@'+e.parent;
+  });
+  return {cells, dividers, attach, roles,
+          order:cells.map(c=>c.toks.slice()),
+          conjToken:conj?conj.t:null, modConjToken:modConj?modConj.t:null};
 }
 
-/* ============================================================ grading
-   Order-independent: children are sorted by token index before the path is
-   built, so building the same diagram in a different order compares equal. */
-function expectedNodes(){
-  const s=sentence();
-  const byToken={};
-  s.expected.forEach(e=>{byToken[e.t]={...e,id:'e'+e.t,
-    parentId:e.parent==null?null:'e'+e.parent, branch:e.branch||0};});
-  return Object.values(byToken);
-}
-function pathMap(nodes){
-  const kids={};
-  nodes.forEach(n=>{(kids[n.parentId]=kids[n.parentId]||[]).push(n);});
-  Object.values(kids).forEach(a=>a.sort((x,y)=>x.tokenIndex!=null&&y.tokenIndex!=null
-    ? x.tokenIndex-y.tokenIndex : 0));
+/* ============================================================ grading */
+function studentAttach(){
   const map={};
-  function walk(n,prefix){
-    const seg=n.slot+(n.branch?'#'+n.branch:'');
-    const p=prefix?prefix+'/'+seg:seg;
-    map[n.tokenIndex]=p;
-    (kids[n.id]||[]).forEach(c=>walk(c,p));
-  }
-  (kids[null]||[]).sort((a,b)=>a.tokenIndex-b.tokenIndex).forEach(r=>walk(r,''));
+  state.nodes.forEach(n=>{
+    if(n.attach==='line'){map[n.tokenIndex]='line';return;}
+    const p=nodeById(n.parentId);
+    const pt=p?p.tokenIndex:'?';
+    // Naming the HEAD TOKEN is what makes "under the wrong noun" detectable:
+    // mod@4 and mod@0 are different answers, where a bare "mod" would not be.
+    map[n.tokenIndex]=n.attach+'@'+pt;
+  });
+  // a conjunction sitting on a fork guide is addressed by the cell it joins
+  state.line.forEach(c=>{
+    if(isFork(c)&&c.conjId){
+      const cj=nodeById(c.conjId);
+      if(cj)map[cj.tokenIndex]='conj';
+    }
+  });
   return map;
 }
-function grade(){
-  const exp=expectedNodes();
-  exp.forEach(e=>{e.tokenIndex=e.t;});
-  const expPath=pathMap(exp);
-  const stuPath=pathMap(state.nodes.map(n=>({...n})));
-  const expRole={}; exp.forEach(e=>{expRole[e.t]=e.role;});
-  const verdicts={};
-  const tokens=sentence().tokens;
-  for(let t=0;t<tokens.length;t++){
-    const e=expPath[t], s=stuPath[t];
-    if(e==null&&s==null){verdicts[t]='ok';continue;}     // correctly left off
-    if(e==null&&s!=null){verdicts[t]='extra';continue;}
-    if(e!=null&&s==null){verdicts[t]='missing';continue;}
-    if(e!==s){verdicts[t]='misplaced';continue;}
-    verdicts[t]=(roleOf(t)===expRole[t])?'ok':'wrongRole';
-  }
-  return verdicts;
+/* Longest increasing subsequence: flags the minimum set of words that must
+   move, instead of cascading a single misplacement onto everything after it. */
+function lisKeep(seq){
+  if(!seq.length)return new Set();
+  const tails=[], idx=[], prev=new Array(seq.length).fill(-1);
+  seq.forEach((v,i)=>{
+    let lo=0,hi=tails.length;
+    while(lo<hi){const mid=(lo+hi)>>1; if(tails[mid]<v)lo=mid+1; else hi=mid;}
+    tails[lo]=v; idx[lo]=i;
+    prev[i]=lo>0?idx[lo-1]:-1;
+  });
+  const keep=new Set();
+  let k=idx[tails.length-1];
+  while(k>=0){keep.add(k);k=prev[k];}
+  return keep;
 }
-function verdictSummary(v){
-  const c={ok:0,wrongRole:0,misplaced:0,extra:0,missing:0};
-  Object.values(v).forEach(x=>c[x]++);
-  return c;
+function grade(){
+  const exp=expectedModel();
+  const stu=studentAttach();
+  const words={}, tokens=sentence().tokens;
+
+  // where each token is expected on the line (its cell index)
+  const expCellOf={}; exp.order.forEach((toks,i)=>toks.forEach(t=>{expCellOf[t]=i;}));
+
+  // student's baseline sequence, by cell
+  const stuCells=state.line.map(c=>cellTokens(c));
+  const stuCellOf={}; stuCells.forEach((toks,i)=>toks.forEach(t=>{stuCellOf[t]=i;}));
+
+  // Order is a property of CELLS, not of words: the two arms of a compound
+  // share one spot and have no left-to-right order between them, so grade one
+  // entry per cell or a fork reads as a step backwards every time.
+  const seq=[], seqCells=[];
+  stuCells.forEach(toks=>{
+    const known=toks.filter(t=>expCellOf[t]!=null);
+    if(!known.length)return;
+    // a cell is "at" the expected position of the arms it holds
+    seq.push(Math.min.apply(null,known.map(t=>expCellOf[t])));
+    seqCells.push(known);
+  });
+  const keep=lisKeep(seq);
+  const outOfOrder=new Set();
+  seqCells.forEach((toks,i)=>{if(!keep.has(i))toks.forEach(t=>outOfOrder.add(t));});
+
+  for(let t=0;t<tokens.length;t++){
+    const e=exp.attach[t], s=stu[t];
+    if(e==null&&s==null){words[t]='ok';continue;}
+    if(e==null){words[t]='extra';continue;}
+    if(s==null){words[t]='missing';continue;}
+    if(e!==s){words[t]='misplaced';continue;}
+    if(outOfOrder.has(t)){words[t]='outOfOrder';continue;}
+    words[t]=(roleOf(t)===exp.roles[t])?'ok':'wrongRole';
+  }
+
+  // dividers: match by CELL MEMBERSHIP, three passes, so "right spot wrong
+  // shape" reads differently from "right shape wrong spot".
+  const used=new Set(), divs={};
+  const stuDiv=state.dividers.map(d=>{
+    const L=nodeById(d.leftId), R=nodeById(d.rightId);
+    return {d, lt:L?L.tokenIndex:null, rt:R?R.tokenIndex:null};
+  }).filter(x=>x.lt!=null&&x.rt!=null);
+  const pairHits=(e,x)=>
+    (e.left.includes(x.lt)&&e.right.includes(x.rt))||(e.left.includes(x.rt)&&e.right.includes(x.lt));
+  stuDiv.forEach(x=>{
+    const i=exp.dividers.findIndex((e,i)=>!used.has(i)&&e.kind===x.d.kind&&pairHits(e,x));
+    if(i>=0){used.add(i);divs[x.d.id]='ok';}
+  });
+  // Ordering alone cannot separate these two, because both are "one half
+  // right". Decide by WHICH HALF: a divider standing in a gap that genuinely
+  // needs one is the right spot with the wrong shape; a divider standing where
+  // no divider belongs is the right shape in the wrong spot.
+  stuDiv.forEach(x=>{ if(divs[x.d.id])return;
+    const byPair=exp.dividers.findIndex((e,i)=>!used.has(i)&&pairHits(e,x));
+    if(byPair>=0){used.add(byPair);divs[x.d.id]='wrongType';return;}
+    const byKind=exp.dividers.findIndex((e,i)=>!used.has(i)&&e.kind===x.d.kind);
+    if(byKind>=0){used.add(byKind);divs[x.d.id]='misplaced';}
+  });
+  stuDiv.forEach(x=>{ if(!divs[x.d.id])divs[x.d.id]='extra'; });
+  const missingDiv=exp.dividers.filter((e,i)=>!used.has(i));
+
+  // forks: expected compounds are cells with more than one token
+  const expForks=exp.order.filter(toks=>toks.length>1);
+  const stuForks=stuCells.filter(toks=>toks.length>1);
+  const forkIssues=[];
+  expForks.forEach(want=>{
+    const got=stuForks.find(g=>g.length===want.length&&want.every(t=>g.includes(t)));
+    if(!got)forkIssues.push({want, kind:'missing'});
+  });
+  stuForks.forEach(got=>{
+    const ok=expForks.some(want=>want.length===got.length&&want.every(t=>got.includes(t)));
+    if(!ok)forkIssues.push({want:got, kind:'extra'});
+  });
+
+  return {words, divs, missingDiv, forkIssues, exp};
 }
 
 /* ============================================================ render */
+const TOOLS=[
+  {id:'div:sv',        label:'S | V',  hint:'Subject / verb divider (crosses the line)'},
+  {id:'div:do',        label:'V | DO', hint:'Direct object divider (stops at the line)'},
+  {id:'div:complement',label:'V \\ PN', hint:'Predicate word divider (slanted)'},
+  {id:'fork',          label:'Compound', hint:'Split one spot into two'},
+  {id:'conj',          label:'Join with',hint:'Put a conjunction between two words'}
+];
+function toolArmed(id){return state.sel&&state.sel.kind==='tool'&&state.sel.tool===id;}
+
 function renderRoleToolbar(){
-  const btns=DIAGRAM_ROLES.map(r=>
-    `<button class="role-btn ${state.selectedRole===r.id?'selected':''}" data-action="role" data-value="${r.id}">
-       <strong>${esc(r.id)}</strong><span>${esc(r.label)}</span></button>`).join('');
-  return `<div class="role-toolbar">${btns}</div>`;
+  const btns=DIAGRAM_ROLES.map(r=>{
+    const on=state.sel&&state.sel.kind==='role'&&state.sel.role===r.id;
+    return '<button class="role-btn '+(on?'selected':'')+'" data-action="role" data-value="'+r.id+'">'+
+      '<strong>'+esc(r.id)+'</strong><span>'+esc(r.label)+'</span></button>';
+  }).join('');
+  return '<div class="role-toolbar">'+btns+'</div>';
+}
+function renderToolbar(){
+  const btns=TOOLS.map(t=>
+    '<button class="role-btn '+(toolArmed(t.id)?'selected':'')+'" data-action="tool" data-value="'+t.id+'">'+
+    '<strong>'+esc(t.label)+'</strong><span>'+esc(t.hint)+'</span></button>').join('');
+  return '<div class="role-toolbar">'+btns+'</div>';
 }
 function renderBank(){
-  const s=sentence();
-  const v=state.feedback;
-  const cells=s.tokens.map((tok,i)=>{
-    const placed=!!nodeForToken(i);
-    const role=roleOf(i);
+  const s=sentence(), v=state.feedback?state.feedback.words:null;
+  return '<div class="word-bank">'+s.tokens.map((tok,i)=>{
+    const placed=!!nodeForToken(i), role=roleOf(i);
     const cls=['word-token'];
-    if(state.selectedWord===i)cls.push('selected');
+    if(state.sel&&state.sel.kind==='word'&&state.sel.tokenIndex===i)cls.push('selected');
     if(placed)cls.push('placed');
     if(isSynthetic(i))cls.push('synthetic');
-    if(v&&v[i]&&v[i]!=='ok')cls.push('v-'+v[i]);
-    else if(v&&v[i]==='ok')cls.push('v-ok');
-    const chip=role?`<span class="chip ${ROLE_MAP[role].className}">${esc(role)}</span>`:'';
-    return `<button class="${cls.join(' ')}" data-action="word" data-index="${i}">
-      <span class="word-text">${esc(tok)}</span><span class="role-chips">${chip}</span></button>`;
-  }).join('');
-  return `<div class="word-bank">${cells}</div>`;
+    if(v&&v[i])cls.push('v-'+v[i]);
+    const chip=role?'<span class="chip '+ROLE_MAP[role].className+'">'+esc(role)+'</span>':'';
+    return '<button class="'+cls.join(' ')+'" data-action="word" data-index="'+i+'">'+
+      '<span class="word-text">'+esc(tok)+'</span><span class="role-chips">'+chip+'</span></button>';
+  }).join('')+'</div>';
 }
-function renderTargetSvg(n,verdicts){
-  const t=n.tokenIndex;
-  const label=esc(tokenText(t));
-  const vd=verdicts?verdicts[t]:null;
-  const vcls=vd&&vd!=='missing'&&vd!=='extra'?' '+('v-'+vd):'';
-  if(n.hit==='box'){
-    return `<g class="diagram-target" data-action="node" data-node="${n.id}">
-      <rect class="target-hit" x="${n.box.x-6}" y="${n.box.y-6}" width="${n.box.w+12}" height="${n.box.h+12}" rx="6"></rect>
-      <rect class="word-box${vcls}" x="${n.box.x}" y="${n.box.y}" width="${n.box.w}" height="${n.box.h}" rx="6"></rect>
-      <text class="diagram-text small-text" x="${n.textX}" y="${n.textY}">${label}</text></g>`;
+function vclass(t){
+  const v=state.feedback?state.feedback.words[t]:null;
+  return (v&&v!=='missing'&&v!=='extra')?' v-'+v:'';
+}
+function vstroke(t){
+  const v=state.feedback?state.feedback.words[t]:null;
+  if(v==='ok')return ' stroke="#217044"';
+  if(v==='wrongRole')return ' stroke="#b7791f"';
+  if(v==='misplaced'||v==='outOfOrder'||v==='extra')return ' stroke="#a3372a"';
+  return '';
+}
+function vfill(t){
+  const v=state.feedback?state.feedback.words[t]:null;
+  if(v==='ok')return ' fill="#217044"';
+  if(v==='wrongRole')return ' fill="#b7791f"';
+  if(v==='misplaced'||v==='outOfOrder'||v==='extra')return ' fill="#a3372a"';
+  return '';
+}
+function renderTargetSvg(n,g){
+  const label=esc(tokenText(n.tokenIndex));
+  const pend=state.pending===n.id?' selected':'';
+  if(g.hit==='box'){
+    return '<g class="diagram-target'+pend+'" data-action="node" data-node="'+n.id+'">'+
+      '<rect class="target-hit" x="'+(g.box.x-6)+'" y="'+(g.box.y-6)+'" width="'+(g.box.w+12)+'" height="'+(g.box.h+12)+'" rx="6"></rect>'+
+      '<rect class="word-box'+vclass(n.tokenIndex)+'" x="'+g.box.x+'" y="'+g.box.y+'" width="'+g.box.w+'" height="'+g.box.h+'" rx="6"></rect>'+
+      '<text class="diagram-text small-text" x="'+g.textX+'" y="'+g.textY+'">'+label+'</text></g>';
   }
-  if(n.hit==='slant'){
-    // Start below the baseline and stop above the foot: a prep slant lands on
-    // the arm it feeds, and touching it would steal the arm's clicks.
-    const {x1,y1,x2,y2}=n.line;
-    const pad=15, tail=(n.slot==='prep')?10:0;
-    const fx=x2+(x1-x2)*(tail/Math.max(1,y2-y1)), fy=y2-tail;
-    const pts=[[x1+pad,y1+5],[x1-pad,y1+5],[fx-pad,fy],[fx+pad,fy]]
+  if(g.hit==='slant'){
+    const L=g.line, pad=15, tail=(g.attach==='prep')?10:0;
+    const fx=L.x2+(L.x1-L.x2)*(tail/Math.max(1,L.y2-L.y1)), fy=L.y2-tail;
+    const pts=[[L.x1+pad,L.y1+5],[L.x1-pad,L.y1+5],[fx-pad,fy],[fx+pad,fy]]
       .map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
-    return `<g class="diagram-target" data-action="node" data-node="${n.id}">
-      <polygon class="target-hit" points="${pts}"></polygon>
-      <line class="diagram-line${vcls?' '+vcls:''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-        ${vd==='misplaced'?'stroke="#a3372a"':vd==='ok'?'stroke="#217044"':vd==='wrongRole'?'stroke="#b7791f"':''}></line>
-      <text class="diagram-text small-text" x="${n.textX}" y="${n.textY}"
-        transform="rotate(${n.rotation.toFixed(1)} ${n.textX} ${n.textY})">${label}</text></g>`;
+    return '<g class="diagram-target'+pend+'" data-action="node" data-node="'+n.id+'">'+
+      '<polygon class="target-hit" points="'+pts+'"></polygon>'+
+      '<line class="diagram-line" x1="'+L.x1+'" y1="'+L.y1+'" x2="'+L.x2+'" y2="'+L.y2+'"'+vstroke(n.tokenIndex)+'></line>'+
+      '<text class="diagram-text small-text" x="'+g.textX+'" y="'+g.textY+'" transform="rotate('+g.rotation.toFixed(1)+' '+g.textX+' '+g.textY+')"'+vfill(n.tokenIndex)+'>'+label+'</text></g>';
   }
-  // horizontal segment (main line or object-of-preposition arm).
-  // On a prep arm the slant that feeds it lands at x1, so start the hit box
-  // clear of that junction or the two fight over the same clicks.
-  const {x1,y1,x2}=n.line;
-  const top=(n.hit==='arm')?n.textY-12:Math.min(y1,n.textY)-16;
-  const left=(n.hit==='arm')?x1+34:x1+2;
-  return `<g class="diagram-target" data-action="node" data-node="${n.id}">
-    <rect class="target-hit" x="${left}" y="${top}" width="${Math.max(28,x2-left-2)}" height="${y1-top}" rx="5"></rect>
-    <text class="diagram-text${vcls}" x="${n.textX}" y="${n.textY}"
-      ${vd==='misplaced'?'fill="#a3372a"':vd==='ok'?'fill="#217044"':vd==='wrongRole'?'fill="#b7791f"':''}>${label}</text></g>`;
+  const L=g.line, top=(g.hit==='arm')?g.textY-12:Math.min(L.y1,g.textY)-16;
+  const left=(g.hit==='arm')?L.x1+34:L.x1+2;
+  return '<g class="diagram-target'+pend+'" data-action="node" data-node="'+n.id+'">'+
+    '<rect class="target-hit" x="'+left+'" y="'+top+'" width="'+Math.max(28,L.x2-left-2)+'" height="'+(L.y1-top)+'" rx="5"></rect>'+
+    '<text class="diagram-text" x="'+g.textX+'" y="'+g.textY+'"'+vfill(n.tokenIndex)+'>'+label+'</text></g>';
 }
-function renderGhosts(L){
-  if(state.selectedWord==null||!state.selectedRole)return '';
-  const zones=legalZones(state.selectedRole);
-  const out=[];
-  zones.forEach((z,i)=>{
-    if(z.kind==='attach'){
-      const host=L.targets.find(t=>t.id===z.parent);
-      if(!host)return;
-      const hy=host.box?host.box.y+host.box.h:Math.max(host.line.y1,host.line.y2);
-      // Put the ghost where this modifier will actually land, not on the head
-      // word: anchored at the head, a second adjective's ghost sits on top of
-      // the first one's slant and is nearly impossible to see or hit.
-      const sibs=L.targets.filter(t=>t.parentId===z.parent&&(t.slot==='mod'||t.slot==='prep'));
-      let hx=host.textX;
-      if(sibs.length){
-        // Step left past everything already hanging here, measured from each
-        // slant's ANCHOR (its top, on the parent) rather than its foot -- the
-        // foot already leans left, so stepping from it overshoots badly.
-        const anchors=sibs.map(t=>t.line.x1);
-        hx=Math.min.apply(null,anchors)-MOD_PITCH;
-      }
-      // Several hosts can be offered at once, and their ghosts must not land on
-      // some other word's slant. Nudge down a little if one is in the way, but
-      // stay near the host or the spot stops reading as belonging to it.
-      let gy=hy+12;
-      const clash=()=>L.targets.some(t=>{
-        if(t.box)return false;
-        const x1=Math.min(t.line.x1,t.line.x2),x2=Math.max(t.line.x1,t.line.x2);
-        const y1=Math.min(t.line.y1,t.line.y2),y2=Math.max(t.line.y1,t.line.y2);
-        return x2>hx-36&&x1<hx+36&&y2>gy-2&&y1<gy+24;
-      });
-      for(let guard=0;guard<2&&clash();guard++)gy+=26;
-      out.push(`<g class="ghost-g" data-action="drop" data-zone="${i}">
-        <rect class="ghost" x="${hx-34}" y="${gy}" width="68" height="22" rx="5"></rect>
-        <text class="ghost-label" x="${hx}" y="${gy+15}">here</text></g>`);
-    }else{
-      const g=ghostSlotBox(z,L);
-      if(!g)return;
-      out.push(`<g class="ghost-g" data-action="drop" data-zone="${i}">
-        <rect class="ghost" x="${g.x}" y="${g.y}" width="${g.w}" height="${g.h}" rx="6"></rect>
-        <text class="ghost-label" x="${g.x+g.w/2}" y="${g.y+g.h/2+4}">${esc(z.label)}</text></g>`);
-    }
-  });
-  return out.join('');
+function renderDividerSvg(D){
+  const d=D.d, y=D.y, x=D.dx;
+  const v=state.feedback?state.feedback.divs[d.id]:null;
+  const col=v==='ok'?'#217044':v==='wrongType'?'#b7791f':v?'#a3372a':'#263241';
+  const dash=D.adjacent?'':' stroke-dasharray="5 4"';
+  let line;
+  if(d.kind==='sv')            line='<line x1="'+x+'" y1="'+(y-DIVIDER_H)+'" x2="'+x+'" y2="'+(y+DIVIDER_H)+'"';
+  else if(d.kind==='do')       line='<line x1="'+x+'" y1="'+(y-DIVIDER_H)+'" x2="'+x+'" y2="'+y+'"';
+  else                         line='<line x1="'+(x-14)+'" y1="'+(y-DIVIDER_H)+'" x2="'+(x+6)+'" y2="'+y+'"';
+  return '<g class="diagram-target" data-action="divider" data-div="'+d.id+'">'+
+    '<rect class="target-hit" x="'+(x-16)+'" y="'+(y-DIVIDER_H-6)+'" width="32" height="'+(DIVIDER_H*2+12)+'" rx="5"></rect>'+
+    line+' stroke="'+col+'" stroke-width="2.4" stroke-linecap="round"'+dash+'></line></g>';
 }
-/* Where an empty slot's ghost box goes, before anything is placed there. */
-function ghostSlotBox(z,L){
-  const y=BASE_Y, w=136, h=28;
-  const subj=subjectNodes(), verb=verbNodes(), obj=objectNodes(), comp=complementNodes();
-  const after=(nodes,fallbackX)=>{
-    const t=nodes.length?L.targets.find(x=>x.id===nodes[0].id):null;
-    return t?Math.max(t.line.x2,t.textX+40)+16:fallbackX;
-  };
-  if(z.slot==='subject')
-    return {x:z.branch?BASE_X+10:BASE_X+6, y:z.branch?y+FORK_RISE-14:y-h-4, w, h};
-  if(z.slot==='verb')
-    return {x:after(subj,BASE_X+SEG_MIN)+10, y:z.branch?y+FORK_RISE-14:y-h-4, w, h};
-  if(z.slot==='object'||z.slot==='complement')
-    return {x:after(verb,BASE_X+2*SEG_MIN)+30, y:z.branch?y+FORK_RISE-14:y-h-4, w, h};
-  if(z.slot==='conj'){
-    const g=[subj,verb,obj,comp].find(a=>a.length===2);
-    const t=g?L.targets.find(x=>x.id===g[0].id):null;
-    return {x:(t?t.textX:BASE_X+140)-34, y:y-14, w:68, h:28};
-  }
-  if(z.slot==='modConj'){
-    const host=L.targets.find(t=>t.id===z.parent);
-    const mods=L.targets.filter(t=>t.slot==='mod'&&t.parentId===z.parent);
-    if(!mods.length)return null;
-    const mx=(mods[0].line.x2+mods[mods.length-1].line.x2)/2;
-    const my=Math.max.apply(null,mods.map(m=>m.line.y2))+30;
-    return {x:mx-32, y:my, w:64, h:26};
-  }
-  return null;
-}
-
 function renderCanvas(){
   const L=layout();
-  const lines=L.lines.map(l=>
-    `<line class="${l.cls}" x1="${l.x1}" y1="${l.y1}" x2="${l.x2}" y2="${l.y2}"></line>`).join('');
-  const targets=L.targets.map(t=>renderTargetSvg(t,state.feedback)).join('');
-  const ghosts=renderGhosts(L);
-  const vb=`${L.minX} 0 ${L.width-L.minX} ${L.height}`;
-  return `<div class="diagram-wrap"><svg class="diagram-svg" viewBox="${vb}"
-    width="${L.width-L.minX}" height="${L.height}" preserveAspectRatio="xMidYMin meet"
-    role="img" aria-label="Sentence diagram">${lines}${targets}${ghosts}</svg></div>`;
+  state._L=L;
+  const lines=L.lines.map(l=>'<line class="'+l.cls+'" x1="'+l.x1+'" y1="'+l.y1+'" x2="'+l.x2+'" y2="'+l.y2+'"></line>').join('');
+  const divs=L.dividers.map(renderDividerSvg).join('');
+  const targets=L.targets.map(n=>{const g=L.geom.get(n.id);return g?renderTargetSvg(n,g):'';}).join('');
+  // one wide strip over the baseline: click it to drop the carried word there
+  const armed=state.sel&&state.sel.kind==='word';
+  const strip=armed?'<rect class="baseline-hit" data-action="baseline" x="'+(L.minX)+'" y="'+(L.baseY-22)+'" width="'+(L.width-L.minX)+'" height="44" fill="rgba(36,93,143,.05)"></rect>':'';
+  const top=Math.min(0,L.topY);
+  const vb=L.minX+' '+top+' '+(L.width-L.minX)+' '+(L.height-top);
+  return '<div class="diagram-wrap"><svg class="diagram-svg" id="canvas" viewBox="'+vb+'" '+
+    'width="'+(L.width-L.minX)+'" height="'+(L.height-top)+'" preserveAspectRatio="xMidYMin meet" '+
+    'role="img" aria-label="Sentence diagram">'+strip+lines+divs+targets+'</svg></div>';
 }
 function renderFeedback(){
-  if(!state.feedback)return '';
-  const c=verdictSummary(state.feedback);
-  const wrong=Object.entries(state.feedback).filter(([t,v])=>v!=='ok');
-  if(!wrong.length)
-    return `<div class="feedback all-ok"><strong>Correct.</strong> Every word is in the right place with the right label.</div>`;
+  const f=state.feedback; if(!f)return '';
+  const wrong=Object.entries(f.words).filter(([t,v])=>v!=='ok');
+  const badDiv=Object.entries(f.divs).filter(([id,v])=>v!=='ok');
+  const clean=!wrong.length&&!badDiv.length&&!f.missingDiv.length&&!f.forkIssues.length;
+  if(clean)return '<div class="feedback all-ok"><strong>Correct.</strong> Every word, divider and compound is right.</div>';
   const names={wrongRole:'right place, but check the label',misplaced:'in the wrong place',
-               extra:'should not be on the diagram',missing:'still needs to go on the diagram'};
-  const items=wrong.map(([t,v])=>`<li><b>${esc(tokenText(t))}</b> &mdash; ${names[v]}</li>`).join('');
-  return `<div class="feedback"><strong>${c.ok} right.</strong> Fix these and check again:<ul>${items}</ul></div>`;
+    outOfOrder:'in the wrong order on the line',extra:'should not be on the diagram',
+    missing:'still needs to go on the diagram'};
+  let html='<div class="feedback"><strong>Check again.</strong><ul>';
+  wrong.forEach(([t,v])=>{html+='<li><b>'+esc(tokenText(t))+'</b> &mdash; '+names[v]+'</li>';});
+  badDiv.forEach(([id,v])=>{
+    const d=state.dividers.find(x=>x.id===id); if(!d)return;
+    const a=nodeById(d.leftId), b=nodeById(d.rightId);
+    const where=(a&&b)?(' between <b>'+esc(tokenText(a.tokenIndex))+'</b> and <b>'+esc(tokenText(b.tokenIndex))+'</b>'):'';
+    html+='<li>The divider'+where+' &mdash; '+
+      (v==='wrongType'?'right spot, wrong kind of divider':v==='misplaced'?'right kind, wrong spot':'is not needed')+'</li>';
+  });
+  f.missingDiv.forEach(e=>{
+    html+='<li>You still need a <b>'+(e.kind==='sv'?'subject / verb':e.kind==='do'?'direct object':'predicate')+
+      '</b> divider between <b>'+esc(tokenText(e.left[e.left.length-1]))+'</b> and <b>'+esc(tokenText(e.right[0]))+'</b></li>';
+  });
+  f.forkIssues.forEach(fi=>{
+    const w=fi.want.map(t=>esc(tokenText(t))).join(' and ');
+    html+='<li>'+(fi.kind==='missing'?'<b>'+w+'</b> should share one spot as a compound':
+      '<b>'+w+'</b> should not be a compound')+'</li>';
+  });
+  return html+'</ul></div>';
+}
+function toolHint(){
+  if(!state.sel)return 'Tag a word’s job, put words on the line, then add the dividers.';
+  if(state.sel.kind==='role')return 'Click each word that is a '+ROLE_MAP[state.sel.role].label.toLowerCase()+'. The tool stays on.';
+  if(state.sel.kind==='word')return 'Click the line to put it there, or click a word already on the diagram to hang it underneath.';
+  if(state.sel.kind==='tool'){
+    if(state.sel.tool==='fork')return 'Click a word on the line to split its spot in two.';
+    if(state.sel.tool==='conj')return state.pending?'Now click the second word.':'Click the two words this joins.';
+    return state.pending?'Now click the word on the RIGHT of the divider.':'Click the word on the LEFT of the divider.';
+  }
+  return '';
 }
 function render(){
   const s=sentence();
-  document.getElementById('count').textContent=`Sentence ${state.index+1} of ${SENTENCES.length}`;
-  const placedAll=s.tokens.every((t,i)=>nodeForToken(i)||!expectedHas(i));
-  document.getElementById('app').innerHTML=`
-  <div class="section">
-    <h2>${esc(s.sentence)}</h2>
-    <p class="directions">Give each word its job, then put it on the diagram. The diagram grows as you build it.</p>
-    <div class="step"><span class="step-num">1</span><span class="step-label">Pick a job</span>
-      <span class="step-hint">${state.selectedRole?'Now click the word that does this job.':'Choose what the next word does in the sentence.'}</span></div>
-    ${renderRoleToolbar()}
-    <div class="step"><span class="step-num">2</span><span class="step-label">Pick the word</span>
-      <span class="step-hint">${state.selectedWord!=null?'Now click a dashed spot on the diagram.':'Click a word to label it.'}</span></div>
-    ${renderBank()}
-    <div class="step"><span class="step-num">3</span><span class="step-label">Place it</span>
-      <span class="step-hint">Click a dashed spot, or click a word already on the diagram to hang this one under it.</span></div>
-    ${renderCanvas()}
-    <div class="hint">${esc(state.hint)}</div>
-    ${renderFeedback()}
-    <div class="toolbar">
-      <button class="primary" data-action="check">Check my diagram</button>
-      <button data-action="undo">Remove last</button>
-      <button data-action="clear">Start over</button>
-      <button data-action="reveal">Show answer</button>
-    </div>
-    <div class="legend"><span><b>Tip:</b> click a word on the diagram to take it off again.</span></div>
-  </div>`;
+  document.getElementById('count').textContent='Sentence '+(state.index+1)+' of '+SENTENCES.length;
+  document.getElementById('app').innerHTML=
+  '<div class="section">'+
+    '<h2>'+esc(s.sentence)+'</h2>'+
+    '<p class="directions">Build the whole diagram yourself. Nothing is drawn for you, and you can put anything anywhere &mdash; press Check when you think it is right.</p>'+
+    '<div class="step"><span class="step-label">Jobs</span><span class="step-hint">Pick a job, then click every word that does it.</span></div>'+
+    renderRoleToolbar()+
+    '<div class="step"><span class="step-label">Words</span><span class="step-hint">Click a word, then click the line or a word on the diagram.</span></div>'+
+    renderBank()+
+    '<div class="step"><span class="step-label">Lines</span><span class="step-hint">Pick a divider, then click the two words it goes between.</span></div>'+
+    renderToolbar()+
+    renderCanvas()+
+    '<div class="hint">'+esc(state.hint||toolHint())+'</div>'+
+    renderFeedback()+
+    '<div class="toolbar">'+
+      '<button class="primary" data-action="check">Check my diagram</button>'+
+      '<button data-action="clear">Start over</button>'+
+      '<button data-action="reveal">Show answer</button>'+
+    '</div>'+
+    '<div class="legend"><span><b>Tip:</b> with nothing picked, click a word or a divider to take it off.</span></div>'+
+  '</div>';
 }
-function expectedHas(t){return sentence().expected.some(e=>e.t===t);}
 
 /* ============================================================ interaction */
-function place(zone){
-  const t=state.selectedWord, role=state.selectedRole;
-  const n=addNode(t,role,zone.slot,zone.parent,zone.branch||0);
-  if(zone.slot==='conj')n._for=zone.forKey||'';
-  state.selectedWord=null; state.selectedRole=null; state.hint=''; state.feedback=null;
-  save();
+function svgX(e){
+  const svg=document.getElementById('canvas');
+  if(!svg||!svg.createSVGPoint)return null;
+  const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY;
+  const m=svg.getScreenCTM(); if(!m)return null;
+  return p.matrixTransform(m.inverse()).x;
 }
+function insertIndexFor(x){
+  const L=state._L; if(!L)return state.line.length;
+  let i=0;
+  L.gaps.forEach(g=>{ if(x>g.x)i=g.index; });
+  return Math.min(i,state.line.length);
+}
+function clearSel(){state.sel=null;state.pending=null;}
+
 document.addEventListener('click',e=>{
   const btn=e.target.closest('[data-action]');
   if(!btn)return;
   const action=btn.dataset.action;
+  state.feedback=null; state.hint='';
 
   if(action==='role'){
-    state.selectedRole=(state.selectedRole===btn.dataset.value)?null:btn.dataset.value;
-    state.hint='';
+    const r=btn.dataset.value;
+    // The role stays armed after tagging, so several words can be tagged in a
+    // row -- tagging one word no longer discards another word's selection.
+    state.sel=(state.sel&&state.sel.kind==='role'&&state.sel.role===r)?null:{kind:'role',role:r};
+    state.pending=null;
+  }
+  else if(action==='tool'){
+    const t=btn.dataset.value;
+    state.sel=toolArmed(t)?null:{kind:'tool',tool:t};
+    state.pending=null;
   }
   else if(action==='word'){
     const i=Number(btn.dataset.index);
-    if(nodeForToken(i)){
-      // Already on the diagram. Taking it off also removes anything hanging
-      // from it, so say what happened rather than silently dropping words.
-      const n=nodeForToken(i);
-      const kids=childrenOf(n.id).length;
+    if(state.sel&&state.sel.kind==='role'){
+      state.roles[i]=(state.roles[i]===state.sel.role)?undefined:state.sel.role;
+      if(state.roles[i]===undefined)delete state.roles[i];
+      // deliberately keep the role armed
+    }else if(nodeForToken(i)){
+      const n=nodeForToken(i), kids=childrenOf(n.id).length;
       removeNode(n.id);
-      state.roles[i]=state.roles[i];           // keep its label for re-placing
-      state.selectedWord=null; state.selectedRole=null; state.feedback=null;
-      state.hint='Took "'+tokenText(i)+'" off the diagram'+
-        (kids?' (and the '+kids+' word'+(kids>1?'s':'')+' under it)':'')+
-        '. Pick its job again to put it back.';
-    }else if(state.selectedRole){
-      state.roles[i]=state.selectedRole;       // tag it
-      state.selectedWord=i;
-      const zones=legalZones(state.selectedRole);
-      state.hint=zones.length?'':whyBlocked(state.selectedRole);
-      if(!zones.length)state.selectedWord=null;
+      clearSel();
+      state.hint='Took "'+tokenText(i)+'" off'+(kids?' (and the '+kids+' word'+(kids>1?'s':'')+' under it)':'')+'.';
     }else{
-      state.hint='Pick what this word does in the sentence first (step 1).';
+      state.sel={kind:'word',tokenIndex:i}; state.pending=null;
     }
   }
-  else if(action==='drop'){
-    const zones=legalZones(state.selectedRole);
-    const z=zones[Number(btn.dataset.zone)];
-    if(z)place(z);
+  else if(action==='baseline'){
+    if(state.sel&&state.sel.kind==='word'){
+      const x=svgX(e);
+      const at=(x==null)?state.line.length:insertIndexFor(x);
+      const n=addNode(state.sel.tokenIndex,'line',null);
+      state.line.splice(at,0,n.id);
+      clearSel();
+    }
   }
   else if(action==='node'){
     const n=nodeById(btn.dataset.node);
     if(!n)return;
-    if(state.selectedWord!=null&&state.selectedRole){
-      const zones=legalZones(state.selectedRole);
-      let z=zones.find(x=>x.kind==='attach'&&x.parent===n.id);
-      // Clicking a word that already hangs off something is the natural way to
-      // ask for a SIBLING there ("another adjective on this noun"), so fall
-      // back to that word's parent before refusing.
-      if(!z&&n.parentId)z=zones.find(x=>x.kind==='attach'&&x.parent===n.parentId);
-      if(z)place(z);
-      else state.hint='"'+tokenText(state.selectedWord)+'" cannot go there. '+whyBlocked(state.selectedRole);
+    if(state.sel&&state.sel.kind==='word'){
+      // attach under whatever was clicked -- right or wrong, no filtering
+      const t=state.sel.tokenIndex;
+      const r=roleOf(t);
+      const attach=(r==='OP'&&roleOf(n.tokenIndex)==='PREP')?'prepObject':(r==='PREP'?'prep':'mod');
+      addNode(t,attach,n.id);
+      clearSel();
+    }else if(state.sel&&state.sel.kind==='tool'){
+      const tool=state.sel.tool;
+      if(tool==='fork'){
+        const ci=cellIndexOfNode(n.id);
+        if(ci>=0&&!isFork(state.line[ci])){
+          state.line[ci]={id:newId('f'),kind:'fork',arms:[n.id,null],conjId:null};
+          state.hint='Now click a word, then click the empty arm to fill it.';
+        }
+        clearSel();
+      }else if(tool==='conj'){
+        if(!state.pending){state.pending=n.id;}
+        else if(state.pending!==n.id){
+          // the conjunction is whichever word is currently tagged CONJ and unplaced
+          const t=sentence().tokens.findIndex((w,i)=>roleOf(i)==='CONJ'&&!nodeForToken(i));
+          const ci=cellIndexOfNode(state.pending), cj=cellIndexOfNode(n.id);
+          if(t>=0&&ci>=0&&isFork(state.line[ci])){
+            const cn=addNode(t,'conj',null); state.line[ci].conjId=cn.id;
+          }else if(t>=0){
+            const host=nodeById(state.pending);
+            addNode(t,'conj',host?host.parentId:null);
+          }else state.hint='Tag a word CONJ first, then join.';
+          clearSel();
+        }
+      }else{
+        // divider tools: two clicks, both on words
+        if(!state.pending){state.pending=n.id;}
+        else if(state.pending!==n.id){
+          const kind=tool.split(':')[1];
+          state.dividers.push({id:newId('d'),kind:kind,leftId:state.pending,rightId:n.id});
+          state.sel={kind:'tool',tool:tool}; state.pending=null;   // stay armed
+        }
+      }
     }else{
-      removeNode(n.id); state.feedback=null; state.hint='';
+      removeNode(n.id);
+      state.hint='Took "'+tokenText(n.tokenIndex)+'" off.';
     }
   }
-  else if(action==='check'){state.feedback=grade(); state.hint='';}
-  else if(action==='undo'){
-    if(state.nodes.length){removeNode(state.nodes[state.nodes.length-1].id);state.feedback=null;}
+  else if(action==='fillarm'){
+    const [fid,ai]=btn.dataset.arm.split(':');
+    if(state.sel&&state.sel.kind==='word'){
+      const cell=state.line.find(c=>isFork(c)&&c.id===fid);
+      if(cell){const n=addNode(state.sel.tokenIndex,'line',null); cell.arms[Number(ai)]=n.id;}
+      clearSel();
+    }
   }
+  else if(action==='divider'){
+    if(!state.sel){removeDivider(btn.dataset.div); state.hint='Took that divider off.';}
+  }
+  else if(action==='check'){state.feedback=grade(); clearSel();}
   else if(action==='clear'){
-    state.nodes=[];state.roles={};state.selectedWord=null;state.selectedRole=null;
-    state.feedback=null;state.hint='';
+    const i=state.index; state=freshState(i);
   }
-  else if(action==='reveal'){
-    state.nodes=[];state.roles={};state.seq=1;
-    const exp=expectedNodes();
-    const idMap={};
-    // parents before children
-    const ordered=[]; const seen=new Set();
-    function push(e){
-      if(seen.has(e.t))return; seen.add(e.t);
-      const p=exp.find(x=>'e'+x.t===e.parentId);
-      if(p)push(p);
-      ordered.push(e);
-    }
-    exp.forEach(push);
-    ordered.forEach(e=>{
-      const n=addNode(e.t,e.role,e.slot,e.parentId?idMap[e.parentId]:null,e.branch||0);
-      idMap['e'+e.t]=n.id;
-      state.roles[e.t]=e.role;
-    });
-    state.feedback=null;state.hint='';state.revealed=true;
-  }
+  else if(action==='reveal'){revealAnswer();}
   else if(action==='next'||action==='prev'){
     save();
     const d=action==='next'?1:-1;
-    const i=(state.index+d+SENTENCES.length)%SENTENCES.length;
-    state=load(i);
+    state=load((state.index+d+SENTENCES.length)%SENTENCES.length);
   }
   else return;
   save(); render();
 });
+
+/* Build the correct diagram, including dividers and forks, from the derived
+   expectation -- so "Show answer" exercises exactly what Check grades. */
+function revealAnswer(){
+  const i=state.index; state=freshState(i);
+  const exp=expectedModel(), s=sentence();
+  const idOf={};
+  exp.order.forEach(toks=>{
+    const ids=toks.map(t=>{const n=addNode(t,'line',null); idOf[t]=n.id; state.roles[t]=exp.roles[t]; return n.id;});
+    state.line.push(ids.length>1?{id:newId('f'),kind:'fork',arms:ids.slice(0,2),conjId:null}:ids[0]);
+  });
+  // attachments, parents before children
+  const rest=s.expected.filter(e=>!ZONE[e.slot]&&e.slot!=='conj'&&e.slot!=='modConj');
+  let guard=0;
+  while(rest.length&&guard++<50){
+    for(let k=rest.length-1;k>=0;k--){
+      const e=rest[k];
+      if(idOf[e.parent]!=null){
+        const attach=e.slot==='prep'?'prep':e.slot==='prepObject'?'prepObject':'mod';
+        const n=addNode(e.t,attach,idOf[e.parent]); idOf[e.t]=n.id;
+        state.roles[e.t]=e.role; rest.splice(k,1);
+      }
+    }
+  }
+  exp.dividers.forEach(d=>{
+    const L=idOf[d.left[d.left.length-1]], R=idOf[d.right[0]];
+    if(L&&R)state.dividers.push({id:newId('d'),kind:d.kind,leftId:L,rightId:R});
+  });
+  const cj=s.expected.find(e=>e.slot==='conj');
+  if(cj){
+    const fork=state.line.find(c=>isFork(c));
+    const n=addNode(cj.t,'conj',fork?null:null); state.roles[cj.t]=cj.role;
+    if(fork)fork.conjId=n.id;
+  }
+  const mc=s.expected.find(e=>e.slot==='modConj');
+  if(mc&&idOf[mc.parent]!=null){
+    const n=addNode(mc.t,'conj',idOf[mc.parent]); state.roles[mc.t]=mc.role;
+  }
+  state.hint='This is the finished diagram.';
+}
 
 /* ============================================================ boot */
 (function init(){
@@ -892,7 +978,6 @@ document.addEventListener('click',e=>{
   state=load(start);
   render();
 })();
-</script>
 </script>
 </body>
 </html>
