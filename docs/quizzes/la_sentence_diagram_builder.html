@@ -913,7 +913,17 @@ function layout(){
       }
       return;
     }
-    const gs=sibs.map(k=>out.geom.get(k.id));
+    // Only the two modifiers the conjunction actually SITS BETWEEN, not every
+    // modifier under the head. "Our thoughtful and kind neighbor" has three
+    // adjectives on "neighbor", but "and" joins just "thoughtful" and "kind";
+    // spanning all three drew the guide from "Our" and put "and" under the
+    // wrong word.
+    const before=sibs.filter(k=>k.tokenIndex<cj.tokenIndex)
+                     .sort((a,b)=>b.tokenIndex-a.tokenIndex)[0];
+    const after=sibs.filter(k=>k.tokenIndex>cj.tokenIndex)
+                    .sort((a,b)=>a.tokenIndex-b.tokenIndex)[0];
+    const joined=[before,after].filter(Boolean);
+    const gs=(joined.length===2?joined:sibs).map(k=>out.geom.get(k.id));
     const xs=gs.map(g=>g.line.x2), ys=gs.map(g=>g.line.y2);
     const gy=Math.max.apply(null,ys)+26;
     const gx1=Math.min.apply(null,xs), gx2=Math.max.apply(null,xs);
