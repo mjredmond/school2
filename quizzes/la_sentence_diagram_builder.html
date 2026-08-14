@@ -457,8 +457,24 @@ function layout(){
   });
   out.gaps.push({index:cells.length, x:x+12});
 
+  // The baseline stops where a compound forks: the two arms carry the sentence
+  // from there, so a line running between them would cut straight through the
+  // fork. Draw it in segments, skipping each fork's span.
   const lineEnd=Math.max(x+40,BASE_X+3*SEG_MIN);
-  out.lines.unshift({cls:'diagram-line',x1:BASE_X-4,y1:y,x2:lineEnd,y2:y});
+  const skips=cells.filter(c=>isFork(c.cell)).map(c=>({a:c.x1,b:c.x2}))
+    .sort((p,q)=>p.a-q.a);
+  let cursor=BASE_X-4;
+  skips.forEach(sk=>{
+    if(sk.a>cursor)out.lines.unshift({cls:'diagram-line',x1:cursor,y1:y,x2:sk.a,y2:y});
+    cursor=Math.max(cursor,sk.b);
+  });
+  // Only continue the baseline past a fork if something is actually there --
+  // otherwise a compound at the end of the sentence leaves a stub hanging in
+  // space to the right of the conjunction.
+  const lastCell=cells[cells.length-1];
+  const endsInFork=lastCell&&isFork(lastCell.cell);
+  if(cursor<lineEnd&&!endsInFork)
+    out.lines.unshift({cls:'diagram-line',x1:cursor,y1:y,x2:lineEnd,y2:y});
   out.lineEnd=lineEnd; out.baseY=y;
 
   out.targets.forEach(t=>{
