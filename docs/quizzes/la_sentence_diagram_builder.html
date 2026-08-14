@@ -866,9 +866,14 @@ function layout(){
         out.geom.set(id,{line:{x1:Math.min(bx,armA),y1:ay,x2:Math.max(bx,armA),y2:ay},
           textX:armMid, textY:ay-ARM_LIFT, rotation:0, hit:'seg', attach:'line'});
         out.targets.push(n);
+        // Keep a modifier's fan clear of the conjunction guide, but always
+        // INSIDE the arm. The clearance pushes away from the guide, which sits
+        // at the vertex end -- so it moves right on a left-pointing fork and
+        // left on a right-pointing one.
+        const need=(c.ms[ai]?c.ms[ai].left:0)+42;
         const anchor=flipped
-          ?Math.min(armMid,gx-42-(c.ms[ai]?c.ms[ai].right:0))
-          :Math.max(armMid,gx+42+(c.ms[ai]?c.ms[ai].left:0));
+          ?Math.min(armMid,Math.max(bx,armA)-14)
+          :Math.max(armMid,gx+need);
         placeMods(n,anchor,ay,out, ai===0?(y-ay-30):null);
       });
       if(c.cell.conjId){
