@@ -1327,7 +1327,10 @@ function renderTargetSvg(n,g){
   // An indirect object owns the slant that carries it down from the verb, so it
   // draws its own stem; a prep object's stem is the preposition's slant.
   const stem=g.stem?'<line class="diagram-line" x1="'+g.stem.x1+'" y1="'+g.stem.y1+'" x2="'+g.stem.x2+'" y2="'+g.stem.y2+'"'+vstroke(n.tokenIndex)+'></line>':'';
-  const shelf=(g.hit==='arm'&&g.attach==='indirect')
+  // Every arm word -- an indirect object OR the object of a preposition -- sits
+  // ON a horizontal line. Without it the word floats under the slant and its
+  // own modifiers appear to hang off nothing.
+  const shelf=(g.hit==='arm')
     ?'<line class="diagram-line" x1="'+L.x1+'" y1="'+L.y1+'" x2="'+L.x2+'" y2="'+L.y2+'"'+vstroke(n.tokenIndex)+'></line>':'';
   return '<g class="diagram-target'+pend+'" data-action="node" data-node="'+n.id+'">'+
     '<rect class="target-hit" x="'+left+'" y="'+top+'" width="'+Math.max(28,L.x2-left-2)+'" height="'+(L.y1-top)+'" rx="5"></rect>'+
