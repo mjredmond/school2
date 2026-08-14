@@ -125,6 +125,9 @@ const SEG_MIN=132, SEG_PAD=26, DIVIDER_H=46, HALF_DIV=23;
    48 run) or two modifiers under one word fight over the same clicks. */
 const SLANT_RUN=48, SLANT_DROP=74, SLANT_CLEAR=88, MOD_PITCH=84;
 const DIVIDER_GAP=44, FORK_RISE=54, FORK_RUN=40;
+/* Vertical distance between the baselines of two clauses in a compound
+   sentence -- enough that the upper clause's modifiers clear the lower one. */
+const CLAUSE_GAP=210;
 const PREP_ARM=126, ARM_LIFT=16;
 const CHAR_W=9.2, TEXT_PAD=30;
 
@@ -185,7 +188,24 @@ const SENTENCES=[
              {t:4,role:'PREP',slot:'prep',parent:3},{t:6,role:'OP',slot:'prepObject',parent:4},
              {t:5,role:'ADJ',slot:'mod',parent:6},
              {t:9,role:'PREP',slot:'prep',parent:8},{t:11,role:'OP',slot:'prepObject',parent:9},
-             {t:10,role:'ADJ',slot:'mod',parent:11}]}
+             {t:10,role:'ADJ',slot:'mod',parent:11}]},
+
+  /* A COMPOUND SENTENCE: two independent clauses, each with its own baseline,
+     joined by a dotted vertical carrying the conjunction. `clause:1` marks the
+     words belonging to the second clause; `slot:'clauseConj'` is the joiner. */
+  {id:'s7', sentence:'The neighbors built a treehouse, and we may play in it with them.',
+   tokens:['The','neighbors','built','a','treehouse','and','we','may play','in','it','with','them'],
+   expected:[{t:1,role:'S',slot:'subject',parent:null},
+             {t:2,role:'AV',slot:'verb',parent:null},
+             {t:4,role:'DO',slot:'object',parent:2},
+             {t:0,role:'ADJ',slot:'mod',parent:1},{t:3,role:'ADJ',slot:'mod',parent:4},
+             {t:5,role:'CONJ',slot:'clauseConj',parent:null},
+             {t:6,role:'S',slot:'subject',parent:null,clause:1},
+             {t:7,role:'AV',slot:'verb',parent:null,clause:1},
+             {t:8,role:'PREP',slot:'prep',parent:7,clause:1},
+             {t:9,role:'OP',slot:'prepObject',parent:8,clause:1},
+             {t:10,role:'PREP',slot:'prep',parent:7,clause:1},
+             {t:11,role:'OP',slot:'prepObject',parent:10,clause:1}]}
 ];
 
 /* ============================================================ state
@@ -196,6 +216,8 @@ let state=freshState(0);
 
 function freshState(index){
   return {index, nodes:[], line:[], dividers:[], roles:{},
+          clauseStarts:[],     // indices in `line` where a NEW clause begins
+          clauseConj:null,     // node id of the conjunction joining the clauses
           sel:null,            // {kind:'role'|'word'|'tool', ...} -- one at a time
           pending:null,        // first word clicked while a 2-click tool is armed
           conjWord:null,       // the word being used as a joining conjunction
@@ -213,7 +235,8 @@ function save(){
     // persist only declared fields -- layout geometry lives in a side map now
     all[sentence().id]={
       nodes:state.nodes.map(n=>({id:n.id,tokenIndex:n.tokenIndex,attach:n.attach,parentId:n.parentId})),
-      line:state.line, dividers:state.dividers, roles:state.roles, seq:state.seq};
+      line:state.line, dividers:state.dividers, roles:state.roles, seq:state.seq,
+      clauseStarts:state.clauseStarts, clauseConj:state.clauseConj};
     all._last=state.index;
     localStorage.setItem(STORAGE_KEY,JSON.stringify(all));
   }catch(e){/* locked-down profile: run without persistence */}
@@ -368,6 +391,14 @@ function layout(){
   const y=BASE_Y;
   let x=BASE_X, maxDepth=0, minX=BASE_X, topY=y;
 
+  // A compound sentence is two independent clauses stacked, each on its own
+  // baseline, joined by a dotted vertical between their verbs. clauseStarts
+  // records where each new clause begins in `line`.
+  const starts=(state.clauseStarts||[]).filter(k=>k>0&&k<state.line.length).sort((a,b)=>a-b);
+  const clauseOfCell=i=>{let c=0;starts.forEach(st=>{if(i>=st)c++;});return c;};
+  const clauseCount=starts.length+1;
+  const clauseY=k=>BASE_Y+k*CLAUSE_GAP;
+
   const cells=state.line.map(c=>{
     const ids=isFork(c)?c.arms.filter(Boolean):[c];
     const ms=ids.map(id=>{const n=nodeById(id);
@@ -396,9 +427,14 @@ function layout(){
     const arr=byGap.get(g)||[]; arr.push(d); byGap.set(g,arr);
   });
 
+  let curClause=0;
   cells.forEach((c,i)=>{
+    const ck=clauseOfCell(i);
+    if(ck!==curClause){curClause=ck; x=BASE_X;}    // each clause starts at the left
+    const y=clauseY(ck);
+    c.clause=ck; c.y=y;
     const here=byGap.get(i)||[];
-    if(i>0)x+=here.length?here.length*DIVIDER_GAP:14;
+    if(i>0&&ck===clauseOfCell(i-1))x+=here.length?here.length*DIVIDER_GAP:14;
     const slack=Math.max(0,c.reserve-c.w);
     const x1=x+slack/2, x2=x1+c.w, mid=(x1+x2)/2;
     c.x1=x1; c.x2=x2; c.mid=mid;
@@ -495,22 +531,50 @@ function layout(){
   // The baseline stops where a compound forks: the two arms carry the sentence
   // from there, so a line running between them would cut straight through the
   // fork. Draw it in segments, skipping each fork's span.
-  const lineEnd=Math.max(x+40,BASE_X+3*SEG_MIN);
-  const skips=cells.filter(c=>isFork(c.cell)).map(c=>({a:c.x1,b:c.x2}))
-    .sort((p,q)=>p.a-q.a);
-  let cursor=BASE_X-4;
-  skips.forEach(sk=>{
-    if(sk.a>cursor)out.lines.unshift({cls:'diagram-line',x1:cursor,y1:y,x2:sk.a,y2:y});
-    cursor=Math.max(cursor,sk.b);
-  });
-  // Only continue the baseline past a fork if something is actually there --
-  // otherwise a compound at the end of the sentence leaves a stub hanging in
-  // space to the right of the conjunction.
-  const lastCell=cells[cells.length-1];
-  const endsInFork=lastCell&&isFork(lastCell.cell);
-  if(cursor<lineEnd&&!endsInFork)
-    out.lines.unshift({cls:'diagram-line',x1:cursor,y1:y,x2:lineEnd,y2:y});
-  out.lineEnd=lineEnd; out.baseY=y;
+  // One baseline PER CLAUSE, each skipping its own forks.
+  let lineEnd=BASE_X+3*SEG_MIN;
+  for(let k=0;k<clauseCount;k++){
+    const mine=cells.filter(c=>c.clause===k);
+    if(!mine.length)continue;
+    const cy=clauseY(k);
+    const right=Math.max.apply(null,mine.map(c=>c.x2));
+    const end=Math.max(right+40,BASE_X+3*SEG_MIN);
+    lineEnd=Math.max(lineEnd,end);
+    const skips=mine.filter(c=>isFork(c.cell)).map(c=>({a:c.x1,b:c.x2})).sort((p,q)=>p.a-q.a);
+    let cursor=BASE_X-4;
+    skips.forEach(sk=>{
+      if(sk.a>cursor)out.lines.unshift({cls:'diagram-line',x1:cursor,y1:cy,x2:sk.a,y2:cy});
+      cursor=Math.max(cursor,sk.b);
+    });
+    // Only continue past a fork if something is actually there, or a compound
+    // at the end of a clause leaves a stub hanging past the conjunction.
+    const last=mine[mine.length-1];
+    if(cursor<end&&!isFork(last.cell))
+      out.lines.unshift({cls:'diagram-line',x1:cursor,y1:cy,x2:end,y2:cy});
+  }
+
+  // The clauses of a compound sentence are joined by a dotted vertical between
+  // their verbs, with the conjunction written on it.
+  if(clauseCount>1){
+    const verbX=k=>{
+      const mine=cells.filter(c=>c.clause===k);
+      return mine.length>1?mine[1].mid:(mine.length?mine[0].mid:BASE_X+SEG_MIN);
+    };
+    for(let k=0;k+1<clauseCount;k++){
+      const xTop=verbX(k), xBot=verbX(k+1), jx=Math.round((xTop+xBot)/2);
+      const yTop=clauseY(k), yBot=clauseY(k+1);
+      out.lines.push({cls:'diagram-line',x1:xTop,y1:yTop,x2:jx,y2:yTop+26});
+      out.lines.push({cls:'diagram-guide',x1:jx,y1:yTop+26,x2:jx,y2:yBot-26});
+      out.lines.push({cls:'diagram-line',x1:jx,y1:yBot-26,x2:xBot,y2:yBot});
+      const cj=state.clauseConj?nodeById(state.clauseConj):null;
+      if(cj&&!out.geom.get(cj.id)){
+        out.geom.set(cj.id,{box:{x:jx-36,y:(yTop+yBot)/2-15,w:72,h:30},
+          textX:jx, textY:(yTop+yBot)/2+5, rotation:0, hit:'box', attach:'clauseConj'});
+        out.targets.push(cj);
+      }
+    }
+  }
+  out.lineEnd=lineEnd; out.baseY=BASE_Y;
 
   out.targets.forEach(t=>{
     const g=out.geom.get(t.id); if(!g)return;
@@ -543,12 +607,16 @@ function expectedModel(){
   const onLine=s.expected.filter(e=>ZONE[e.slot]).sort((a,b)=>a.t-b.t);
   const cells=[];
   onLine.forEach(e=>{
+    const cl=e.clause||0;
     const last=cells[cells.length-1];
-    if(last&&last.slot===e.slot)last.toks.push(e.t);      // compound: same cell
-    else cells.push({slot:e.slot, toks:[e.t]});
+    // Same slot AND same clause means a compound; the second clause of a
+    // compound sentence has its own subject and verb, not a fork.
+    if(last&&last.slot===e.slot&&last.clause===cl)last.toks.push(e.t);
+    else cells.push({slot:e.slot, toks:[e.t], clause:cl});
   });
   const dividers=[];
   for(let i=0;i<cells.length-1;i++){
+    if(cells[i].clause!==cells[i+1].clause)continue;      // no divider across clauses
     const k=ZONE[cells[i].slot]+ZONE[cells[i+1].slot];
     if(ZONE_DIVIDER[k])
       dividers.push({kind:ZONE_DIVIDER[k], left:cells[i].toks.slice(), right:cells[i+1].toks.slice()});
@@ -559,13 +627,15 @@ function expectedModel(){
   s.expected.forEach(e=>{
     roles[e.t]=e.role;
     if(ZONE[e.slot])attach[e.t]='line';
-    else if(e.slot==='conj')attach[e.t]='conj';
+    else if(e.slot==='conj'||e.slot==='clauseConj')attach[e.t]='conj';
     else if(e.slot==='modConj')attach[e.t]='conj@'+e.parent;
     else if(e.slot==='prepObject')attach[e.t]='prepObject@'+e.parent;
     else if(e.slot==='prep')attach[e.t]='prep@'+e.parent;
     else attach[e.t]='mod@'+e.parent;
   });
-  return {cells, dividers, attach, roles,
+  const clauseStart=cells.findIndex(c=>c.clause===1);
+  return {cells, dividers, attach, roles, clauseStart,
+          clauseConjToken:(s.expected.find(e=>e.slot==='clauseConj')||{}).t,
           order:cells.map(c=>c.toks.slice()),
           conjToken:conj?conj.t:null, modConjToken:modConj?modConj.t:null};
 }
@@ -581,13 +651,18 @@ function studentAttach(){
     // mod@4 and mod@0 are different answers, where a bare "mod" would not be.
     map[n.tokenIndex]=n.attach+'@'+pt;
   });
-  // a conjunction sitting on a fork guide is addressed by the cell it joins
+  // A conjunction on a fork guide, or joining two clauses, is addressed as
+  // plain 'conj' -- it has no head word to hang from.
   state.line.forEach(c=>{
     if(isFork(c)&&c.conjId){
       const cj=nodeById(c.conjId);
       if(cj)map[cj.tokenIndex]='conj';
     }
   });
+  if(state.clauseConj){
+    const cc=nodeById(state.clauseConj);
+    if(cc)map[cc.tokenIndex]='conj';
+  }
   return map;
 }
 /* Longest increasing subsequence: flags the minimum set of words that must
@@ -1026,7 +1101,8 @@ function revealAnswer(){
     state.line.push(ids.length>1?{id:newId('f'),kind:'fork',arms:ids.slice(0,2),conjId:null}:ids[0]);
   });
   // attachments, parents before children
-  const rest=s.expected.filter(e=>!ZONE[e.slot]&&e.slot!=='conj'&&e.slot!=='modConj');
+  if(exp.clauseStart>0)state.clauseStarts=[exp.clauseStart];
+  const rest=s.expected.filter(e=>!ZONE[e.slot]&&e.slot!=='conj'&&e.slot!=='modConj'&&e.slot!=='clauseConj');
   let guard=0;
   while(rest.length&&guard++<50){
     for(let k=rest.length-1;k>=0;k--){
@@ -1051,6 +1127,11 @@ function revealAnswer(){
   const mc=s.expected.find(e=>e.slot==='modConj');
   if(mc&&idOf[mc.parent]!=null){
     const n=addNode(mc.t,'conj',idOf[mc.parent]); state.roles[mc.t]=mc.role;
+  }
+  const cc=s.expected.find(e=>e.slot==='clauseConj');
+  if(cc){
+    const n=addNode(cc.t,'conj',null); state.roles[cc.t]=cc.role;
+    state.clauseConj=n.id;
   }
   state.hint='This is the finished diagram.';
 }
