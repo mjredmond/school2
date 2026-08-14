@@ -125,6 +125,9 @@ const SEG_MIN=132, SEG_PAD=26, DIVIDER_H=46, HALF_DIV=23;
    48 run) or two modifiers under one word fight over the same clicks. */
 const SLANT_RUN=48, SLANT_DROP=74, SLANT_CLEAR=88, MOD_PITCH=84;
 const DIVIDER_GAP=44, FORK_RISE=54, FORK_RUN=40;
+/* Vertical distance between the baselines of two clauses in a compound
+   sentence -- enough that the upper clause's modifiers clear the lower one. */
+const CLAUSE_GAP=210;
 const PREP_ARM=126, ARM_LIFT=16;
 const CHAR_W=9.2, TEXT_PAD=30;
 
@@ -132,60 +135,257 @@ const CHAR_W=9.2, TEXT_PAD=30;
 /* `expected` uses token indices for `parent`, which keeps it human-writable.
    parent:null means the node sits on its clause's main line. */
 const SENTENCES=[
-  {id:'s1', sentence:'Mason watched three playful dolphins.',
-   tokens:['Mason','watched','three','playful','dolphins'],
-   expected:[{t:0,role:'S',slot:'subject',parent:null},{t:1,role:'AV',slot:'verb',parent:null},
-             {t:4,role:'DO',slot:'object',parent:1},{t:2,role:'ADJ',slot:'mod',parent:4},
-             {t:3,role:'ADJ',slot:'mod',parent:4}]},
+  {id:'c01', sentence:'That small green box holds Mom\'s sewing supplies.',
+   tokens:['That','small','green','box','holds','Mom\'s','sewing','supplies'],
+   expected:[
+     {t:3,role:'S',slot:'subject',parent:null},
+     {t:4,role:'AV',slot:'verb',parent:null},
+     {t:7,role:'DO',slot:'object',parent:4},
+     {t:0,role:'ADJ',slot:'mod',parent:3},
+     {t:1,role:'ADJ',slot:'mod',parent:3},
+     {t:2,role:'ADJ',slot:'mod',parent:3},
+     {t:5,role:'ADJ',slot:'mod',parent:7},
+     {t:6,role:'ADJ',slot:'mod',parent:7}]},
 
-  {id:'s2', sentence:'The weather today is warm and windy.',
-   tokens:['The','weather','today','is','warm','and','windy'],
-   expected:[{t:1,role:'S',slot:'subject',parent:null},{t:3,role:'LV',slot:'verb',parent:null},
-             {t:4,role:'PA',slot:'complement',parent:3,branch:0},
-             {t:6,role:'PA',slot:'complement',parent:3,branch:1},
-             {t:5,role:'CONJ',slot:'conj',parent:3},
-             {t:0,role:'ADJ',slot:'mod',parent:1},{t:2,role:'ADV',slot:'mod',parent:3}]},
+  {id:'c02', sentence:'Our thoughtful and kind neighbor has been helping Dad with our new fence.',
+   tokens:['Our','thoughtful','and','kind','neighbor','has been helping','Dad','with','our','new','fence'],
+   expected:[
+     {t:4,role:'S',slot:'subject',parent:null},
+     {t:5,role:'AV',slot:'verb',parent:null},
+     {t:6,role:'DO',slot:'object',parent:5},
+     {t:0,role:'ADJ',slot:'mod',parent:4},
+     {t:1,role:'ADJ',slot:'mod',parent:4},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:2,role:'CONJ',slot:'modConj',parent:4},
+     {t:7,role:'PREP',slot:'prep',parent:5},
+     {t:10,role:'OP',slot:'prepObject',parent:7},
+     {t:8,role:'ADJ',slot:'mod',parent:10},
+     {t:9,role:'ADJ',slot:'mod',parent:10}]},
 
-  {id:'s3', sentence:'Climb the ladder to the treehouse carefully.',
+  {id:'c03', sentence:'Hailey\'s banana is bruised.',
+   tokens:['Hailey\'s','banana','is','bruised'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:2,role:'LV',slot:'verb',parent:null},
+     {t:3,role:'PA',slot:'complement',parent:2},
+     {t:0,role:'ADJ',slot:'mod',parent:1}]},
+
+  {id:'c04', sentence:'Julian and Stella are my cousins.',
+   tokens:['Julian','and','Stella','are','my','cousins'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null,branch:0},
+     {t:2,role:'S',slot:'subject',parent:null,branch:1},
+     {t:1,role:'CONJ',slot:'conj',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:5,role:'PN',slot:'complement',parent:3},
+     {t:4,role:'ADJ',slot:'mod',parent:5}]},
+
+  {id:'c05', sentence:'Duke is our faithful, gentle dog.',
+   tokens:['Duke','is','our','faithful','gentle','dog'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'LV',slot:'verb',parent:null},
+     {t:5,role:'PN',slot:'complement',parent:1},
+     {t:2,role:'ADJ',slot:'mod',parent:5},
+     {t:3,role:'ADJ',slot:'mod',parent:5},
+     {t:4,role:'ADJ',slot:'mod',parent:5}]},
+
+  {id:'c06', sentence:'Our camping trip was exciting and fun.',
+   tokens:['Our','camping','trip','was','exciting','and','fun'],
+   expected:[
+     {t:2,role:'S',slot:'subject',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:4,role:'PA',slot:'complement',parent:3,branch:0},
+     {t:6,role:'PA',slot:'complement',parent:3,branch:1},
+     {t:5,role:'CONJ',slot:'conj',parent:null},
+     {t:0,role:'ADJ',slot:'mod',parent:2},
+     {t:1,role:'ADJ',slot:'mod',parent:2}]},
+
+  {id:'c07', sentence:'Those warm and chewy cookies are delicious!',
+   tokens:['Those','warm','and','chewy','cookies','are','delicious'],
+   expected:[
+     {t:4,role:'S',slot:'subject',parent:null},
+     {t:5,role:'LV',slot:'verb',parent:null},
+     {t:6,role:'PA',slot:'complement',parent:5},
+     {t:0,role:'ADJ',slot:'mod',parent:4},
+     {t:1,role:'ADJ',slot:'mod',parent:4},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:2,role:'CONJ',slot:'modConj',parent:4}]},
+
+  {id:'c08', sentence:'Marco\'s trumpet teacher is Mr. Watson.',
+   tokens:['Marco\'s','trumpet','teacher','is','Mr. Watson'],
+   expected:[
+     {t:2,role:'S',slot:'subject',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:4,role:'PN',slot:'complement',parent:3},
+     {t:0,role:'ADJ',slot:'mod',parent:2},
+     {t:1,role:'ADJ',slot:'mod',parent:2}]},
+
+  {id:'c09', sentence:'Jesus\' disciples collected twelve baskets of leftovers!',
+   tokens:['Jesus\'','disciples','collected','twelve','baskets','of','leftovers'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:2,role:'AV',slot:'verb',parent:null},
+     {t:4,role:'DO',slot:'object',parent:2},
+     {t:0,role:'ADJ',slot:'mod',parent:1},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:5,role:'PREP',slot:'prep',parent:4},
+     {t:6,role:'OP',slot:'prepObject',parent:5}]},
+
+  {id:'c10', sentence:'Mother often encourages me with her kind words.',
+   tokens:['Mother','often','encourages','me','with','her','kind','words'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:2,role:'AV',slot:'verb',parent:null},
+     {t:3,role:'DO',slot:'object',parent:2},
+     {t:1,role:'ADV',slot:'mod',parent:2},
+     {t:4,role:'PREP',slot:'prep',parent:2},
+     {t:7,role:'OP',slot:'prepObject',parent:4},
+     {t:5,role:'ADJ',slot:'mod',parent:7},
+     {t:6,role:'ADJ',slot:'mod',parent:7}]},
+
+  {id:'c11', sentence:'Charlie ran home for his baseball glove.',
+   tokens:['Charlie','ran','home','for','his','baseball','glove'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'AV',slot:'verb',parent:null},
+     {t:2,role:'ADV',slot:'mod',parent:1},
+     {t:3,role:'PREP',slot:'prep',parent:1},
+     {t:6,role:'OP',slot:'prepObject',parent:3},
+     {t:4,role:'ADJ',slot:'mod',parent:6},
+     {t:5,role:'ADJ',slot:'mod',parent:6}]},
+
+  {id:'c12', sentence:'Yellowstone National Park is an exciting vacation place.',
+   tokens:['Yellowstone National Park','is','an','exciting','vacation','place'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'LV',slot:'verb',parent:null},
+     {t:5,role:'PN',slot:'complement',parent:1},
+     {t:2,role:'ADJ',slot:'mod',parent:5},
+     {t:3,role:'ADJ',slot:'mod',parent:5},
+     {t:4,role:'ADJ',slot:'mod',parent:5}]},
+
+  {id:'c13', sentence:'Hailey and Miles saw many large buffalo herds.',
+   tokens:['Hailey','and','Miles','saw','many','large','buffalo','herds'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null,branch:0},
+     {t:2,role:'S',slot:'subject',parent:null,branch:1},
+     {t:1,role:'CONJ',slot:'conj',parent:null},
+     {t:3,role:'AV',slot:'verb',parent:null},
+     {t:7,role:'DO',slot:'object',parent:3},
+     {t:4,role:'ADJ',slot:'mod',parent:7},
+     {t:5,role:'ADJ',slot:'mod',parent:7},
+     {t:6,role:'ADJ',slot:'mod',parent:7}]},
+
+  {id:'c14', sentence:'Morgan\'s favorite sports are softball and soccer.',
+   tokens:['Morgan\'s','favorite','sports','are','softball','and','soccer'],
+   expected:[
+     {t:2,role:'S',slot:'subject',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:4,role:'PN',slot:'complement',parent:3,branch:0},
+     {t:6,role:'PN',slot:'complement',parent:3,branch:1},
+     {t:5,role:'CONJ',slot:'conj',parent:null},
+     {t:0,role:'ADJ',slot:'mod',parent:2},
+     {t:1,role:'ADJ',slot:'mod',parent:2}]},
+
+  {id:'c15', sentence:'On her hikes, Morgan often takes exciting and interesting pictures.',
+   tokens:['On','her','hikes','Morgan','often','takes','exciting','and','interesting','pictures'],
+   expected:[
+     {t:3,role:'S',slot:'subject',parent:null},
+     {t:5,role:'AV',slot:'verb',parent:null},
+     {t:9,role:'DO',slot:'object',parent:5},
+     {t:4,role:'ADV',slot:'mod',parent:5},
+     {t:0,role:'PREP',slot:'prep',parent:5},
+     {t:2,role:'OP',slot:'prepObject',parent:0},
+     {t:1,role:'ADJ',slot:'mod',parent:2},
+     {t:6,role:'ADJ',slot:'mod',parent:9},
+     {t:8,role:'ADJ',slot:'mod',parent:9},
+     {t:7,role:'CONJ',slot:'modConj',parent:9}]},
+
+  {id:'c16', sentence:'Yesterday, Hannah and her brother rode their bikes in the park.',
+   tokens:['Yesterday','Hannah','and','her','brother','rode','their','bikes','in','the','park'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null,branch:0},
+     {t:4,role:'S',slot:'subject',parent:null,branch:1},
+     {t:2,role:'CONJ',slot:'conj',parent:null},
+     {t:5,role:'AV',slot:'verb',parent:null},
+     {t:7,role:'DO',slot:'object',parent:5},
+     {t:0,role:'ADV',slot:'mod',parent:5},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:6,role:'ADJ',slot:'mod',parent:7},
+     {t:8,role:'PREP',slot:'prep',parent:5},
+     {t:10,role:'OP',slot:'prepObject',parent:8},
+     {t:9,role:'ADJ',slot:'mod',parent:10}]},
+
+  {id:'c17', sentence:'The frisky squirrel scampered across the lawn and ran up the old tree.',
+   tokens:['The','frisky','squirrel','scampered','across','the','lawn','and','ran','up','the','old','tree'],
+   expected:[
+     {t:2,role:'S',slot:'subject',parent:null},
+     {t:3,role:'AV',slot:'verb',parent:null,branch:0},
+     {t:8,role:'AV',slot:'verb',parent:null,branch:1},
+     {t:7,role:'CONJ',slot:'conj',parent:null},
+     {t:0,role:'ADJ',slot:'mod',parent:2},
+     {t:1,role:'ADJ',slot:'mod',parent:2},
+     {t:4,role:'PREP',slot:'prep',parent:3},
+     {t:6,role:'OP',slot:'prepObject',parent:4},
+     {t:5,role:'ADJ',slot:'mod',parent:6},
+     {t:9,role:'PREP',slot:'prep',parent:8},
+     {t:12,role:'OP',slot:'prepObject',parent:9},
+     {t:10,role:'ADJ',slot:'mod',parent:12},
+     {t:11,role:'ADJ',slot:'mod',parent:12}]},
+
+  {id:'c18', sentence:'Climb the ladder to the treehouse carefully.',
    tokens:['(You)','Climb','the','ladder','to','the','treehouse','carefully'],
    synthetic:[0],
-   expected:[{t:0,role:'S',slot:'subject',parent:null},{t:1,role:'AV',slot:'verb',parent:null},
-             {t:3,role:'DO',slot:'object',parent:1},{t:2,role:'ADJ',slot:'mod',parent:3},
-             {t:7,role:'ADV',slot:'mod',parent:1},
-             {t:4,role:'PREP',slot:'prep',parent:1},{t:6,role:'OP',slot:'prepObject',parent:4},
-             {t:5,role:'ADJ',slot:'mod',parent:6}]},
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'AV',slot:'verb',parent:null},
+     {t:3,role:'DO',slot:'object',parent:1},
+     {t:2,role:'ADJ',slot:'mod',parent:3},
+     {t:7,role:'ADV',slot:'mod',parent:1},
+     {t:4,role:'PREP',slot:'prep',parent:1},
+     {t:6,role:'OP',slot:'prepObject',parent:4},
+     {t:5,role:'ADJ',slot:'mod',parent:6}]},
 
-  {id:'s4', sentence:'Joseph threw the baseball to Isaiah quickly and accurately.',
+  {id:'c19', sentence:'The weather today is warm and windy.',
+   tokens:['The','weather','today','is','warm','and','windy'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:4,role:'PA',slot:'complement',parent:3,branch:0},
+     {t:6,role:'PA',slot:'complement',parent:3,branch:1},
+     {t:5,role:'CONJ',slot:'conj',parent:null},
+     {t:0,role:'ADJ',slot:'mod',parent:1},
+     {t:2,role:'ADV',slot:'mod',parent:3}]},
+
+  {id:'c20', sentence:'The neighbors built a treehouse, and we may play in it with them.',
+   tokens:['The','neighbors','built','a','treehouse','and','we','may play','in','it','with','them'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:2,role:'AV',slot:'verb',parent:null},
+     {t:4,role:'DO',slot:'object',parent:2},
+     {t:0,role:'ADJ',slot:'mod',parent:1},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:5,role:'CONJ',slot:'clauseConj',parent:null},
+     {t:6,role:'S',slot:'subject',parent:null,clause:1},
+     {t:7,role:'AV',slot:'verb',parent:null,clause:1},
+     {t:8,role:'PREP',slot:'prep',parent:7,clause:1},
+     {t:9,role:'OP',slot:'prepObject',parent:8,clause:1},
+     {t:10,role:'PREP',slot:'prep',parent:7,clause:1},
+     {t:11,role:'OP',slot:'prepObject',parent:10,clause:1}]},
+
+  {id:'c21', sentence:'Joseph threw the baseball to Isaiah quickly and accurately.',
    tokens:['Joseph','threw','the','baseball','to','Isaiah','quickly','and','accurately'],
-   expected:[{t:0,role:'S',slot:'subject',parent:null},{t:1,role:'AV',slot:'verb',parent:null},
-             {t:3,role:'DO',slot:'object',parent:1},{t:2,role:'ADJ',slot:'mod',parent:3},
-             {t:6,role:'ADV',slot:'mod',parent:1},{t:8,role:'ADV',slot:'mod',parent:1},
-             {t:7,role:'CONJ',slot:'modConj',parent:1},
-             {t:4,role:'PREP',slot:'prep',parent:1},{t:5,role:'OP',slot:'prepObject',parent:4}]},
-
-  {id:'s5', sentence:'Quietly, Ben and Clara carried the heavy baskets into the pantry.',
-   tokens:['Quietly','Ben','and','Clara','carried','the','heavy','baskets','into','the','pantry'],
-   expected:[{t:1,role:'S',slot:'subject',parent:null,branch:0},
-             {t:3,role:'S',slot:'subject',parent:null,branch:1},
-             {t:2,role:'CONJ',slot:'conj',parent:null},
-             {t:4,role:'AV',slot:'verb',parent:null},
-             {t:7,role:'DO',slot:'object',parent:4},
-             {t:5,role:'ADJ',slot:'mod',parent:7},{t:6,role:'ADJ',slot:'mod',parent:7},
-             {t:0,role:'ADV',slot:'mod',parent:4},
-             {t:8,role:'PREP',slot:'prep',parent:4},{t:10,role:'OP',slot:'prepObject',parent:8},
-             {t:9,role:'ADJ',slot:'mod',parent:10}]},
-
-  {id:'s6', sentence:'The small dog barked beside the gate and growled at the stranger.',
-   tokens:['The','small','dog','barked','beside','the','gate','and','growled','at','the','stranger'],
-   expected:[{t:2,role:'S',slot:'subject',parent:null},
-             {t:3,role:'AV',slot:'verb',parent:null,branch:0},
-             {t:8,role:'AV',slot:'verb',parent:null,branch:1},
-             {t:7,role:'CONJ',slot:'conj',parent:null},
-             {t:0,role:'ADJ',slot:'mod',parent:2},{t:1,role:'ADJ',slot:'mod',parent:2},
-             {t:4,role:'PREP',slot:'prep',parent:3},{t:6,role:'OP',slot:'prepObject',parent:4},
-             {t:5,role:'ADJ',slot:'mod',parent:6},
-             {t:9,role:'PREP',slot:'prep',parent:8},{t:11,role:'OP',slot:'prepObject',parent:9},
-             {t:10,role:'ADJ',slot:'mod',parent:11}]}
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'AV',slot:'verb',parent:null},
+     {t:3,role:'DO',slot:'object',parent:1},
+     {t:2,role:'ADJ',slot:'mod',parent:3},
+     {t:6,role:'ADV',slot:'mod',parent:1},
+     {t:8,role:'ADV',slot:'mod',parent:1},
+     {t:7,role:'CONJ',slot:'modConj',parent:1},
+     {t:4,role:'PREP',slot:'prep',parent:1},
+     {t:5,role:'OP',slot:'prepObject',parent:4}]}
 ];
 
 /* ============================================================ state
@@ -196,6 +396,8 @@ let state=freshState(0);
 
 function freshState(index){
   return {index, nodes:[], line:[], dividers:[], roles:{},
+          clauseStarts:[],     // indices in `line` where a NEW clause begins
+          clauseConj:null,     // node id of the conjunction joining the clauses
           sel:null,            // {kind:'role'|'word'|'tool', ...} -- one at a time
           pending:null,        // first word clicked while a 2-click tool is armed
           conjWord:null,       // the word being used as a joining conjunction
@@ -213,7 +415,8 @@ function save(){
     // persist only declared fields -- layout geometry lives in a side map now
     all[sentence().id]={
       nodes:state.nodes.map(n=>({id:n.id,tokenIndex:n.tokenIndex,attach:n.attach,parentId:n.parentId})),
-      line:state.line, dividers:state.dividers, roles:state.roles, seq:state.seq};
+      line:state.line, dividers:state.dividers, roles:state.roles, seq:state.seq,
+      clauseStarts:state.clauseStarts, clauseConj:state.clauseConj};
     all._last=state.index;
     localStorage.setItem(STORAGE_KEY,JSON.stringify(all));
   }catch(e){/* locked-down profile: run without persistence */}
@@ -309,7 +512,19 @@ function measure(node,slots){
     const need=(k.attach==='prep')?Math.max(MOD_PITCH,SLANT_RUN+objW+km.right+16):MOD_PITCH;
     list.push({node:k, offset:cursor, m:km, need});
     cursor+=need;
-    m.depth=Math.max(m.depth,(km.depth?SLANT_CLEAR:SLANT_DROP)+km.depth);
+    // A prep phrase reaches further down than its own slant: the object sits
+    // at the slant's foot and carries modifiers of ITS own. Measuring only the
+    // slant under-reports the depth, which let an upper fork arm's phrase hang
+    // into the arm below it.
+    let kd=(km.depth?SLANT_CLEAR:SLANT_DROP)+km.depth;
+    if(k.attach==='prep'){
+      const obj=childrenOf(k.id).find(c=>c.attach==='prepObject');
+      if(obj){
+        const om=measure(obj,slots);
+        kd=Math.max(kd, SLANT_DROP+(om.depth?SLANT_CLEAR+om.depth:0)+ARM_LIFT);
+      }
+    }
+    m.depth=Math.max(m.depth,kd);
   });
   const shift=(cursor-list[list.length-1].need)/2;   // centre the fan on the head
   list.forEach(s=>{s.offset-=shift;});
@@ -368,6 +583,14 @@ function layout(){
   const y=BASE_Y;
   let x=BASE_X, maxDepth=0, minX=BASE_X, topY=y;
 
+  // A compound sentence is two independent clauses stacked, each on its own
+  // baseline, joined by a dotted vertical between their verbs. clauseStarts
+  // records where each new clause begins in `line`.
+  const starts=(state.clauseStarts||[]).filter(k=>k>0&&k<state.line.length).sort((a,b)=>a-b);
+  const clauseOfCell=i=>{let c=0;starts.forEach(st=>{if(i>=st)c++;});return c;};
+  const clauseCount=starts.length+1;
+  const clauseY=k=>BASE_Y+k*CLAUSE_GAP;
+
   const cells=state.line.map(c=>{
     const ids=isFork(c)?c.arms.filter(Boolean):[c];
     const ms=ids.map(id=>{const n=nodeById(id);
@@ -396,9 +619,14 @@ function layout(){
     const arr=byGap.get(g)||[]; arr.push(d); byGap.set(g,arr);
   });
 
+  let curClause=0;
   cells.forEach((c,i)=>{
+    const ck=clauseOfCell(i);
+    if(ck!==curClause){curClause=ck; x=BASE_X;}    // each clause starts at the left
+    const y=clauseY(ck);
+    c.clause=ck; c.y=y;
     const here=byGap.get(i)||[];
-    if(i>0)x+=here.length?here.length*DIVIDER_GAP:14;
+    if(i>0&&ck===clauseOfCell(i-1))x+=here.length?here.length*DIVIDER_GAP:14;
     const slack=Math.max(0,c.reserve-c.w);
     const x1=x+slack/2, x2=x1+c.w, mid=(x1+x2)/2;
     c.x1=x1; c.x2=x2; c.mid=mid;
@@ -495,22 +723,50 @@ function layout(){
   // The baseline stops where a compound forks: the two arms carry the sentence
   // from there, so a line running between them would cut straight through the
   // fork. Draw it in segments, skipping each fork's span.
-  const lineEnd=Math.max(x+40,BASE_X+3*SEG_MIN);
-  const skips=cells.filter(c=>isFork(c.cell)).map(c=>({a:c.x1,b:c.x2}))
-    .sort((p,q)=>p.a-q.a);
-  let cursor=BASE_X-4;
-  skips.forEach(sk=>{
-    if(sk.a>cursor)out.lines.unshift({cls:'diagram-line',x1:cursor,y1:y,x2:sk.a,y2:y});
-    cursor=Math.max(cursor,sk.b);
-  });
-  // Only continue the baseline past a fork if something is actually there --
-  // otherwise a compound at the end of the sentence leaves a stub hanging in
-  // space to the right of the conjunction.
-  const lastCell=cells[cells.length-1];
-  const endsInFork=lastCell&&isFork(lastCell.cell);
-  if(cursor<lineEnd&&!endsInFork)
-    out.lines.unshift({cls:'diagram-line',x1:cursor,y1:y,x2:lineEnd,y2:y});
-  out.lineEnd=lineEnd; out.baseY=y;
+  // One baseline PER CLAUSE, each skipping its own forks.
+  let lineEnd=BASE_X+3*SEG_MIN;
+  for(let k=0;k<clauseCount;k++){
+    const mine=cells.filter(c=>c.clause===k);
+    if(!mine.length)continue;
+    const cy=clauseY(k);
+    const right=Math.max.apply(null,mine.map(c=>c.x2));
+    const end=Math.max(right+40,BASE_X+3*SEG_MIN);
+    lineEnd=Math.max(lineEnd,end);
+    const skips=mine.filter(c=>isFork(c.cell)).map(c=>({a:c.x1,b:c.x2})).sort((p,q)=>p.a-q.a);
+    let cursor=BASE_X-4;
+    skips.forEach(sk=>{
+      if(sk.a>cursor)out.lines.unshift({cls:'diagram-line',x1:cursor,y1:cy,x2:sk.a,y2:cy});
+      cursor=Math.max(cursor,sk.b);
+    });
+    // Only continue past a fork if something is actually there, or a compound
+    // at the end of a clause leaves a stub hanging past the conjunction.
+    const last=mine[mine.length-1];
+    if(cursor<end&&!isFork(last.cell))
+      out.lines.unshift({cls:'diagram-line',x1:cursor,y1:cy,x2:end,y2:cy});
+  }
+
+  // The clauses of a compound sentence are joined by a dotted vertical between
+  // their verbs, with the conjunction written on it.
+  if(clauseCount>1){
+    const verbX=k=>{
+      const mine=cells.filter(c=>c.clause===k);
+      return mine.length>1?mine[1].mid:(mine.length?mine[0].mid:BASE_X+SEG_MIN);
+    };
+    for(let k=0;k+1<clauseCount;k++){
+      const xTop=verbX(k), xBot=verbX(k+1), jx=Math.round((xTop+xBot)/2);
+      const yTop=clauseY(k), yBot=clauseY(k+1);
+      out.lines.push({cls:'diagram-line',x1:xTop,y1:yTop,x2:jx,y2:yTop+26});
+      out.lines.push({cls:'diagram-guide',x1:jx,y1:yTop+26,x2:jx,y2:yBot-26});
+      out.lines.push({cls:'diagram-line',x1:jx,y1:yBot-26,x2:xBot,y2:yBot});
+      const cj=state.clauseConj?nodeById(state.clauseConj):null;
+      if(cj&&!out.geom.get(cj.id)){
+        out.geom.set(cj.id,{box:{x:jx-36,y:(yTop+yBot)/2-15,w:72,h:30},
+          textX:jx, textY:(yTop+yBot)/2+5, rotation:0, hit:'box', attach:'clauseConj'});
+        out.targets.push(cj);
+      }
+    }
+  }
+  out.lineEnd=lineEnd; out.baseY=BASE_Y;
 
   out.targets.forEach(t=>{
     const g=out.geom.get(t.id); if(!g)return;
@@ -523,8 +779,10 @@ function layout(){
   out.width=Math.max(760,lineEnd+40);
   out.minX=Math.min(0,minX-30);
   out.top=Math.min(0,topY-BASE_Y)+BASE_Y-BASE_Y;
-  out.topY=Math.min(0,topY);
-  out.height=Math.max(300,maxDepth+BASE_Y-Math.min(0,out.topY)+56);
+  out.topY=topY;
+  // Span from the highest content down to the deepest, not from y=0: a tall
+  // fork lifts its upper arm well above the baseline.
+  out.height=Math.max(300,(BASE_Y+maxDepth)-Math.min(0,out.topY)+56);
   return out;
 }
 
@@ -543,12 +801,16 @@ function expectedModel(){
   const onLine=s.expected.filter(e=>ZONE[e.slot]).sort((a,b)=>a.t-b.t);
   const cells=[];
   onLine.forEach(e=>{
+    const cl=e.clause||0;
     const last=cells[cells.length-1];
-    if(last&&last.slot===e.slot)last.toks.push(e.t);      // compound: same cell
-    else cells.push({slot:e.slot, toks:[e.t]});
+    // Same slot AND same clause means a compound; the second clause of a
+    // compound sentence has its own subject and verb, not a fork.
+    if(last&&last.slot===e.slot&&last.clause===cl)last.toks.push(e.t);
+    else cells.push({slot:e.slot, toks:[e.t], clause:cl});
   });
   const dividers=[];
   for(let i=0;i<cells.length-1;i++){
+    if(cells[i].clause!==cells[i+1].clause)continue;      // no divider across clauses
     const k=ZONE[cells[i].slot]+ZONE[cells[i+1].slot];
     if(ZONE_DIVIDER[k])
       dividers.push({kind:ZONE_DIVIDER[k], left:cells[i].toks.slice(), right:cells[i+1].toks.slice()});
@@ -559,13 +821,15 @@ function expectedModel(){
   s.expected.forEach(e=>{
     roles[e.t]=e.role;
     if(ZONE[e.slot])attach[e.t]='line';
-    else if(e.slot==='conj')attach[e.t]='conj';
+    else if(e.slot==='conj'||e.slot==='clauseConj')attach[e.t]='conj';
     else if(e.slot==='modConj')attach[e.t]='conj@'+e.parent;
     else if(e.slot==='prepObject')attach[e.t]='prepObject@'+e.parent;
     else if(e.slot==='prep')attach[e.t]='prep@'+e.parent;
     else attach[e.t]='mod@'+e.parent;
   });
-  return {cells, dividers, attach, roles,
+  const clauseStart=cells.findIndex(c=>c.clause===1);
+  return {cells, dividers, attach, roles, clauseStart,
+          clauseConjToken:(s.expected.find(e=>e.slot==='clauseConj')||{}).t,
           order:cells.map(c=>c.toks.slice()),
           conjToken:conj?conj.t:null, modConjToken:modConj?modConj.t:null};
 }
@@ -581,13 +845,18 @@ function studentAttach(){
     // mod@4 and mod@0 are different answers, where a bare "mod" would not be.
     map[n.tokenIndex]=n.attach+'@'+pt;
   });
-  // a conjunction sitting on a fork guide is addressed by the cell it joins
+  // A conjunction on a fork guide, or joining two clauses, is addressed as
+  // plain 'conj' -- it has no head word to hang from.
   state.line.forEach(c=>{
     if(isFork(c)&&c.conjId){
       const cj=nodeById(c.conjId);
       if(cj)map[cj.tokenIndex]='conj';
     }
   });
+  if(state.clauseConj){
+    const cc=nodeById(state.clauseConj);
+    if(cc)map[cc.tokenIndex]='conj';
+  }
   return map;
 }
 /* Longest increasing subsequence: flags the minimum set of words that must
@@ -797,7 +1066,7 @@ function renderCanvas(){
   // one wide strip over the baseline: click it to drop the carried word there
   const armed=state.sel&&state.sel.kind==='word';
   const strip=armed?'<rect class="baseline-hit" data-action="baseline" x="'+(L.minX)+'" y="'+(L.baseY-22)+'" width="'+(L.width-L.minX)+'" height="44" fill="rgba(36,93,143,.05)"></rect>':'';
-  const top=Math.min(0,L.topY);
+  const top=Math.min(0,L.topY)-10;   // a little air above the tallest arm
   const vb=L.minX+' '+top+' '+(L.width-L.minX)+' '+(L.height-top);
   return '<div class="diagram-wrap"><svg class="diagram-svg" id="canvas" viewBox="'+vb+'" '+
     'width="'+(L.width-L.minX)+'" height="'+(L.height-top)+'" preserveAspectRatio="xMidYMin meet" '+
@@ -1026,7 +1295,8 @@ function revealAnswer(){
     state.line.push(ids.length>1?{id:newId('f'),kind:'fork',arms:ids.slice(0,2),conjId:null}:ids[0]);
   });
   // attachments, parents before children
-  const rest=s.expected.filter(e=>!ZONE[e.slot]&&e.slot!=='conj'&&e.slot!=='modConj');
+  if(exp.clauseStart>0)state.clauseStarts=[exp.clauseStart];
+  const rest=s.expected.filter(e=>!ZONE[e.slot]&&e.slot!=='conj'&&e.slot!=='modConj'&&e.slot!=='clauseConj');
   let guard=0;
   while(rest.length&&guard++<50){
     for(let k=rest.length-1;k>=0;k--){
@@ -1051,6 +1321,11 @@ function revealAnswer(){
   const mc=s.expected.find(e=>e.slot==='modConj');
   if(mc&&idOf[mc.parent]!=null){
     const n=addNode(mc.t,'conj',idOf[mc.parent]); state.roles[mc.t]=mc.role;
+  }
+  const cc=s.expected.find(e=>e.slot==='clauseConj');
+  if(cc){
+    const n=addNode(cc.t,'conj',null); state.roles[cc.t]=cc.role;
+    state.clauseConj=n.id;
   }
   state.hint='This is the finished diagram.';
 }
