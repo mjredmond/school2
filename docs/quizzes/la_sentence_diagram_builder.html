@@ -135,77 +135,257 @@ const CHAR_W=9.2, TEXT_PAD=30;
 /* `expected` uses token indices for `parent`, which keeps it human-writable.
    parent:null means the node sits on its clause's main line. */
 const SENTENCES=[
-  {id:'s1', sentence:'Mason watched three playful dolphins.',
-   tokens:['Mason','watched','three','playful','dolphins'],
-   expected:[{t:0,role:'S',slot:'subject',parent:null},{t:1,role:'AV',slot:'verb',parent:null},
-             {t:4,role:'DO',slot:'object',parent:1},{t:2,role:'ADJ',slot:'mod',parent:4},
-             {t:3,role:'ADJ',slot:'mod',parent:4}]},
+  {id:'c01', sentence:'That small green box holds Mom\'s sewing supplies.',
+   tokens:['That','small','green','box','holds','Mom\'s','sewing','supplies'],
+   expected:[
+     {t:3,role:'S',slot:'subject',parent:null},
+     {t:4,role:'AV',slot:'verb',parent:null},
+     {t:7,role:'DO',slot:'object',parent:4},
+     {t:0,role:'ADJ',slot:'mod',parent:3},
+     {t:1,role:'ADJ',slot:'mod',parent:3},
+     {t:2,role:'ADJ',slot:'mod',parent:3},
+     {t:5,role:'ADJ',slot:'mod',parent:7},
+     {t:6,role:'ADJ',slot:'mod',parent:7}]},
 
-  {id:'s2', sentence:'The weather today is warm and windy.',
-   tokens:['The','weather','today','is','warm','and','windy'],
-   expected:[{t:1,role:'S',slot:'subject',parent:null},{t:3,role:'LV',slot:'verb',parent:null},
-             {t:4,role:'PA',slot:'complement',parent:3,branch:0},
-             {t:6,role:'PA',slot:'complement',parent:3,branch:1},
-             {t:5,role:'CONJ',slot:'conj',parent:3},
-             {t:0,role:'ADJ',slot:'mod',parent:1},{t:2,role:'ADV',slot:'mod',parent:3}]},
+  {id:'c02', sentence:'Our thoughtful and kind neighbor has been helping Dad with our new fence.',
+   tokens:['Our','thoughtful','and','kind','neighbor','has been helping','Dad','with','our','new','fence'],
+   expected:[
+     {t:4,role:'S',slot:'subject',parent:null},
+     {t:5,role:'AV',slot:'verb',parent:null},
+     {t:6,role:'DO',slot:'object',parent:5},
+     {t:0,role:'ADJ',slot:'mod',parent:4},
+     {t:1,role:'ADJ',slot:'mod',parent:4},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:2,role:'CONJ',slot:'modConj',parent:4},
+     {t:7,role:'PREP',slot:'prep',parent:5},
+     {t:10,role:'OP',slot:'prepObject',parent:7},
+     {t:8,role:'ADJ',slot:'mod',parent:10},
+     {t:9,role:'ADJ',slot:'mod',parent:10}]},
 
-  {id:'s3', sentence:'Climb the ladder to the treehouse carefully.',
+  {id:'c03', sentence:'Hailey\'s banana is bruised.',
+   tokens:['Hailey\'s','banana','is','bruised'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:2,role:'LV',slot:'verb',parent:null},
+     {t:3,role:'PA',slot:'complement',parent:2},
+     {t:0,role:'ADJ',slot:'mod',parent:1}]},
+
+  {id:'c04', sentence:'Julian and Stella are my cousins.',
+   tokens:['Julian','and','Stella','are','my','cousins'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null,branch:0},
+     {t:2,role:'S',slot:'subject',parent:null,branch:1},
+     {t:1,role:'CONJ',slot:'conj',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:5,role:'PN',slot:'complement',parent:3},
+     {t:4,role:'ADJ',slot:'mod',parent:5}]},
+
+  {id:'c05', sentence:'Duke is our faithful, gentle dog.',
+   tokens:['Duke','is','our','faithful','gentle','dog'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'LV',slot:'verb',parent:null},
+     {t:5,role:'PN',slot:'complement',parent:1},
+     {t:2,role:'ADJ',slot:'mod',parent:5},
+     {t:3,role:'ADJ',slot:'mod',parent:5},
+     {t:4,role:'ADJ',slot:'mod',parent:5}]},
+
+  {id:'c06', sentence:'Our camping trip was exciting and fun.',
+   tokens:['Our','camping','trip','was','exciting','and','fun'],
+   expected:[
+     {t:2,role:'S',slot:'subject',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:4,role:'PA',slot:'complement',parent:3,branch:0},
+     {t:6,role:'PA',slot:'complement',parent:3,branch:1},
+     {t:5,role:'CONJ',slot:'conj',parent:null},
+     {t:0,role:'ADJ',slot:'mod',parent:2},
+     {t:1,role:'ADJ',slot:'mod',parent:2}]},
+
+  {id:'c07', sentence:'Those warm and chewy cookies are delicious!',
+   tokens:['Those','warm','and','chewy','cookies','are','delicious'],
+   expected:[
+     {t:4,role:'S',slot:'subject',parent:null},
+     {t:5,role:'LV',slot:'verb',parent:null},
+     {t:6,role:'PA',slot:'complement',parent:5},
+     {t:0,role:'ADJ',slot:'mod',parent:4},
+     {t:1,role:'ADJ',slot:'mod',parent:4},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:2,role:'CONJ',slot:'modConj',parent:4}]},
+
+  {id:'c08', sentence:'Marco\'s trumpet teacher is Mr. Watson.',
+   tokens:['Marco\'s','trumpet','teacher','is','Mr. Watson'],
+   expected:[
+     {t:2,role:'S',slot:'subject',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:4,role:'PN',slot:'complement',parent:3},
+     {t:0,role:'ADJ',slot:'mod',parent:2},
+     {t:1,role:'ADJ',slot:'mod',parent:2}]},
+
+  {id:'c09', sentence:'Jesus\' disciples collected twelve baskets of leftovers!',
+   tokens:['Jesus\'','disciples','collected','twelve','baskets','of','leftovers'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:2,role:'AV',slot:'verb',parent:null},
+     {t:4,role:'DO',slot:'object',parent:2},
+     {t:0,role:'ADJ',slot:'mod',parent:1},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:5,role:'PREP',slot:'prep',parent:4},
+     {t:6,role:'OP',slot:'prepObject',parent:5}]},
+
+  {id:'c10', sentence:'Mother often encourages me with her kind words.',
+   tokens:['Mother','often','encourages','me','with','her','kind','words'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:2,role:'AV',slot:'verb',parent:null},
+     {t:3,role:'DO',slot:'object',parent:2},
+     {t:1,role:'ADV',slot:'mod',parent:2},
+     {t:4,role:'PREP',slot:'prep',parent:2},
+     {t:7,role:'OP',slot:'prepObject',parent:4},
+     {t:5,role:'ADJ',slot:'mod',parent:7},
+     {t:6,role:'ADJ',slot:'mod',parent:7}]},
+
+  {id:'c11', sentence:'Charlie ran home for his baseball glove.',
+   tokens:['Charlie','ran','home','for','his','baseball','glove'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'AV',slot:'verb',parent:null},
+     {t:2,role:'ADV',slot:'mod',parent:1},
+     {t:3,role:'PREP',slot:'prep',parent:1},
+     {t:6,role:'OP',slot:'prepObject',parent:3},
+     {t:4,role:'ADJ',slot:'mod',parent:6},
+     {t:5,role:'ADJ',slot:'mod',parent:6}]},
+
+  {id:'c12', sentence:'Yellowstone National Park is an exciting vacation place.',
+   tokens:['Yellowstone National Park','is','an','exciting','vacation','place'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'LV',slot:'verb',parent:null},
+     {t:5,role:'PN',slot:'complement',parent:1},
+     {t:2,role:'ADJ',slot:'mod',parent:5},
+     {t:3,role:'ADJ',slot:'mod',parent:5},
+     {t:4,role:'ADJ',slot:'mod',parent:5}]},
+
+  {id:'c13', sentence:'Hailey and Miles saw many large buffalo herds.',
+   tokens:['Hailey','and','Miles','saw','many','large','buffalo','herds'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null,branch:0},
+     {t:2,role:'S',slot:'subject',parent:null,branch:1},
+     {t:1,role:'CONJ',slot:'conj',parent:null},
+     {t:3,role:'AV',slot:'verb',parent:null},
+     {t:7,role:'DO',slot:'object',parent:3},
+     {t:4,role:'ADJ',slot:'mod',parent:7},
+     {t:5,role:'ADJ',slot:'mod',parent:7},
+     {t:6,role:'ADJ',slot:'mod',parent:7}]},
+
+  {id:'c14', sentence:'Morgan\'s favorite sports are softball and soccer.',
+   tokens:['Morgan\'s','favorite','sports','are','softball','and','soccer'],
+   expected:[
+     {t:2,role:'S',slot:'subject',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:4,role:'PN',slot:'complement',parent:3,branch:0},
+     {t:6,role:'PN',slot:'complement',parent:3,branch:1},
+     {t:5,role:'CONJ',slot:'conj',parent:null},
+     {t:0,role:'ADJ',slot:'mod',parent:2},
+     {t:1,role:'ADJ',slot:'mod',parent:2}]},
+
+  {id:'c15', sentence:'On her hikes, Morgan often takes exciting and interesting pictures.',
+   tokens:['On','her','hikes','Morgan','often','takes','exciting','and','interesting','pictures'],
+   expected:[
+     {t:3,role:'S',slot:'subject',parent:null},
+     {t:5,role:'AV',slot:'verb',parent:null},
+     {t:9,role:'DO',slot:'object',parent:5},
+     {t:4,role:'ADV',slot:'mod',parent:5},
+     {t:0,role:'PREP',slot:'prep',parent:5},
+     {t:2,role:'OP',slot:'prepObject',parent:0},
+     {t:1,role:'ADJ',slot:'mod',parent:2},
+     {t:6,role:'ADJ',slot:'mod',parent:9},
+     {t:8,role:'ADJ',slot:'mod',parent:9},
+     {t:7,role:'CONJ',slot:'modConj',parent:9}]},
+
+  {id:'c16', sentence:'Yesterday, Hannah and her brother rode their bikes in the park.',
+   tokens:['Yesterday','Hannah','and','her','brother','rode','their','bikes','in','the','park'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null,branch:0},
+     {t:4,role:'S',slot:'subject',parent:null,branch:1},
+     {t:2,role:'CONJ',slot:'conj',parent:null},
+     {t:5,role:'AV',slot:'verb',parent:null},
+     {t:7,role:'DO',slot:'object',parent:5},
+     {t:0,role:'ADV',slot:'mod',parent:5},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:6,role:'ADJ',slot:'mod',parent:7},
+     {t:8,role:'PREP',slot:'prep',parent:5},
+     {t:10,role:'OP',slot:'prepObject',parent:8},
+     {t:9,role:'ADJ',slot:'mod',parent:10}]},
+
+  {id:'c17', sentence:'The frisky squirrel scampered across the lawn and ran up the old tree.',
+   tokens:['The','frisky','squirrel','scampered','across','the','lawn','and','ran','up','the','old','tree'],
+   expected:[
+     {t:2,role:'S',slot:'subject',parent:null},
+     {t:3,role:'AV',slot:'verb',parent:null,branch:0},
+     {t:8,role:'AV',slot:'verb',parent:null,branch:1},
+     {t:7,role:'CONJ',slot:'conj',parent:null},
+     {t:0,role:'ADJ',slot:'mod',parent:2},
+     {t:1,role:'ADJ',slot:'mod',parent:2},
+     {t:4,role:'PREP',slot:'prep',parent:3},
+     {t:6,role:'OP',slot:'prepObject',parent:4},
+     {t:5,role:'ADJ',slot:'mod',parent:6},
+     {t:9,role:'PREP',slot:'prep',parent:8},
+     {t:12,role:'OP',slot:'prepObject',parent:9},
+     {t:10,role:'ADJ',slot:'mod',parent:12},
+     {t:11,role:'ADJ',slot:'mod',parent:12}]},
+
+  {id:'c18', sentence:'Climb the ladder to the treehouse carefully.',
    tokens:['(You)','Climb','the','ladder','to','the','treehouse','carefully'],
    synthetic:[0],
-   expected:[{t:0,role:'S',slot:'subject',parent:null},{t:1,role:'AV',slot:'verb',parent:null},
-             {t:3,role:'DO',slot:'object',parent:1},{t:2,role:'ADJ',slot:'mod',parent:3},
-             {t:7,role:'ADV',slot:'mod',parent:1},
-             {t:4,role:'PREP',slot:'prep',parent:1},{t:6,role:'OP',slot:'prepObject',parent:4},
-             {t:5,role:'ADJ',slot:'mod',parent:6}]},
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'AV',slot:'verb',parent:null},
+     {t:3,role:'DO',slot:'object',parent:1},
+     {t:2,role:'ADJ',slot:'mod',parent:3},
+     {t:7,role:'ADV',slot:'mod',parent:1},
+     {t:4,role:'PREP',slot:'prep',parent:1},
+     {t:6,role:'OP',slot:'prepObject',parent:4},
+     {t:5,role:'ADJ',slot:'mod',parent:6}]},
 
-  {id:'s4', sentence:'Joseph threw the baseball to Isaiah quickly and accurately.',
-   tokens:['Joseph','threw','the','baseball','to','Isaiah','quickly','and','accurately'],
-   expected:[{t:0,role:'S',slot:'subject',parent:null},{t:1,role:'AV',slot:'verb',parent:null},
-             {t:3,role:'DO',slot:'object',parent:1},{t:2,role:'ADJ',slot:'mod',parent:3},
-             {t:6,role:'ADV',slot:'mod',parent:1},{t:8,role:'ADV',slot:'mod',parent:1},
-             {t:7,role:'CONJ',slot:'modConj',parent:1},
-             {t:4,role:'PREP',slot:'prep',parent:1},{t:5,role:'OP',slot:'prepObject',parent:4}]},
+  {id:'c19', sentence:'The weather today is warm and windy.',
+   tokens:['The','weather','today','is','warm','and','windy'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:3,role:'LV',slot:'verb',parent:null},
+     {t:4,role:'PA',slot:'complement',parent:3,branch:0},
+     {t:6,role:'PA',slot:'complement',parent:3,branch:1},
+     {t:5,role:'CONJ',slot:'conj',parent:null},
+     {t:0,role:'ADJ',slot:'mod',parent:1},
+     {t:2,role:'ADV',slot:'mod',parent:3}]},
 
-  {id:'s5', sentence:'Quietly, Ben and Clara carried the heavy baskets into the pantry.',
-   tokens:['Quietly','Ben','and','Clara','carried','the','heavy','baskets','into','the','pantry'],
-   expected:[{t:1,role:'S',slot:'subject',parent:null,branch:0},
-             {t:3,role:'S',slot:'subject',parent:null,branch:1},
-             {t:2,role:'CONJ',slot:'conj',parent:null},
-             {t:4,role:'AV',slot:'verb',parent:null},
-             {t:7,role:'DO',slot:'object',parent:4},
-             {t:5,role:'ADJ',slot:'mod',parent:7},{t:6,role:'ADJ',slot:'mod',parent:7},
-             {t:0,role:'ADV',slot:'mod',parent:4},
-             {t:8,role:'PREP',slot:'prep',parent:4},{t:10,role:'OP',slot:'prepObject',parent:8},
-             {t:9,role:'ADJ',slot:'mod',parent:10}]},
-
-  {id:'s6', sentence:'The small dog barked beside the gate and growled at the stranger.',
-   tokens:['The','small','dog','barked','beside','the','gate','and','growled','at','the','stranger'],
-   expected:[{t:2,role:'S',slot:'subject',parent:null},
-             {t:3,role:'AV',slot:'verb',parent:null,branch:0},
-             {t:8,role:'AV',slot:'verb',parent:null,branch:1},
-             {t:7,role:'CONJ',slot:'conj',parent:null},
-             {t:0,role:'ADJ',slot:'mod',parent:2},{t:1,role:'ADJ',slot:'mod',parent:2},
-             {t:4,role:'PREP',slot:'prep',parent:3},{t:6,role:'OP',slot:'prepObject',parent:4},
-             {t:5,role:'ADJ',slot:'mod',parent:6},
-             {t:9,role:'PREP',slot:'prep',parent:8},{t:11,role:'OP',slot:'prepObject',parent:9},
-             {t:10,role:'ADJ',slot:'mod',parent:11}]},
-
-  /* A COMPOUND SENTENCE: two independent clauses, each with its own baseline,
-     joined by a dotted vertical carrying the conjunction. `clause:1` marks the
-     words belonging to the second clause; `slot:'clauseConj'` is the joiner. */
-  {id:'s7', sentence:'The neighbors built a treehouse, and we may play in it with them.',
+  {id:'c20', sentence:'The neighbors built a treehouse, and we may play in it with them.',
    tokens:['The','neighbors','built','a','treehouse','and','we','may play','in','it','with','them'],
-   expected:[{t:1,role:'S',slot:'subject',parent:null},
-             {t:2,role:'AV',slot:'verb',parent:null},
-             {t:4,role:'DO',slot:'object',parent:2},
-             {t:0,role:'ADJ',slot:'mod',parent:1},{t:3,role:'ADJ',slot:'mod',parent:4},
-             {t:5,role:'CONJ',slot:'clauseConj',parent:null},
-             {t:6,role:'S',slot:'subject',parent:null,clause:1},
-             {t:7,role:'AV',slot:'verb',parent:null,clause:1},
-             {t:8,role:'PREP',slot:'prep',parent:7,clause:1},
-             {t:9,role:'OP',slot:'prepObject',parent:8,clause:1},
-             {t:10,role:'PREP',slot:'prep',parent:7,clause:1},
-             {t:11,role:'OP',slot:'prepObject',parent:10,clause:1}]}
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:2,role:'AV',slot:'verb',parent:null},
+     {t:4,role:'DO',slot:'object',parent:2},
+     {t:0,role:'ADJ',slot:'mod',parent:1},
+     {t:3,role:'ADJ',slot:'mod',parent:4},
+     {t:5,role:'CONJ',slot:'clauseConj',parent:null},
+     {t:6,role:'S',slot:'subject',parent:null,clause:1},
+     {t:7,role:'AV',slot:'verb',parent:null,clause:1},
+     {t:8,role:'PREP',slot:'prep',parent:7,clause:1},
+     {t:9,role:'OP',slot:'prepObject',parent:8,clause:1},
+     {t:10,role:'PREP',slot:'prep',parent:7,clause:1},
+     {t:11,role:'OP',slot:'prepObject',parent:10,clause:1}]},
+
+  {id:'c21', sentence:'Joseph threw the baseball to Isaiah quickly and accurately.',
+   tokens:['Joseph','threw','the','baseball','to','Isaiah','quickly','and','accurately'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'AV',slot:'verb',parent:null},
+     {t:3,role:'DO',slot:'object',parent:1},
+     {t:2,role:'ADJ',slot:'mod',parent:3},
+     {t:6,role:'ADV',slot:'mod',parent:1},
+     {t:8,role:'ADV',slot:'mod',parent:1},
+     {t:7,role:'CONJ',slot:'modConj',parent:1},
+     {t:4,role:'PREP',slot:'prep',parent:1},
+     {t:5,role:'OP',slot:'prepObject',parent:4}]}
 ];
 
 /* ============================================================ state
@@ -332,7 +512,19 @@ function measure(node,slots){
     const need=(k.attach==='prep')?Math.max(MOD_PITCH,SLANT_RUN+objW+km.right+16):MOD_PITCH;
     list.push({node:k, offset:cursor, m:km, need});
     cursor+=need;
-    m.depth=Math.max(m.depth,(km.depth?SLANT_CLEAR:SLANT_DROP)+km.depth);
+    // A prep phrase reaches further down than its own slant: the object sits
+    // at the slant's foot and carries modifiers of ITS own. Measuring only the
+    // slant under-reports the depth, which let an upper fork arm's phrase hang
+    // into the arm below it.
+    let kd=(km.depth?SLANT_CLEAR:SLANT_DROP)+km.depth;
+    if(k.attach==='prep'){
+      const obj=childrenOf(k.id).find(c=>c.attach==='prepObject');
+      if(obj){
+        const om=measure(obj,slots);
+        kd=Math.max(kd, SLANT_DROP+(om.depth?SLANT_CLEAR+om.depth:0)+ARM_LIFT);
+      }
+    }
+    m.depth=Math.max(m.depth,kd);
   });
   const shift=(cursor-list[list.length-1].need)/2;   // centre the fan on the head
   list.forEach(s=>{s.offset-=shift;});
@@ -587,8 +779,10 @@ function layout(){
   out.width=Math.max(760,lineEnd+40);
   out.minX=Math.min(0,minX-30);
   out.top=Math.min(0,topY-BASE_Y)+BASE_Y-BASE_Y;
-  out.topY=Math.min(0,topY);
-  out.height=Math.max(300,maxDepth+BASE_Y-Math.min(0,out.topY)+56);
+  out.topY=topY;
+  // Span from the highest content down to the deepest, not from y=0: a tall
+  // fork lifts its upper arm well above the baseline.
+  out.height=Math.max(300,(BASE_Y+maxDepth)-Math.min(0,out.topY)+56);
   return out;
 }
 
@@ -872,7 +1066,7 @@ function renderCanvas(){
   // one wide strip over the baseline: click it to drop the carried word there
   const armed=state.sel&&state.sel.kind==='word';
   const strip=armed?'<rect class="baseline-hit" data-action="baseline" x="'+(L.minX)+'" y="'+(L.baseY-22)+'" width="'+(L.width-L.minX)+'" height="44" fill="rgba(36,93,143,.05)"></rect>':'';
-  const top=Math.min(0,L.topY);
+  const top=Math.min(0,L.topY)-10;   // a little air above the tallest arm
   const vb=L.minX+' '+top+' '+(L.width-L.minX)+' '+(L.height-top);
   return '<div class="diagram-wrap"><svg class="diagram-svg" id="canvas" viewBox="'+vb+'" '+
     'width="'+(L.width-L.minX)+'" height="'+(L.height-top)+'" preserveAspectRatio="xMidYMin meet" '+
