@@ -44,7 +44,7 @@ button:disabled{opacity:.45;cursor:default}
 .word-text{font-family:Georgia,"Times New Roman",serif;font-size:15px}
 .role-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;min-height:16px}
 .chip{display:inline-flex;align-items:center;min-height:16px;border-radius:999px;padding:1px 5px;color:#fff;font-size:10px;font-weight:800}
-.role-s{background:#2f5f98}.role-av,.role-lv,.role-bv{background:#9b5f1a}
+.role-s{background:#2f5f98}.role-av,.role-lv,.role-bv,.role-hv{background:#9b5f1a}
 .role-do,.role-pn,.role-pa{background:#357a54}.role-adj{background:#6b5ca5}
 .role-adv{background:#7f4b77}.role-conj{background:#b34d37}
 .role-prep,.role-op{background:#637083}
@@ -103,6 +103,7 @@ const DIAGRAM_ROLES=[
   {id:'S',   label:'Subject',      className:'role-s'},
   {id:'AV',  label:'Action Verb',  className:'role-av'},
   {id:'LV',  label:'Linking Verb', className:'role-lv'},
+  {id:'HV',  label:'Helping Verb', className:'role-hv'},
   {id:'DO',  label:'Direct Object',className:'role-do'},
   {id:'IO',  label:'Indirect Obj.',className:'role-io'},
   {id:'PN',  label:'Pred. Nom.',   className:'role-pn'},
@@ -115,7 +116,7 @@ const DIAGRAM_ROLES=[
   {id:'INT', label:'Interjection', className:'role-int'}
 ];
 const ROLE_MAP=Object.fromEntries(DIAGRAM_ROLES.map(r=>[r.id,r]));
-const VERB_ROLES=['AV','LV'];
+const VERB_ROLES=['AV','LV','HV'];
 const NOUN_ROLES=['S','DO','IO','PN','OP'];
 
 /* Layout constants. The slant proportions (48 run / 74 drop / 126 arm / -58 deg
@@ -132,6 +133,8 @@ const DIVIDER_GAP=44, FORK_RISE=54, FORK_RUN=40;
    sentence -- enough that the upper clause's modifiers clear the lower one. */
 const CLAUSE_GAP=210;
 const PREP_ARM=126, ARM_LIFT=16;
+/* Space between the words of a verb phrase sharing one baseline spot. */
+const PHRASE_GAP=18;
 /* An indirect object hangs under the verb on a slant with a horizontal shelf at
    its foot -- the same shape as a prepositional phrase with the preposition left
    off, which is exactly what "gave [to] him the book" means. */
@@ -159,19 +162,21 @@ const SENTENCES=[
      {t:6,role:'ADJ',slot:'mod',parent:7}]},
 
   {id:'c02', sentence:'Our thoughtful and kind neighbor has been helping Dad with our new fence.',
-   tokens:['Our','thoughtful','and','kind','neighbor','has been helping','Dad','with','our','new','fence'],
+   tokens:['Our','thoughtful','and','kind','neighbor','has','been','helping','Dad','with','our','new','fence'],
    expected:[
      {t:4,role:'S',slot:'subject',parent:null},
-     {t:5,role:'AV',slot:'verb',parent:null},
-     {t:6,role:'DO',slot:'object',parent:5},
+     {t:5,role:'HV',slot:'verb',parent:null},
+     {t:6,role:'HV',slot:'verb',parent:null},
+     {t:7,role:'AV',slot:'verb',parent:null},
+     {t:8,role:'DO',slot:'object',parent:7},
      {t:0,role:'ADJ',slot:'mod',parent:4},
      {t:1,role:'ADJ',slot:'mod',parent:4},
      {t:3,role:'ADJ',slot:'mod',parent:4},
      {t:2,role:'CONJ',slot:'modConj',parent:4},
-     {t:7,role:'PREP',slot:'prep',parent:5},
-     {t:10,role:'OP',slot:'prepObject',parent:7},
-     {t:8,role:'ADJ',slot:'mod',parent:10},
-     {t:9,role:'ADJ',slot:'mod',parent:10}]},
+     {t:9,role:'PREP',slot:'prep',parent:7},
+     {t:12,role:'OP',slot:'prepObject',parent:9},
+     {t:10,role:'ADJ',slot:'mod',parent:12},
+     {t:11,role:'ADJ',slot:'mod',parent:12}]},
 
   {id:'c03', sentence:'Hailey\'s banana is bruised.',
    tokens:['Hailey\'s','banana','is','bruised'],
@@ -370,7 +375,7 @@ const SENTENCES=[
      {t:2,role:'ADV',slot:'mod',parent:3}]},
 
   {id:'c20', sentence:'The neighbors built a treehouse, and we may play in it with them.',
-   tokens:['The','neighbors','built','a','treehouse','and','we','may play','in','it','with','them'],
+   tokens:['The','neighbors','built','a','treehouse','and','we','may','play','in','it','with','them'],
    expected:[
      {t:1,role:'S',slot:'subject',parent:null},
      {t:2,role:'AV',slot:'verb',parent:null},
@@ -379,11 +384,12 @@ const SENTENCES=[
      {t:3,role:'ADJ',slot:'mod',parent:4},
      {t:5,role:'CONJ',slot:'clauseConj',parent:null},
      {t:6,role:'S',slot:'subject',parent:null,clause:1},
-     {t:7,role:'AV',slot:'verb',parent:null,clause:1},
-     {t:8,role:'PREP',slot:'prep',parent:7,clause:1},
-     {t:9,role:'OP',slot:'prepObject',parent:8,clause:1},
-     {t:10,role:'PREP',slot:'prep',parent:7,clause:1},
-     {t:11,role:'OP',slot:'prepObject',parent:10,clause:1}]},
+     {t:7,role:'HV',slot:'verb',parent:null,clause:1},
+     {t:8,role:'AV',slot:'verb',parent:null,clause:1},
+     {t:9,role:'PREP',slot:'prep',parent:8,clause:1},
+     {t:10,role:'OP',slot:'prepObject',parent:9,clause:1},
+     {t:11,role:'PREP',slot:'prep',parent:8,clause:1},
+     {t:12,role:'OP',slot:'prepObject',parent:11,clause:1}]},
 
   {id:'c21', sentence:'Joseph threw the baseball to Isaiah quickly and accurately.',
    tokens:['Joseph','threw','the','baseball','to','Isaiah','quickly','and','accurately'],
@@ -531,21 +537,37 @@ function addNode(tokenIndex,attach,parentId){
   state.nodes.push(n);
   return n;
 }
-/* A cell is one baseline position: either a plain node id, or a fork holding
-   two arms plus the conjunction that joins them. */
+/* A cell is one baseline position, in one of three shapes: a plain node id; a
+   fork holding two arms plus the conjunction that joins them; or a PHRASE -- a
+   run of words written side by side in one spot. A verb phrase ("has been
+   helping") is one predicate, so it takes one spot, but the student still has
+   to assemble it from three separate words rather than being handed it whole. */
 function cellAt(i){return state.line[i];}
 function isFork(c){return c&&typeof c==='object'&&c.kind==='fork';}
+function isPhrase(c){return c&&typeof c==='object'&&c.kind==='phrase';}
+function phraseIds(c){return isPhrase(c)?c.ids.filter(Boolean):[];}
+/* The word that a phrase's modifiers and dividers hang off: by convention the
+   MAIN verb, which is the last word of the phrase. */
+function cellHeadId(c){
+  if(isPhrase(c)){const ids=phraseIds(c); return ids[ids.length-1]||null;}
+  return isFork(c)?(c.arms.filter(Boolean)[0]||null):c;
+}
 function cellTokens(c){
   if(!c)return [];
   if(isFork(c))return c.arms.filter(Boolean).map(id=>nodeById(id)).filter(Boolean).map(n=>n.tokenIndex);
+  if(isPhrase(c))return phraseIds(c).map(id=>nodeById(id)).filter(Boolean).map(n=>n.tokenIndex);
   const n=nodeById(c); return n?[n.tokenIndex]:[];
 }
 function cellIndexOfNode(id){
-  return state.line.findIndex(c=>isFork(c)?c.arms.includes(id):c===id);
+  return state.line.findIndex(c=>isFork(c)?c.arms.includes(id):isPhrase(c)?c.ids.includes(id):c===id);
 }
 function lineNodeIds(){
   const out=[];
-  state.line.forEach(c=>{ if(isFork(c))c.arms.filter(Boolean).forEach(a=>out.push(a)); else if(c)out.push(c); });
+  state.line.forEach(c=>{
+    if(isFork(c))c.arms.filter(Boolean).forEach(a=>out.push(a));
+    else if(isPhrase(c))phraseIds(c).forEach(a=>out.push(a));
+    else if(c)out.push(c);
+  });
   return out;
 }
 function isOnLine(id){return lineNodeIds().includes(id);}
@@ -565,6 +587,12 @@ function removeNode(id){
       if(!kept.length)return null;
       if(kept.length===1&&gone.has(c.conjId))return kept[0];   // fork collapses
       return {...c, arms, conjId:gone.has(c.conjId)?null:c.conjId};
+    }
+    if(isPhrase(c)){
+      const ids=c.ids.filter(id=>!gone.has(id));
+      if(!ids.length)return null;
+      if(ids.length===1)return ids[0];        // a one-word phrase is just a word
+      return {...c, ids};
     }
     return gone.has(c)?null:c;
   }).filter(Boolean);
@@ -703,16 +731,39 @@ function layout(){
   const clauseY=k=>BASE_Y+k*CLAUSE_GAP;
 
   const cells=state.line.map(c=>{
-    const ids=isFork(c)?c.arms.filter(Boolean):[c];
+    const ids=isFork(c)?c.arms.filter(Boolean):isPhrase(c)?phraseIds(c):[c];
     const ms=ids.map(id=>{const n=nodeById(id);
       return n?measure(n,out.slots):{own:SEG_MIN,left:0,right:0,depth:0};});
     if(!ms.length)ms.push({own:SEG_MIN,left:0,right:0,depth:0});
-    const own=Math.max.apply(null,ms.map(m=>m.own));
+    // Fork arms are stacked, so they share a width; a phrase's words are
+    // written side by side, so its words' widths ADD.
+    const own=isPhrase(c)
+      ?ms.reduce((a,m)=>a+m.own,0)+PHRASE_GAP*Math.max(0,ms.length-1)
+      :Math.max.apply(null,ms.map(m=>m.own));
+    // A phrase word's modifiers hang from ITS OWN centre, at a fixed offset
+    // inside the phrase -- so the cell must reserve the widest reach measured
+    // from that offset, not the sum of each word's spread. Summing let the
+    // last word's prepositional phrase run out past the cell and collide with
+    // the next word's hit target.
+    let spread;
+    if(isPhrase(c)){
+      let cur=0, lo=0, hi=own;
+      ms.forEach(m=>{
+        const centre=cur+m.own/2;
+        lo=Math.min(lo,centre-m.left);
+        hi=Math.max(hi,centre+m.right);
+        cur+=m.own+PHRASE_GAP;
+      });
+      spread=hi-lo;
+    }else{
+      spread=Math.max.apply(null,ms.map(m=>Math.max(m.own,m.left+m.right)));
+    }
     return {cell:c, ids:ids, ms:ms,
             w:Math.max(SEG_MIN,own+SEG_PAD),
-            reserve:Math.max(SEG_MIN,Math.max.apply(null,ms.map(m=>Math.max(m.own,m.left+m.right)))+SEG_PAD),
+            reserve:Math.max(SEG_MIN,spread+SEG_PAD),
             depth:Math.max.apply(null,ms.map(m=>m.depth)),
-            left:Math.max.apply(null,ms.map(m=>m.left))};
+            left:isPhrase(c)?(ms[0]?ms[0].left:0):Math.max.apply(null,ms.map(m=>m.left)),
+            phraseW:isPhrase(c)?own:0};
   });
 
   // A divider claims room in the gap between the two cells it names. Endpoints
@@ -783,6 +834,36 @@ function layout(){
       }
       topY=Math.min(topY,topArm-26);
       maxDepth=Math.max(maxDepth,FORK_RISE+(c.ms[1]?c.ms[1].depth:0));
+      minX=Math.min(minX,x1-c.left);
+    }else if(isPhrase(c.cell)){
+      // The words of a verb phrase share one segment of line, written side by
+      // side. Each word is separately clickable so it can be taken back off,
+      // and every one of them can carry its own modifier ("has NOT been going").
+      const ids=phraseIds(c.cell);
+      const total=c.phraseW||
+        (c.ms.reduce((a,m)=>a+m.own,0)+PHRASE_GAP*Math.max(0,ids.length-1));
+      // Centre the phrase on the space its modifiers actually need, not on the
+      // words alone: a prep phrase under the LAST word pushes the whole run
+      // left so the branch stays inside this cell.
+      let lo=0, hi=total, cur=0;
+      c.ms.forEach(m=>{
+        const centre=cur+m.own/2;
+        lo=Math.min(lo,centre-m.left); hi=Math.max(hi,centre+m.right);
+        cur+=m.own+PHRASE_GAP;
+      });
+      let wx=mid-(lo+hi)/2;
+      ids.forEach((id,pi)=>{
+        const n=nodeById(id); if(!n)return;
+        const ow=c.ms[pi]?c.ms[pi].own:SEG_MIN;
+        const cx=wx+ow/2;
+        out.geom.set(id,{line:{x1:x1,y1:y,x2:x2,y2:y},
+          textX:cx, textY:y-ARM_LIFT, rotation:0, hit:'word',
+          span:{x:wx-6,w:ow+12}, attach:'line'});
+        out.targets.push(n);
+        placeMods(n,cx,y,out,null);
+        wx+=ow+PHRASE_GAP;
+      });
+      maxDepth=Math.max(maxDepth,c.depth);
       minX=Math.min(minX,x1-c.left);
     }else if(c.cell){
       const n=nodeById(c.cell);
@@ -872,9 +953,23 @@ function layout(){
   // The clauses of a compound sentence are joined by a dotted vertical between
   // their verbs, with the conjunction written on it.
   if(clauseCount>1){
+    // Meet the verb cell just inside its LEFT edge. Aiming at the midpoint puts
+    // the elbow on top of the word -- and squarely between the words of a verb
+    // phrase, where "may play" had the dotted joiner running through "play".
     const verbX=k=>{
       const mine=cells.filter(c=>c.clause===k);
-      return mine.length>1?mine[1].mid:(mine.length?mine[0].mid:BASE_X+SEG_MIN);
+      const c=mine.length>1?mine[1]:mine[0];
+      if(!c)return BASE_X+SEG_MIN;
+      if(!isPhrase(c.cell))return c.mid;
+      // Land in the gap BETWEEN the words of the phrase -- the one place inside
+      // the verb spot that no word occupies, so the joiner never crosses a
+      // glyph. ("may |here| play")
+      const ids=phraseIds(c.cell);
+      for(let q=0;q+1<ids.length;q++){
+        const a=out.geom.get(ids[q]), b=out.geom.get(ids[q+1]);
+        if(a&&a.span&&b&&b.span)return (a.span.x+a.span.w+b.span.x)/2;
+      }
+      return c.mid;
     };
     for(let k=0;k+1<clauseCount;k++){
       const xTop=verbX(k), xBot=verbX(k+1), jx=Math.round((xTop+xBot)/2);
@@ -938,6 +1033,13 @@ function expectedModel(){
     // compound sentence has its own subject and verb, not a fork.
     if(last&&last.slot===e.slot&&last.clause===cl)last.toks.push(e.t);
     else cells.push({slot:e.slot, toks:[e.t], clause:cl});
+  });
+  // A cell holding several words is one of two different things. Joined by a
+  // conjunction it is a COMPOUND -- two stacked fork arms ("Ben and Clara").
+  // Otherwise it is a PHRASE: consecutive words filling one spot side by side,
+  // which is what a verb phrase like "has been helping" is.
+  cells.forEach(c=>{
+    c.phrase=c.toks.length>1&&c.toks.every((t,i)=>i===0||t===c.toks[i-1]+1);
   });
   const dividers=[];
   for(let i=0;i<cells.length-1;i++){
@@ -1073,9 +1175,11 @@ function grade(){
   stuDiv.forEach(x=>{ if(!divs[x.d.id])divs[x.d.id]='extra'; });
   const missingDiv=exp.dividers.filter((e,i)=>!used.has(i));
 
-  // forks: expected compounds are cells with more than one token
-  const expForks=exp.order.filter(toks=>toks.length>1);
-  const stuForks=stuCells.filter(toks=>toks.length>1);
+  // forks: expected compounds are multi-token cells that are NOT verb phrases.
+  // "has been helping" fills one spot but is not a compound, so it must not be
+  // demanded as one -- nor reported as a stray compound when built correctly.
+  const expForks=exp.cells.filter(c=>c.toks.length>1&&!c.phrase).map(c=>c.toks);
+  const stuForks=state.line.filter(c=>isFork(c)).map(c=>cellTokens(c)).filter(t=>t.length>1);
   const forkIssues=[];
   expForks.forEach(want=>{
     const got=stuForks.find(g=>g.length===want.length&&want.every(t=>g.includes(t)));
@@ -1095,6 +1199,7 @@ const TOOLS=[
   {id:'div:do',        label:'V | DO', hint:'Direct object divider (stops at the line)'},
   {id:'div:complement',label:'V \\ PN', hint:'Predicate word divider (slanted)'},
   {id:'fork',          label:'Compound', hint:'Split one spot into two'},
+  {id:'phrase',        label:'Same spot', hint:'Add a helping verb beside a word'},
   {id:'conj',          label:'Join with',hint:'Pick the joining word, then the two it joins'},
   {id:'interj',        label:'Set apart', hint:'Put a word on its own line (interjection)'}
 ];
@@ -1165,6 +1270,13 @@ function renderTargetSvg(n,g){
       '<polygon class="target-hit" points="'+pts+'"></polygon>'+
       '<line class="diagram-line" x1="'+L.x1+'" y1="'+L.y1+'" x2="'+L.x2+'" y2="'+L.y2+'"'+vstroke(n.tokenIndex)+'></line>'+
       '<text class="diagram-text small-text" x="'+g.textX+'" y="'+g.textY+'" transform="rotate('+g.rotation.toFixed(1)+' '+g.textX+' '+g.textY+')"'+vfill(n.tokenIndex)+'>'+label+'</text></g>';
+  }
+  // One word of a verb phrase: its hit target is just its own span, not the
+  // whole shared segment, or the words fight over each other's clicks.
+  if(g.hit==='word'){
+    return '<g class="diagram-target'+pend+'" data-action="node" data-node="'+n.id+'">'+
+      '<rect class="target-hit" x="'+g.span.x+'" y="'+(g.textY-18)+'" width="'+g.span.w+'" height="'+(g.line.y1-g.textY+22)+'" rx="5"></rect>'+
+      '<text class="diagram-text" x="'+g.textX+'" y="'+g.textY+'"'+vfill(n.tokenIndex)+'>'+label+'</text></g>';
   }
   const L=g.line, top=(g.hit==='arm')?g.textY-12:Math.min(L.y1,g.textY)-16;
   const left=(g.hit==='arm')?L.x1+34:L.x1+2;
@@ -1250,6 +1362,9 @@ function toolHint(){
   if(state.sel.kind==='tool'){
     if(state.sel.tool==='fork')return 'Click a word on the line to split its spot in two.';
     if(state.sel.tool==='interj')return 'Click the interjection in the word list to set it on its own line.';
+    if(state.sel.tool==='phrase')return state.conjWord==null
+      ?'Click the helping verb in the word list, then the verb it goes with.'
+      :'Now click the word on the line that "'+tokenText(state.conjWord)+'" joins.';
     if(state.sel.tool==='conj'){
       if(state.conjWord==null)return 'Click the joining word (like "and") in the word list.';
       if(!state.pending)return 'Now click the FIRST word that "'+tokenText(state.conjWord)+'" joins.';
@@ -1317,7 +1432,7 @@ document.addEventListener('click',e=>{
     const t=btn.dataset.value;
     state.sel=toolArmed(t)?null:{kind:'tool',tool:t};
     state.pending=null;
-    if(t==='conj')state.conjWord=null;   // each join starts fresh
+    if(t==='conj'||t==='phrase')state.conjWord=null;   // each one starts fresh
   }
   else if(action==='word'){
     const i=Number(btn.dataset.index);
@@ -1325,8 +1440,9 @@ document.addEventListener('click',e=>{
       state.roles[i]=(state.roles[i]===state.sel.role)?undefined:state.sel.role;
       if(state.roles[i]===undefined)delete state.roles[i];
       // deliberately keep the role armed
-    }else if(state.sel&&state.sel.kind==='tool'&&state.sel.tool==='conj'&&state.conjWord==null){
-      // "Join with" is armed and waiting for its conjunction: this is it.
+    }else if(state.sel&&state.sel.kind==='tool'&&
+             (state.sel.tool==='conj'||state.sel.tool==='phrase')&&state.conjWord==null){
+      // A two-part tool waiting for its word from the bank: this is it.
       state.conjWord=i; state.pending=null;
     }else if(state.sel&&state.sel.kind==='tool'&&state.sel.tool==='interj'){
       // An interjection attaches to nothing, so there is no second click: one
@@ -1363,6 +1479,35 @@ document.addEventListener('click',e=>{
                    (r==='IO')?'indirect':'mod';
       addNode(t,attach,n.id);
       clearSel();
+    }else if(state.sel&&state.sel.kind==='tool'&&state.sel.tool==='phrase'){
+      // "Same spot" -> a word from the bank, then the word on the line it joins.
+      // The two share one segment, which is how a verb phrase is diagrammed.
+      if(state.conjWord==null){
+        state.hint='Pick the word to add from the word list first.';
+      }else{
+        const ci=cellIndexOfNode(n.id);
+        if(ci>=0){
+          const w=addNode(state.conjWord,'line',null);
+          const cell=state.line[ci];
+          // The words of a verb phrase are written in SENTENCE order ("has been
+          // helping"), not in the order the student happened to add them, so
+          // keep the run sorted by token index.
+          const bySentence=ids=>ids.slice().sort((a,b)=>{
+            const na=nodeById(a), nb=nodeById(b);
+            return (na?na.tokenIndex:0)-(nb?nb.tokenIndex:0);
+          });
+          if(isPhrase(cell)){
+            cell.ids=bySentence(cell.ids.concat([w.id]));
+          }else if(!isFork(cell)){
+            state.line[ci]={id:newId('p'),kind:'phrase',ids:bySentence([cell,w.id])};
+          }else{
+            // a fork arm: put it beside that arm, inside the arm
+            state.hint='Add helping verbs to a plain spot, not to a compound arm.';
+            removeNode(w.id);
+          }
+        }
+        state.conjWord=null; clearSel();
+      }
     }else if(state.sel&&state.sel.kind==='tool'){
       const tool=state.sel.tool;
       if(tool==='fork'){
@@ -1440,9 +1585,13 @@ function revealAnswer(){
   const i=state.index; state=freshState(i);
   const exp=expectedModel(), s=sentence();
   const idOf={};
-  exp.order.forEach(toks=>{
+  exp.order.forEach((toks,ci)=>{
     const ids=toks.map(t=>{const n=addNode(t,'line',null); idOf[t]=n.id; state.roles[t]=exp.roles[t]; return n.id;});
-    state.line.push(ids.length>1?{id:newId('f'),kind:'fork',arms:ids.slice(0,2),conjId:null}:ids[0]);
+    if(ids.length<2){state.line.push(ids[0]); return;}
+    // consecutive words in one spot are a verb phrase, not a compound
+    state.line.push(exp.cells[ci]&&exp.cells[ci].phrase
+      ?{id:newId('p'),kind:'phrase',ids:ids}
+      :{id:newId('f'),kind:'fork',arms:ids.slice(0,2),conjId:null});
   });
   // attachments, parents before children
   if(exp.clauseStart>0)state.clauseStarts=[exp.clauseStart];
