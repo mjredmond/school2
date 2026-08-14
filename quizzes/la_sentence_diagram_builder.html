@@ -135,6 +135,9 @@ const CLAUSE_GAP=210;
 const PREP_ARM=126, ARM_LIFT=16;
 /* Space between the words of a verb phrase sharing one baseline spot. */
 const PHRASE_GAP=18;
+/* How far past a slant's foot the conjunction guide starts. Landing exactly on
+   the foot puts the dashed line inside the slant's click polygon. */
+const GUIDE_DROP=26;
 /* An indirect object hangs under the verb on a slant with a horizontal shelf at
    its foot -- the same shape as a prepositional phrase with the preposition left
    off, which is exactly what "gave [to] him the book" means. */
@@ -627,11 +630,20 @@ function measure(node,slots){
   if(!kids.length)return m;
   let cursor=0;
   const list=[];
+  // A conjunction joining two of these modifiers needs a readable dashed line
+  // between their slants, with the word written on it. At the normal pitch the
+  // two slants are too close and the guide collapses to a couple of specks, so
+  // widen the step across the pair the conjunction sits between.
+  const conjKid=childrenOf(node.id).find(c=>c.attach==='conj');
+  const joinFrom=conjKid?kids.filter(k=>k.tokenIndex<conjKid.tokenIndex)
+                              .sort((a,b)=>b.tokenIndex-a.tokenIndex)[0]:null;
   kids.forEach(k=>{
     const km=measure(k,slots);
     const objW=(k.attach==='prep')?prepObjectWidth(k):(k.attach==='indirect')?ioArmWidth(k):0;
-    const need=(k.attach==='prep'||k.attach==='indirect')
+    let need=(k.attach==='prep'||k.attach==='indirect')
       ?Math.max(MOD_PITCH,SLANT_RUN+objW+km.right+16):MOD_PITCH;
+    if(joinFrom&&k.id===joinFrom.id)
+      need=Math.max(need,MOD_PITCH+textWidth(tokenText(conjKid.tokenIndex))+46);
     list.push({node:k, offset:cursor, m:km, need});
     cursor+=need;
     // A prep phrase reaches further down than its own slant: the object sits
@@ -924,26 +936,35 @@ function layout(){
                     .sort((a,b)=>a.tokenIndex-b.tokenIndex)[0];
     const joined=[before,after].filter(Boolean);
     const gs=(joined.length===2?joined:sibs).map(k=>out.geom.get(k.id));
-    const xs=gs.map(g=>g.line.x2), ys=gs.map(g=>g.line.y2);
-    const gy=Math.max.apply(null,ys)+26;
-    const gx1=Math.min.apply(null,xs), gx2=Math.max.apply(null,xs);
-    // The conjunction is written ON the dashed line, midway between the two
-    // slants it joins -- not parked below it. Break the guide either side of
-    // the word so the line does not run through the letters.
-    const cx=(gx1+gx2)/2;
-    const halfW=Math.max(22,textWidth(tokenText(cj.tokenIndex))/2+8);
-    // Reach out to the two slants themselves, so the guide visibly connects
-    // them rather than floating as two stubs beside the word.
-    // Span exactly the two slants, breaking around the word in the middle. When
-    // the word is wider than the gap there is no horizontal left to draw, and
-    // the risers alone carry the connection.
-    if(cx-halfW>gx1)out.lines.push({cls:'diagram-guide',x1:gx1,y1:gy,x2:cx-halfW,y2:gy});
-    if(gx2>cx+halfW)out.lines.push({cls:'diagram-guide',x1:cx+halfW,y1:gy,x2:gx2,y2:gy});
-    // Risers up to the foot of each slant, so the guide is visibly attached to
-    // the two words it joins instead of hanging free beneath them.
-    gs.forEach(g0=>out.lines.push({cls:'diagram-guide',
-      x1:g0.line.x2, y1:g0.line.y2, x2:g0.line.x2, y2:gy}));
-    out.geom.set(cj.id,{box:{x:cx-halfW,y:gy-14,w:halfW*2,h:28},
+    // ONE dashed line drawn straight from the foot of the left slant to the
+    // foot of the right one, with the conjunction written on it -- exactly the
+    // stroke a student makes on paper. Drawing a horizontal below both feet
+    // plus risers up to them read as three disconnected stubs.
+    const L0=gs[0].line, R0=gs[1]?gs[1].line:gs[0].line;
+    const left =L0.x2<=R0.x2?L0:R0, right=L0.x2<=R0.x2?R0:L0;
+    // Start just past each foot, along the slant's own direction: touching the
+    // feet exactly puts the guide inside the slants' click polygons.
+    const off=(seg)=>{
+      const rx=seg.x2-seg.x1, ry=seg.y2-seg.y1, m=Math.hypot(rx,ry)||1;
+      return {x:seg.x2+rx/m*GUIDE_DROP, y:seg.y2+ry/m*GUIDE_DROP};
+    };
+    const pa=off(left), pb=off(right);
+    const ax=pa.x, ay=pa.y, bx=pb.x, by=pb.y;
+    const cx=(ax+bx)/2, gy=(ay+by)/2;
+    // Break the line around the word so the dashes do not cross the letters --
+    // but never eat more than half the span, or the guide is reduced to two
+    // specks either side of the word instead of reading as a line.
+    const len0=Math.hypot(bx-ax,by-ay)||1;
+    const halfW=Math.min(textWidth(tokenText(cj.tokenIndex))/2+6, len0*0.28);
+    const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy)||1;
+    const ux=dx/len, uy=dy/len;
+    if(len>halfW*2){
+      out.lines.push({cls:'diagram-guide',x1:ax,y1:ay,x2:cx-ux*halfW,y2:gy-uy*halfW});
+      out.lines.push({cls:'diagram-guide',x1:cx+ux*halfW,y1:gy+uy*halfW,x2:bx,y2:by});
+    }else{
+      out.lines.push({cls:'diagram-guide',x1:ax,y1:ay,x2:bx,y2:by});
+    }
+    out.geom.set(cj.id,{box:{x:cx-Math.max(halfW,20),y:gy-15,w:Math.max(halfW,20)*2,h:30},
       textX:cx, textY:gy+5, rotation:0, hit:'box', bare:true, attach:'conj'});
     out.targets.push(cj);
     maxDepth=Math.max(maxDepth,gy+40-y);
