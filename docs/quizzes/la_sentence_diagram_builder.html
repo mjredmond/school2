@@ -691,10 +691,12 @@ function placeSlant(node,anchorX,anchorY,out,maxDrop){
   const deg=clampReadable(Math.atan2(drop,-run)*180/Math.PI);
   // Sit the word beside the slant, not on it: text-anchor is middle, so a point
   // taken on the line itself puts the glyphs straight across the stroke.
+  // It goes on the UPPER-LEFT side of the stroke, which is where the Abeka key
+  // writes it -- the normal below points down-right, so it is negated.
   const len=Math.hypot(run,drop)||1, nx=drop/len, ny=run/len;
   const mx=anchorX-run*0.5, my=anchorY+drop*0.5;
   out.geom.set(node.id,{line:{x1:anchorX,y1:anchorY,x2:x2,y2:y2},
-    textX:mx+nx*15, textY:my+ny*15+4, rotation:deg, hit:'slant', attach:node.attach});
+    textX:mx-nx*15, textY:my-ny*15+4, rotation:deg, hit:'slant', attach:node.attach});
   out.targets.push(node);
   return {x2:x2,y2:y2};
 }
