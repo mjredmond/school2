@@ -457,6 +457,25 @@ function layout(){
   });
   out.gaps.push({index:cells.length, x:x+12});
 
+  // A conjunction joining two MODIFIERS (like "quickly and accurately" under a
+  // verb) has no fork to ride on -- it hangs under the word they both modify,
+  // on a dashed guide bridging their two slants. Done after every modifier is
+  // placed, since it needs their finished positions.
+  state.nodes.filter(n=>n.attach==='conj'&&n.parentId).forEach(cj=>{
+    const sibs=childrenOf(cj.parentId).filter(k=>k.attach==='mod'&&out.geom.get(k.id));
+    if(sibs.length<2)return;
+    const gs=sibs.map(k=>out.geom.get(k.id));
+    const xs=gs.map(g=>g.line.x2), ys=gs.map(g=>g.line.y2);
+    const gy=Math.max.apply(null,ys)+26;
+    const gx1=Math.min.apply(null,xs), gx2=Math.max.apply(null,xs);
+    out.lines.push({cls:'diagram-guide',x1:gx1,y1:gy,x2:gx2,y2:gy});
+    const cx=(gx1+gx2)/2;
+    out.geom.set(cj.id,{box:{x:cx-34,y:gy+8,w:68,h:28},
+      textX:cx, textY:gy+27, rotation:0, hit:'box', attach:'conj'});
+    out.targets.push(cj);
+    maxDepth=Math.max(maxDepth,gy+40-y);
+  });
+
   // The baseline stops where a compound forks: the two arms carry the sentence
   // from there, so a line running between them would cut straight through the
   // fork. Draw it in segments, skipping each fork's span.
