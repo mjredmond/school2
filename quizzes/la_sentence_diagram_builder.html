@@ -48,6 +48,7 @@ button:disabled{opacity:.45;cursor:default}
 .role-do,.role-pn,.role-pa{background:#357a54}.role-adj{background:#6b5ca5}
 .role-adv{background:#7f4b77}.role-conj{background:#b34d37}
 .role-prep,.role-op{background:#637083}
+.role-io{background:#1f7a7a}.role-int{background:#8a6d1f}
 /* diagram canvas */
 .diagram-wrap{overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .diagram-svg{display:block;height:auto;max-width:none}
@@ -103,17 +104,19 @@ const DIAGRAM_ROLES=[
   {id:'AV',  label:'Action Verb',  className:'role-av'},
   {id:'LV',  label:'Linking Verb', className:'role-lv'},
   {id:'DO',  label:'Direct Object',className:'role-do'},
+  {id:'IO',  label:'Indirect Obj.',className:'role-io'},
   {id:'PN',  label:'Pred. Nom.',   className:'role-pn'},
   {id:'PA',  label:'Pred. Adj.',   className:'role-pa'},
   {id:'ADJ', label:'Adjective',    className:'role-adj'},
   {id:'ADV', label:'Adverb',       className:'role-adv'},
   {id:'CONJ',label:'Conjunction',  className:'role-conj'},
   {id:'PREP',label:'Preposition',  className:'role-prep'},
-  {id:'OP',  label:'Obj. of Prep.',className:'role-op'}
+  {id:'OP',  label:'Obj. of Prep.',className:'role-op'},
+  {id:'INT', label:'Interjection', className:'role-int'}
 ];
 const ROLE_MAP=Object.fromEntries(DIAGRAM_ROLES.map(r=>[r.id,r]));
 const VERB_ROLES=['AV','LV'];
-const NOUN_ROLES=['S','DO','PN','OP'];
+const NOUN_ROLES=['S','DO','IO','PN','OP'];
 
 /* Layout constants. The slant proportions (48 run / 74 drop / 126 arm / -58 deg
    text) are carried over from the existing practice file so the diagrams read
@@ -129,6 +132,14 @@ const DIVIDER_GAP=44, FORK_RISE=54, FORK_RUN=40;
    sentence -- enough that the upper clause's modifiers clear the lower one. */
 const CLAUSE_GAP=210;
 const PREP_ARM=126, ARM_LIFT=16;
+/* An indirect object hangs under the verb on a slant with a horizontal shelf at
+   its foot -- the same shape as a prepositional phrase with the preposition left
+   off, which is exactly what "gave [to] him the book" means. */
+const IO_ARM=118;
+/* An interjection stands apart from the sentence on its own short line, above
+   and to the left of the baseline: it modifies nothing and is separated from
+   everything else. */
+const INTERJ_LIFT=86, INTERJ_W=112, INTERJ_DX=-6;
 const CHAR_W=9.2, TEXT_PAD=30;
 
 /* ============================================================ sentences */
@@ -386,6 +397,82 @@ const SENTENCES=[
      {t:7,role:'CONJ',slot:'modConj',parent:1},
      {t:4,role:'PREP',slot:'prep',parent:1},
      {t:5,role:'OP',slot:'prepObject',parent:4}]}
+,
+
+  {id:'c22', sentence:'Grandma baked us a cherry pie.',
+   tokens:['Grandma','baked','us','a','cherry','pie'],
+   expected:[
+     {t:0,role:'S',slot:'subject',parent:null},
+     {t:1,role:'AV',slot:'verb',parent:null},
+     {t:5,role:'DO',slot:'object',parent:1},
+     {t:2,role:'IO',slot:'indirect',parent:1},
+     {t:3,role:'ADJ',slot:'mod',parent:5},
+     {t:4,role:'ADJ',slot:'mod',parent:5}]},
+
+  {id:'c23', sentence:'The teacher gave the new students their books.',
+   tokens:['The','teacher','gave','the','new','students','their','books'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:2,role:'AV',slot:'verb',parent:null},
+     {t:7,role:'DO',slot:'object',parent:2},
+     {t:5,role:'IO',slot:'indirect',parent:2},
+     {t:0,role:'ADJ',slot:'mod',parent:1},
+     {t:3,role:'ADJ',slot:'mod',parent:5},
+     {t:4,role:'ADJ',slot:'mod',parent:5},
+     {t:6,role:'ADJ',slot:'mod',parent:7}]},
+
+  {id:'c24', sentence:'Wow, that rocket climbed quickly!',
+   tokens:['Wow','that','rocket','climbed','quickly'],
+   expected:[
+     {t:0,role:'INT',slot:'interj',parent:null},
+     {t:2,role:'S',slot:'subject',parent:null},
+     {t:3,role:'AV',slot:'verb',parent:null},
+     {t:1,role:'ADJ',slot:'mod',parent:2},
+     {t:4,role:'ADV',slot:'mod',parent:3}]},
+
+  {id:'c25', sentence:'Oh, Mother handed me the warm bread.',
+   tokens:['Oh','Mother','handed','me','the','warm','bread'],
+   expected:[
+     {t:0,role:'INT',slot:'interj',parent:null},
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:2,role:'AV',slot:'verb',parent:null},
+     {t:6,role:'DO',slot:'object',parent:2},
+     {t:3,role:'IO',slot:'indirect',parent:2},
+     {t:4,role:'ADJ',slot:'mod',parent:6},
+     {t:5,role:'ADJ',slot:'mod',parent:6}]},
+
+  {id:'c26', sentence:'Are you ready for the long trip?',
+   tokens:['Are','you','ready','for','the','long','trip'],
+   expected:[
+     {t:1,role:'S',slot:'subject',parent:null},
+     {t:0,role:'LV',slot:'verb',parent:null},
+     {t:2,role:'PA',slot:'complement',parent:0},
+     {t:3,role:'PREP',slot:'prep',parent:2},
+     {t:6,role:'OP',slot:'prepObject',parent:3},
+     {t:4,role:'ADJ',slot:'mod',parent:6},
+     {t:5,role:'ADJ',slot:'mod',parent:6}]},
+
+  {id:'c27', sentence:'There are three books on the shelf.',
+   tokens:['There','are','three','books','on','the','shelf'],
+   expected:[
+     {t:3,role:'S',slot:'subject',parent:null},
+     {t:1,role:'LV',slot:'verb',parent:null},
+     {t:0,role:'ADV',slot:'mod',parent:1},
+     {t:2,role:'ADJ',slot:'mod',parent:3},
+     {t:4,role:'PREP',slot:'prep',parent:3},
+     {t:6,role:'OP',slot:'prepObject',parent:4},
+     {t:5,role:'ADJ',slot:'mod',parent:6}]},
+
+  {id:'c28', sentence:'Down the road rumbled an old truck.',
+   tokens:['Down','the','road','rumbled','an','old','truck'],
+   expected:[
+     {t:6,role:'S',slot:'subject',parent:null},
+     {t:3,role:'AV',slot:'verb',parent:null},
+     {t:4,role:'ADJ',slot:'mod',parent:6},
+     {t:5,role:'ADJ',slot:'mod',parent:6},
+     {t:0,role:'PREP',slot:'prep',parent:3},
+     {t:2,role:'OP',slot:'prepObject',parent:0},
+     {t:1,role:'ADJ',slot:'mod',parent:2}]}
 ];
 
 /* ============================================================ state
@@ -492,12 +579,18 @@ function removeDivider(id){state.dividers=state.dividers.filter(d=>d.id!==id);}
    to its left. Geometry goes into a side map keyed by node id, never grafted
    onto the nodes themselves (v1 did that and serialized it to localStorage). */
 function modChildren(id){
-  return childrenOf(id).filter(n=>n.attach==='mod'||n.attach==='prep')
+  return childrenOf(id).filter(n=>n.attach==='mod'||n.attach==='prep'||n.attach==='indirect')
     .sort((a,b)=>a.tokenIndex-b.tokenIndex);
 }
 function prepObjectWidth(prepNode){
   const obj=childrenOf(prepNode.id).find(c=>c.attach==='prepObject');
   return obj?Math.max(PREP_ARM,textWidth(tokenText(obj.tokenIndex))+30):PREP_ARM;
+}
+/* The indirect object writes its own word ON the shelf, so the shelf has to be
+   wide enough for it -- unlike a prep phrase, whose slant carries the
+   preposition and whose shelf carries a separate word. */
+function ioArmWidth(node){
+  return Math.max(IO_ARM,textWidth(tokenText(node.tokenIndex))+34);
 }
 function measure(node,slots){
   const kids=modChildren(node.id);
@@ -508,8 +601,9 @@ function measure(node,slots){
   const list=[];
   kids.forEach(k=>{
     const km=measure(k,slots);
-    const objW=(k.attach==='prep')?prepObjectWidth(k):0;
-    const need=(k.attach==='prep')?Math.max(MOD_PITCH,SLANT_RUN+objW+km.right+16):MOD_PITCH;
+    const objW=(k.attach==='prep')?prepObjectWidth(k):(k.attach==='indirect')?ioArmWidth(k):0;
+    const need=(k.attach==='prep'||k.attach==='indirect')
+      ?Math.max(MOD_PITCH,SLANT_RUN+objW+km.right+16):MOD_PITCH;
     list.push({node:k, offset:cursor, m:km, need});
     cursor+=need;
     // A prep phrase reaches further down than its own slant: the object sits
@@ -523,6 +617,10 @@ function measure(node,slots){
         const om=measure(obj,slots);
         kd=Math.max(kd, SLANT_DROP+(om.depth?SLANT_CLEAR+om.depth:0)+ARM_LIFT);
       }
+    }else if(k.attach==='indirect'){
+      // The word sits on the shelf and its own modifiers hang beneath THAT, so
+      // measuring only the slant under-reports how far down the branch reaches.
+      kd=Math.max(kd, SLANT_DROP+(km.depth?SLANT_CLEAR+km.depth:0)+ARM_LIFT);
     }
     m.depth=Math.max(m.depth,kd);
   });
@@ -554,6 +652,19 @@ function placeSlant(node,anchorX,anchorY,out,maxDrop){
 function placeMods(head,centerX,anchorY,out,maxDrop){
   (out.slots.get(head.id)||[]).forEach(s=>{
     const ax=centerX+s.offset;
+    if(s.node.attach==='indirect'){
+      // Slant down from the verb, then a horizontal shelf carrying the word.
+      // The slant itself is bare -- there is no preposition written on it.
+      const drop=SLANT_DROP, run=SLANT_RUN;
+      const fx=ax-run, fy=anchorY+drop;
+      const w=ioArmWidth(s.node);
+      out.geom.set(s.node.id,{line:{x1:fx,y1:fy,x2:fx+w,y2:fy},
+        stem:{x1:ax,y1:anchorY,x2:fx,y2:fy},
+        textX:fx+34+(w-34)/2, textY:fy-ARM_LIFT, rotation:0, hit:'arm', attach:'indirect'});
+      out.targets.push(s.node);
+      placeMods(s.node,out.geom.get(s.node.id).textX,fy,out,null);
+      return;
+    }
     const foot=placeSlant(s.node,ax,anchorY,out,maxDrop);
     if(s.node.attach==='prep'){
       const obj=childrenOf(s.node.id).find(c=>c.attach==='prepObject');
@@ -689,6 +800,19 @@ function layout(){
   });
   out.gaps.push({index:cells.length, x:x+12});
 
+  // An interjection is grammatically independent: it hangs off nothing and is
+  // written on its own short line above and to the left of the sentence, so it
+  // is visibly separate from the diagram proper.
+  state.nodes.filter(n=>n.attach==='interj').forEach((ij,k)=>{
+    const w=Math.max(INTERJ_W,textWidth(tokenText(ij.tokenIndex))+30);
+    const ix=BASE_X+INTERJ_DX, iy=BASE_Y-INTERJ_LIFT-k*40;
+    out.lines.push({cls:'diagram-line',x1:ix,y1:iy,x2:ix+w,y2:iy});
+    out.geom.set(ij.id,{line:{x1:ix,y1:iy,x2:ix+w,y2:iy},
+      textX:ix+w/2, textY:iy-ARM_LIFT, rotation:0, hit:'seg', attach:'interj'});
+    out.targets.push(ij);
+    topY=Math.min(topY,iy-34);
+  });
+
   // A conjunction joining two MODIFIERS (like "quickly and accurately" under a
   // verb) has no fork to ride on -- it hangs under the word they both modify,
   // on a dashed guide bridging their two slants. Done after every modifier is
@@ -796,9 +920,16 @@ function layout(){
 const ZONE={subject:'S', verb:'V', object:'O', complement:'C'};
 const ZONE_DIVIDER={SV:'sv', VO:'do', VC:'complement'};
 
+const SLOT_RANK={subject:0, verb:1, object:2, complement:2};
 function expectedModel(){
   const s=sentence();
-  const onLine=s.expected.filter(e=>ZONE[e.slot]).sort((a,b)=>a.t-b.t);
+  // Baseline order is DIAGRAM order, not sentence order. In an inverted or
+  // interrogative sentence ("Are you ready?", "Down the road rumbled a truck")
+  // the subject's token index is higher than the verb's, yet the subject still
+  // sits first on the line. Sort by clause, then slot, then token -- so token
+  // order only breaks ties inside one slot, where it is a genuine compound.
+  const onLine=s.expected.filter(e=>ZONE[e.slot]).slice().sort((a,b)=>
+    ((a.clause||0)-(b.clause||0))||(SLOT_RANK[a.slot]-SLOT_RANK[b.slot])||(a.t-b.t));
   const cells=[];
   onLine.forEach(e=>{
     const cl=e.clause||0;
@@ -825,6 +956,8 @@ function expectedModel(){
     else if(e.slot==='modConj')attach[e.t]='conj@'+e.parent;
     else if(e.slot==='prepObject')attach[e.t]='prepObject@'+e.parent;
     else if(e.slot==='prep')attach[e.t]='prep@'+e.parent;
+    else if(e.slot==='indirect')attach[e.t]='indirect@'+e.parent;
+    else if(e.slot==='interj')attach[e.t]='interj';
     else attach[e.t]='mod@'+e.parent;
   });
   const clauseStart=cells.findIndex(c=>c.clause===1);
@@ -839,6 +972,8 @@ function studentAttach(){
   const map={};
   state.nodes.forEach(n=>{
     if(n.attach==='line'){map[n.tokenIndex]='line';return;}
+    // An interjection hangs off nothing, so it has no head token to name.
+    if(n.attach==='interj'){map[n.tokenIndex]='interj';return;}
     const p=nodeById(n.parentId);
     const pt=p?p.tokenIndex:'?';
     // Naming the HEAD TOKEN is what makes "under the wrong noun" detectable:
@@ -960,7 +1095,8 @@ const TOOLS=[
   {id:'div:do',        label:'V | DO', hint:'Direct object divider (stops at the line)'},
   {id:'div:complement',label:'V \\ PN', hint:'Predicate word divider (slanted)'},
   {id:'fork',          label:'Compound', hint:'Split one spot into two'},
-  {id:'conj',          label:'Join with',hint:'Pick the joining word, then the two it joins'}
+  {id:'conj',          label:'Join with',hint:'Pick the joining word, then the two it joins'},
+  {id:'interj',        label:'Set apart', hint:'Put a word on its own line (interjection)'}
 ];
 function toolArmed(id){return state.sel&&state.sel.kind==='tool'&&state.sel.tool===id;}
 
@@ -1032,8 +1168,14 @@ function renderTargetSvg(n,g){
   }
   const L=g.line, top=(g.hit==='arm')?g.textY-12:Math.min(L.y1,g.textY)-16;
   const left=(g.hit==='arm')?L.x1+34:L.x1+2;
+  // An indirect object owns the slant that carries it down from the verb, so it
+  // draws its own stem; a prep object's stem is the preposition's slant.
+  const stem=g.stem?'<line class="diagram-line" x1="'+g.stem.x1+'" y1="'+g.stem.y1+'" x2="'+g.stem.x2+'" y2="'+g.stem.y2+'"'+vstroke(n.tokenIndex)+'></line>':'';
+  const shelf=(g.hit==='arm'&&g.attach==='indirect')
+    ?'<line class="diagram-line" x1="'+L.x1+'" y1="'+L.y1+'" x2="'+L.x2+'" y2="'+L.y2+'"'+vstroke(n.tokenIndex)+'></line>':'';
   return '<g class="diagram-target'+pend+'" data-action="node" data-node="'+n.id+'">'+
     '<rect class="target-hit" x="'+left+'" y="'+top+'" width="'+Math.max(28,L.x2-left-2)+'" height="'+(L.y1-top)+'" rx="5"></rect>'+
+    stem+shelf+
     '<text class="diagram-text" x="'+g.textX+'" y="'+g.textY+'"'+vfill(n.tokenIndex)+'>'+label+'</text></g>';
 }
 /* An empty fork arm: the line is already drawn, so add a dashed slot on it that
@@ -1107,6 +1249,7 @@ function toolHint(){
   if(state.sel.kind==='word')return 'Click the line to put it there, click a word to hang it underneath, or an empty arm to fill it.';
   if(state.sel.kind==='tool'){
     if(state.sel.tool==='fork')return 'Click a word on the line to split its spot in two.';
+    if(state.sel.tool==='interj')return 'Click the interjection in the word list to set it on its own line.';
     if(state.sel.tool==='conj'){
       if(state.conjWord==null)return 'Click the joining word (like "and") in the word list.';
       if(!state.pending)return 'Now click the FIRST word that "'+tokenText(state.conjWord)+'" joins.';
@@ -1185,6 +1328,11 @@ document.addEventListener('click',e=>{
     }else if(state.sel&&state.sel.kind==='tool'&&state.sel.tool==='conj'&&state.conjWord==null){
       // "Join with" is armed and waiting for its conjunction: this is it.
       state.conjWord=i; state.pending=null;
+    }else if(state.sel&&state.sel.kind==='tool'&&state.sel.tool==='interj'){
+      // An interjection attaches to nothing, so there is no second click: one
+      // word, straight onto its own line. Stays armed like the role tools.
+      if(!nodeForToken(i))addNode(i,'interj',null);
+      else state.hint='"'+tokenText(i)+'" is already on the diagram.';
     }else if(nodeForToken(i)){
       const n=nodeForToken(i), kids=childrenOf(n.id).length;
       removeNode(n.id);
@@ -1210,7 +1358,9 @@ document.addEventListener('click',e=>{
       // attach under whatever was clicked -- right or wrong, no filtering
       const t=state.sel.tokenIndex;
       const r=roleOf(t);
-      const attach=(r==='OP'&&roleOf(n.tokenIndex)==='PREP')?'prepObject':(r==='PREP'?'prep':'mod');
+      const attach=(r==='OP'&&roleOf(n.tokenIndex)==='PREP')?'prepObject':
+                   (r==='PREP')?'prep':
+                   (r==='IO')?'indirect':'mod';
       addNode(t,attach,n.id);
       clearSel();
     }else if(state.sel&&state.sel.kind==='tool'){
@@ -1296,13 +1446,19 @@ function revealAnswer(){
   });
   // attachments, parents before children
   if(exp.clauseStart>0)state.clauseStarts=[exp.clauseStart];
-  const rest=s.expected.filter(e=>!ZONE[e.slot]&&e.slot!=='conj'&&e.slot!=='modConj'&&e.slot!=='clauseConj');
+  // An interjection has no parent to wait for, so it never enters the loop.
+  s.expected.filter(e=>e.slot==='interj').forEach(e=>{
+    const n=addNode(e.t,'interj',null); idOf[e.t]=n.id; state.roles[e.t]=e.role;
+  });
+  const rest=s.expected.filter(e=>!ZONE[e.slot]&&e.slot!=='conj'&&e.slot!=='modConj'&&
+                                  e.slot!=='clauseConj'&&e.slot!=='interj');
   let guard=0;
   while(rest.length&&guard++<50){
     for(let k=rest.length-1;k>=0;k--){
       const e=rest[k];
       if(idOf[e.parent]!=null){
-        const attach=e.slot==='prep'?'prep':e.slot==='prepObject'?'prepObject':'mod';
+        const attach=e.slot==='prep'?'prep':e.slot==='prepObject'?'prepObject':
+                     e.slot==='indirect'?'indirect':'mod';
         const n=addNode(e.t,attach,idOf[e.parent]); idOf[e.t]=n.id;
         state.roles[e.t]=e.role; rest.splice(k,1);
       }
