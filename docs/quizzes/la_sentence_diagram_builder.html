@@ -927,10 +927,24 @@ function layout(){
     const xs=gs.map(g=>g.line.x2), ys=gs.map(g=>g.line.y2);
     const gy=Math.max.apply(null,ys)+26;
     const gx1=Math.min.apply(null,xs), gx2=Math.max.apply(null,xs);
-    out.lines.push({cls:'diagram-guide',x1:gx1,y1:gy,x2:gx2,y2:gy});
+    // The conjunction is written ON the dashed line, midway between the two
+    // slants it joins -- not parked below it. Break the guide either side of
+    // the word so the line does not run through the letters.
     const cx=(gx1+gx2)/2;
-    out.geom.set(cj.id,{box:{x:cx-34,y:gy+8,w:68,h:28},
-      textX:cx, textY:gy+27, rotation:0, hit:'box', attach:'conj'});
+    const halfW=Math.max(22,textWidth(tokenText(cj.tokenIndex))/2+8);
+    // Reach out to the two slants themselves, so the guide visibly connects
+    // them rather than floating as two stubs beside the word.
+    // Span exactly the two slants, breaking around the word in the middle. When
+    // the word is wider than the gap there is no horizontal left to draw, and
+    // the risers alone carry the connection.
+    if(cx-halfW>gx1)out.lines.push({cls:'diagram-guide',x1:gx1,y1:gy,x2:cx-halfW,y2:gy});
+    if(gx2>cx+halfW)out.lines.push({cls:'diagram-guide',x1:cx+halfW,y1:gy,x2:gx2,y2:gy});
+    // Risers up to the foot of each slant, so the guide is visibly attached to
+    // the two words it joins instead of hanging free beneath them.
+    gs.forEach(g0=>out.lines.push({cls:'diagram-guide',
+      x1:g0.line.x2, y1:g0.line.y2, x2:g0.line.x2, y2:gy}));
+    out.geom.set(cj.id,{box:{x:cx-halfW,y:gy-14,w:halfW*2,h:28},
+      textX:cx, textY:gy+5, rotation:0, hit:'box', bare:true, attach:'conj'});
     out.targets.push(cj);
     maxDepth=Math.max(maxDepth,gy+40-y);
   });
@@ -1266,10 +1280,15 @@ function renderTargetSvg(n,g){
   const label=esc(tokenText(n.tokenIndex));
   const pend=state.pending===n.id?' selected':'';
   if(g.hit==='box'){
+    // A conjunction written ON the dashed guide needs no drawn box -- the
+    // broken line either side already frames it. Only the free-standing kind
+    // (a fork's conjunction) gets a border.
+    const plate=g.bare?''
+      :'<rect class="word-box'+vclass(n.tokenIndex)+'" x="'+g.box.x+'" y="'+g.box.y+'" width="'+g.box.w+'" height="'+g.box.h+'" rx="6"></rect>';
     return '<g class="diagram-target'+pend+'" data-action="node" data-node="'+n.id+'">'+
       '<rect class="target-hit" x="'+(g.box.x-6)+'" y="'+(g.box.y-6)+'" width="'+(g.box.w+12)+'" height="'+(g.box.h+12)+'" rx="6"></rect>'+
-      '<rect class="word-box'+vclass(n.tokenIndex)+'" x="'+g.box.x+'" y="'+g.box.y+'" width="'+g.box.w+'" height="'+g.box.h+'" rx="6"></rect>'+
-      '<text class="diagram-text small-text" x="'+g.textX+'" y="'+g.textY+'">'+label+'</text></g>';
+      plate+
+      '<text class="diagram-text small-text" x="'+g.textX+'" y="'+g.textY+'"'+vfill(n.tokenIndex)+'>'+label+'</text></g>';
   }
   if(g.hit==='slant'){
     const L=g.line, pad=15, tail=(g.attach==='prep')?10:0;
