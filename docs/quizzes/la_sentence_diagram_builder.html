@@ -548,6 +548,15 @@ function addNode(tokenIndex,attach,parentId){
    to assemble it from three separate words rather than being handed it whole. */
 function cellAt(i){return state.line[i];}
 function isFork(c){return c&&typeof c==='object'&&c.kind==='fork';}
+/* Which way a compound's V points. The vertex sits on the side the sentence
+   carries on: a compound SUBJECT is entered from its arms and converges right
+   into the verb (vertex right, flipped), while a compound object or complement
+   hangs off the verb to its left (vertex left). `flip` overrides the guess, so
+   the student can point it either way. */
+function forkFlipped(cell,index,count){
+  if(cell&&cell.flip!=null)return !!cell.flip;
+  return index===0&&count>1;      // first cell on the line -> converge rightward
+}
 function isPhrase(c){return c&&typeof c==='object'&&c.kind==='phrase';}
 function phraseIds(c){return isPhrase(c)?c.ids.filter(Boolean):[];}
 /* The word that a phrase's modifiers and dividers hang off: by convention the
@@ -827,13 +836,22 @@ function layout(){
     if(isFork(c.cell)){
       const rise=Math.max(FORK_RISE,(c.ms[0]?c.ms[0].depth:0)+34);
       const topArm=y-rise, botArm=y+FORK_RISE;
-      out.lines.push({cls:'diagram-line',x1:x1+FORK_RUN,y1:topArm,x2:x2,y2:topArm});
-      out.lines.push({cls:'diagram-line',x1:x1+FORK_RUN,y1:botArm,x2:x2,y2:botArm});
-      out.lines.push({cls:'diagram-line',x1:x1,y1:y,x2:x1+FORK_RUN,y2:topArm});
-      out.lines.push({cls:'diagram-line',x1:x1,y1:y,x2:x1+FORK_RUN,y2:botArm});
-      const gx=x1+FORK_RUN+24;
+      // Which way the V points. The vertex belongs on the side the sentence
+      // CONTINUES: a compound subject converges rightward into the verb, while
+      // a compound object opens rightward off the verb. Default from the cell's
+      // position, but the student can flip it -- and must be able to, since a
+      // compound can sit anywhere.
+      const flipped=forkFlipped(c.cell,i,cells.length);
+      const vx=flipped?x2:x1;                    // vertex
+      const bx=flipped?x2-FORK_RUN:x1+FORK_RUN;  // where the arms turn horizontal
+      const armA=flipped?x1:x2;                  // the arms' far end
+      out.lines.push({cls:'diagram-line',x1:bx,y1:topArm,x2:armA,y2:topArm});
+      out.lines.push({cls:'diagram-line',x1:bx,y1:botArm,x2:armA,y2:botArm});
+      out.lines.push({cls:'diagram-line',x1:vx,y1:y,x2:bx,y2:topArm});
+      out.lines.push({cls:'diagram-line',x1:vx,y1:y,x2:bx,y2:botArm});
+      const gx=bx+(flipped?-24:24);
       out.lines.push({cls:'diagram-guide',x1:gx,y1:topArm,x2:gx,y2:botArm});
-      const armMid=(x1+FORK_RUN+x2)/2;
+      const armMid=(bx+armA)/2;
       c.cell.arms.forEach((id,ai)=>{
         const ay=ai===0?topArm:botArm;
         // An empty arm needs a visible, clickable slot or the fork is a dead
@@ -841,14 +859,16 @@ function layout(){
         // word. Draw the arm plus an open slot on it.
         if(!id){
           out.slotsOpen.push({forkId:c.cell.id, arm:ai,
-            x:x1+FORK_RUN, x2:x2, y:ay, mid:armMid});
+            x:Math.min(bx,armA), x2:Math.max(bx,armA), y:ay, mid:armMid});
           return;
         }
         const n=nodeById(id); if(!n)return;
-        out.geom.set(id,{line:{x1:x1+FORK_RUN,y1:ay,x2:x2,y2:ay},
+        out.geom.set(id,{line:{x1:Math.min(bx,armA),y1:ay,x2:Math.max(bx,armA),y2:ay},
           textX:armMid, textY:ay-ARM_LIFT, rotation:0, hit:'seg', attach:'line'});
         out.targets.push(n);
-        const anchor=Math.max(armMid,gx+42+(c.ms[ai]?c.ms[ai].left:0));
+        const anchor=flipped
+          ?Math.min(armMid,gx-42-(c.ms[ai]?c.ms[ai].right:0))
+          :Math.max(armMid,gx+42+(c.ms[ai]?c.ms[ai].left:0));
         placeMods(n,anchor,ay,out, ai===0?(y-ay-30):null);
       });
       if(c.cell.conjId){
@@ -978,6 +998,16 @@ function layout(){
     lineEnd=Math.max(lineEnd,end);
     const skips=mine.filter(c=>isFork(c.cell)).map(c=>({a:c.x1,b:c.x2})).sort((p,q)=>p.a-q.a);
     let cursor=BASE_X-4;
+    // A compound whose V points RIGHT is entered through its arms, not along
+    // the baseline: the line begins at its vertex. Starting at BASE_X left a
+    // stray stub floating to the left of the fork, and skipping its span again
+    // would then re-skip a stretch the line never covered.
+    const firstCell=mine[0];
+    if(firstCell&&isFork(firstCell.cell)&&
+       forkFlipped(firstCell.cell,cells.indexOf(firstCell),cells.length)){
+      cursor=Math.max(cursor,firstCell.x2);
+      if(skips.length&&skips[0].a===firstCell.x1)skips.shift();
+    }
     skips.forEach(sk=>{
       if(sk.a>cursor)out.lines.unshift({cls:'diagram-line',x1:cursor,y1:cy,x2:sk.a,y2:cy});
       cursor=Math.max(cursor,sk.b);
@@ -1237,7 +1267,7 @@ const TOOLS=[
   {id:'div:sv',        label:'S | V',  hint:'Subject / verb divider (crosses the line)'},
   {id:'div:do',        label:'V | DO', hint:'Direct object divider (stops at the line)'},
   {id:'div:complement',label:'V \\ PN', hint:'Predicate word divider (slanted)'},
-  {id:'fork',          label:'Compound', hint:'Split one spot into two'},
+  {id:'fork',          label:'Compound', hint:'Split a spot in two (click again to turn it)'},
   {id:'phrase',        label:'Same spot', hint:'Add a helping verb beside a word'},
   {id:'conj',          label:'Join with',hint:'Pick the joining word, then the two it joins'},
   {id:'interj',        label:'Set apart', hint:'Put a word on its own line (interjection)'}
@@ -1407,7 +1437,7 @@ function toolHint(){
   if(state.sel.kind==='role')return 'Click each word that is a '+ROLE_MAP[state.sel.role].label.toLowerCase()+'. The tool stays on.';
   if(state.sel.kind==='word')return 'Click the line to put it there, click a word to hang it underneath, or an empty arm to fill it.';
   if(state.sel.kind==='tool'){
-    if(state.sel.tool==='fork')return 'Click a word on the line to split its spot in two.';
+    if(state.sel.tool==='fork')return 'Click a word on the line to split its spot in two. Click a compound again to turn it the other way.';
     if(state.sel.tool==='interj')return 'Click the interjection in the word list to set it on its own line.';
     if(state.sel.tool==='phrase')return state.conjWord==null
       ?'Click the helping verb in the word list, then the verb it goes with.'
@@ -1562,6 +1592,12 @@ document.addEventListener('click',e=>{
         if(ci>=0&&!isFork(state.line[ci])){
           state.line[ci]={id:newId('f'),kind:'fork',arms:[n.id,null],conjId:null};
           state.hint='Now click a word, then click the empty arm to fill it.';
+        }else if(ci>=0&&isFork(state.line[ci])){
+          // Already a compound: clicking it again turns the V around, so the
+          // split can point either way whatever the app guessed.
+          const cell=state.line[ci];
+          cell.flip=!forkFlipped(cell,ci,state.line.length);
+          state.hint='Turned the compound the other way.';
         }
         clearSel();
       }else if(tool==='conj'){
