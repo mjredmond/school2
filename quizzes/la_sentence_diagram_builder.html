@@ -1036,18 +1036,20 @@ function layout(){
       const c=mine.length>1?mine[1]:mine[0];
       if(!c)return BASE_X+SEG_MIN;
       if(!isPhrase(c.cell))return c.mid;
-      // Land in the gap BETWEEN the words of the phrase -- the one place inside
-      // the verb spot that no word occupies, so the joiner never crosses a
-      // glyph. ("may |here| play")
+      // Meet the phrase just BEFORE its first word. "may play" is one predicate
+      // occupying one spot, so a line dropping into the gap between its words
+      // reads as if it split the verb phrase in two -- which is exactly what a
+      // verb phrase must never look like.
       const ids=phraseIds(c.cell);
-      for(let q=0;q+1<ids.length;q++){
-        const a=out.geom.get(ids[q]), b=out.geom.get(ids[q+1]);
-        if(a&&a.span&&b&&b.span)return (a.span.x+a.span.w+b.span.x)/2;
-      }
-      return c.mid;
+      const first=out.geom.get(ids[0]);
+      return (first&&first.span)?Math.min(first.span.x-8,c.x1+10):c.x1+8;
     };
     for(let k=0;k+1<clauseCount;k++){
-      const xTop=verbX(k), xBot=verbX(k+1), jx=Math.round((xTop+xBot)/2);
+      const xTop=verbX(k), xBot=verbX(k+1);
+      // Run the dotted guide down the LEFT of both verb spots rather than at
+      // their midpoint: a midpoint can sit directly above a word, and the
+      // elbow then grazes its letters on the way down.
+      const jx=Math.round(Math.min(xTop,xBot)-14);
       const yTop=clauseY(k), yBot=clauseY(k+1);
       out.lines.push({cls:'diagram-line',x1:xTop,y1:yTop,x2:jx,y2:yTop+26});
       out.lines.push({cls:'diagram-guide',x1:jx,y1:yTop+26,x2:jx,y2:yBot-26});
