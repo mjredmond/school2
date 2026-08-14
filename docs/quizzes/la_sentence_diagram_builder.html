@@ -133,6 +133,9 @@ const DIVIDER_GAP=44, FORK_RISE=54, FORK_RUN=40;
    sentence -- enough that the upper clause's modifiers clear the lower one. */
 const CLAUSE_GAP=210;
 const PREP_ARM=126, ARM_LIFT=16;
+/* How far the compound-sentence step runs across before dropping to the lower
+   clause. The horizontal carries the conjunction, so it needs real length. */
+const STEP_RUN=86;
 /* Space between the words of a verb phrase sharing one baseline spot. */
 const PHRASE_GAP=18;
 /* How far down its (invisible) slant a joining conjunction sits, as a fraction
@@ -1025,39 +1028,47 @@ function layout(){
       out.lines.unshift({cls:'diagram-line',x1:cursor,y1:cy,x2:end,y2:cy});
   }
 
-  // The clauses of a compound sentence are joined by a dotted vertical between
-  // their verbs, with the conjunction written on it.
+  // The clauses of a compound sentence are joined by a dotted STEP: straight
+  // down from the upper baseline, across, then straight down to the lower one,
+  // with the conjunction written UPRIGHT on the horizontal part. This is the
+  // form in the Abeka answer key (Test 17 #55), not a vertical line between the
+  // two verbs with the word boxed on it.
   if(clauseCount>1){
-    // Meet the verb cell just inside its LEFT edge. Aiming at the midpoint puts
-    // the elbow on top of the word -- and squarely between the words of a verb
-    // phrase, where "may play" had the dotted joiner running through "play".
-    const verbX=k=>{
+    // The step stands just right of the clause's subject|verb divider, which is
+    // where the key draws it -- clear of both the subject and the verb.
+    // Land clear of every word on the clause's line: just left of the verb spot
+    // (and of a verb PHRASE's first word), never inside it.
+    const stepX=k=>{
       const mine=cells.filter(c=>c.clause===k);
-      const c=mine.length>1?mine[1]:mine[0];
-      if(!c)return BASE_X+SEG_MIN;
-      if(!isPhrase(c.cell))return c.mid;
-      // Meet the phrase just BEFORE its first word. "may play" is one predicate
-      // occupying one spot, so a line dropping into the gap between its words
-      // reads as if it split the verb phrase in two -- which is exactly what a
-      // verb phrase must never look like.
-      const ids=phraseIds(c.cell);
-      const first=out.geom.get(ids[0]);
-      return (first&&first.span)?Math.min(first.span.x-8,c.x1+10):c.x1+8;
+      if(!mine.length)return BASE_X+SEG_MIN;
+      const verb=mine.length>1?mine[1]:mine[0];
+      let x=verb.x1+10;
+      if(isPhrase(verb.cell)){
+        const first=out.geom.get(phraseIds(verb.cell)[0]);
+        if(first&&first.span)x=Math.min(x,first.span.x-10);
+      }
+      return x;
     };
     for(let k=0;k+1<clauseCount;k++){
-      const xTop=verbX(k), xBot=verbX(k+1);
-      // Run the dotted guide down the LEFT of both verb spots rather than at
-      // their midpoint: a midpoint can sit directly above a word, and the
-      // elbow then grazes its letters on the way down.
-      const jx=Math.round(Math.min(xTop,xBot)-14);
+      const xTop=stepX(k), xBot=stepX(k+1);
       const yTop=clauseY(k), yBot=clauseY(k+1);
-      out.lines.push({cls:'diagram-line',x1:xTop,y1:yTop,x2:jx,y2:yTop+26});
-      out.lines.push({cls:'diagram-guide',x1:jx,y1:yTop+26,x2:jx,y2:yBot-26});
-      out.lines.push({cls:'diagram-line',x1:jx,y1:yBot-26,x2:xBot,y2:yBot});
+      const midY=(yTop+yBot)/2;
+      // The horizontal is the part that carries the word, so give it real
+      // length even when the two clauses' drops land at nearly the same x --
+      // otherwise the step collapses into one straight dotted line.
+      // Run the step LEFT into the open space under the subject, never right --
+      // rightward is where the verb's own words are, and the drop then lands
+      // between them and splits the verb phrase.
+      const runTo=Math.min(xBot,xTop-STEP_RUN);
+      out.lines.push({cls:'diagram-guide',x1:xTop,y1:yTop,x2:xTop,y2:midY});
+      out.lines.push({cls:'diagram-guide',x1:xTop,y1:midY,x2:runTo,y2:midY});
+      out.lines.push({cls:'diagram-guide',x1:runTo,y1:midY,x2:runTo,y2:yBot});
       const cj=state.clauseConj?nodeById(state.clauseConj):null;
       if(cj&&!out.geom.get(cj.id)){
-        out.geom.set(cj.id,{box:{x:jx-36,y:(yTop+yBot)/2-15,w:72,h:30},
-          textX:jx, textY:(yTop+yBot)/2+5, rotation:0, hit:'box', attach:'clauseConj'});
+        // Written ON the step, upright and unboxed -- the form in the key.
+        const cx=(xTop+runTo)/2;
+        out.geom.set(cj.id,{box:{x:cx-34,y:midY-30,w:68,h:26},
+          textX:cx, textY:midY-11, rotation:0, hit:'box', bare:true, attach:'clauseConj'});
         out.targets.push(cj);
       }
     }
