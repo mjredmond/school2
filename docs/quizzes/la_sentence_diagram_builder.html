@@ -347,6 +347,10 @@ function placeMods(head,centerX,anchorY,out,maxDrop){
         out.geom.set(obj.id,{line:{x1:foot.x2,y1:foot.y2,x2:foot.x2+w,y2:foot.y2},
           textX:foot.x2+34+(w-34)/2, textY:foot.y2-ARM_LIFT, rotation:0, hit:'arm', attach:'prepObject'});
         out.targets.push(obj);
+        // The object of a preposition takes modifiers of its own ("to the
+        // treehouse"), but measure() never descends through a prepObject, so
+        // its slot list is empty until we build it here.
+        measure(obj,out.slots);
         placeMods(obj,out.geom.get(obj.id).textX,foot.y2,out,null);
       }
     }else{
@@ -463,7 +467,19 @@ function layout(){
   // placed, since it needs their finished positions.
   state.nodes.filter(n=>n.attach==='conj'&&n.parentId).forEach(cj=>{
     const sibs=childrenOf(cj.parentId).filter(k=>k.attach==='mod'&&out.geom.get(k.id));
-    if(sibs.length<2)return;
+    if(sibs.length<2){
+      // Not joining anything yet -- park it under its word rather than leaving
+      // it invisible, so a placed word is never silently missing.
+      const pg=out.geom.get(cj.parentId);
+      if(pg){
+        const px=pg.textX, py=pg.box?pg.box.y+pg.box.h:Math.max(pg.line.y1,pg.line.y2);
+        out.geom.set(cj.id,{box:{x:px-34,y:py+30,w:68,h:28},
+          textX:px, textY:py+49, rotation:0, hit:'box', attach:'conj'});
+        out.targets.push(cj);
+        maxDepth=Math.max(maxDepth,py+62-y);
+      }
+      return;
+    }
     const gs=sibs.map(k=>out.geom.get(k.id));
     const xs=gs.map(g=>g.line.x2), ys=gs.map(g=>g.line.y2);
     const gy=Math.max.apply(null,ys)+26;
