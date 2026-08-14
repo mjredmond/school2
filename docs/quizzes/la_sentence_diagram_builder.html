@@ -1034,39 +1034,27 @@ function layout(){
   // form in the Abeka answer key (Test 17 #55), not a vertical line between the
   // two verbs with the word boxed on it.
   if(clauseCount>1){
-    // The step stands just right of the clause's subject|verb divider, which is
-    // where the key draws it -- clear of both the subject and the verb.
-    // Land clear of every word on the clause's line: just left of the verb spot
-    // (and of a verb PHRASE's first word), never inside it.
+    // The step joins the two VERBS -- it leaves the upper clause at its verb and
+    // arrives at the lower clause's verb, which is what makes it read as joining
+    // two predicates. It drops just inside the verb spot's left edge, right of
+    // the subject|verb divider, exactly as the key draws it.
     const stepX=k=>{
       const mine=cells.filter(c=>c.clause===k);
       if(!mine.length)return BASE_X+SEG_MIN;
       const verb=mine.length>1?mine[1]:mine[0];
-      let x=verb.x1+10;
-      if(isPhrase(verb.cell)){
-        const first=out.geom.get(phraseIds(verb.cell)[0]);
-        if(first&&first.span)x=Math.min(x,first.span.x-10);
-      }
-      return x;
+      return verb.x1+10;
     };
     for(let k=0;k+1<clauseCount;k++){
       const xTop=stepX(k), xBot=stepX(k+1);
       const yTop=clauseY(k), yBot=clauseY(k+1);
       const midY=(yTop+yBot)/2;
-      // The horizontal is the part that carries the word, so give it real
-      // length even when the two clauses' drops land at nearly the same x --
-      // otherwise the step collapses into one straight dotted line.
-      // Run the step LEFT into the open space under the subject, never right --
-      // rightward is where the verb's own words are, and the drop then lands
-      // between them and splits the verb phrase.
-      const runTo=Math.min(xBot,xTop-STEP_RUN);
       out.lines.push({cls:'diagram-guide',x1:xTop,y1:yTop,x2:xTop,y2:midY});
-      out.lines.push({cls:'diagram-guide',x1:xTop,y1:midY,x2:runTo,y2:midY});
-      out.lines.push({cls:'diagram-guide',x1:runTo,y1:midY,x2:runTo,y2:yBot});
+      out.lines.push({cls:'diagram-guide',x1:xTop,y1:midY,x2:xBot,y2:midY});
+      out.lines.push({cls:'diagram-guide',x1:xBot,y1:midY,x2:xBot,y2:yBot});
       const cj=state.clauseConj?nodeById(state.clauseConj):null;
       if(cj&&!out.geom.get(cj.id)){
-        // Written ON the step, upright and unboxed -- the form in the key.
-        const cx=(xTop+runTo)/2;
+        // Written ABOVE the horizontal, upright and unboxed -- as in the key.
+        const cx=(xTop+xBot)/2;
         out.geom.set(cj.id,{box:{x:cx-34,y:midY-30,w:68,h:26},
           textX:cx, textY:midY-11, rotation:0, hit:'box', bare:true, attach:'clauseConj'});
         out.targets.push(cj);
