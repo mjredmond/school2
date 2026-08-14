@@ -867,13 +867,14 @@ function layout(){
           textX:armMid, textY:ay-ARM_LIFT, rotation:0, hit:'seg', attach:'line'});
         out.targets.push(n);
         // Keep a modifier's fan clear of the conjunction guide, but always
-        // INSIDE the arm. The clearance pushes away from the guide, which sits
-        // at the vertex end -- so it moves right on a left-pointing fork and
-        // left on a right-pointing one.
+        // anchored ON the arm. The clearance pushes away from the guide (which
+        // sits at the vertex end), then is clamped to the arm's own span -- an
+        // anchor past the arm's edge leaves the modifier visibly floating off
+        // the compound, which is what happened to "her" under "brother".
+        const aL=Math.min(bx,armA), aR=Math.max(bx,armA);
         const need=(c.ms[ai]?c.ms[ai].left:0)+42;
-        const anchor=flipped
-          ?Math.min(armMid,Math.max(bx,armA)-14)
-          :Math.max(armMid,gx+need);
+        const want=flipped?Math.min(armMid,aR-14):Math.max(armMid,gx+need);
+        const anchor=Math.max(aL+10,Math.min(aR-10,want));
         placeMods(n,anchor,ay,out, ai===0?(y-ay-30):null);
       });
       if(c.cell.conjId){
