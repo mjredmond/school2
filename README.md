@@ -18,7 +18,16 @@ mkdocs.yml
 deploy.py           regenerates the index, builds, and deploys
 ```
 
-## Adding a quiz
+## Managing current quizzes
+
+`ACTIVE_QUIZZES` in `deploy.py` is the explicit list of assessments shown on the
+landing page. Files not on this list stay in `docs/quizzes/` and remain available
+at their existing direct URLs, but are not listed on the site pages. Older quizzes,
+tests, and practice drills are retained this way.
+
+The current list contains Grade 5 History Quiz 9 (Lesson 43) and Test 3 (Lesson 45).
+
+To add or replace the current practice:
 
 1. Copy the HTML file into `docs/quizzes/` using the naming convention:
 
@@ -30,13 +39,16 @@ deploy.py           regenerates the index, builds, and deploys
    `math_162_quiz_33.html` or `history_160_test_11.html`. The lesson number is
    optional for material not tied to a lesson.
 
-2. Run `python deploy.py`. The index page picks up the new file automatically.
-   If the auto-generated link text needs to read differently, add an entry to
-   `LABEL_OVERRIDES` in `deploy.py`.
+2. Add the filename to `ACTIVE_QUIZZES` in `deploy.py`. Remove entries that should
+   no longer appear on the landing page; keep their HTML files. A listed file
+   must exist or the build stops with an error. If the generated link text needs
+   to read differently, add an entry to `LABEL_OVERRIDES`.
 
-3. Optionally add a description to the matching subject page.
+3. Update the matching subject page to describe only current practice. Remove old
+   links from subject pages when retiring an entry from `ACTIVE_QUIZZES`.
 
-4. Commit and push the source changes.
+4. Run `python deploy.py --build` to regenerate the index and check the strict
+   site build. Then commit and push the source changes and deploy as below.
 
 ## Deploying
 

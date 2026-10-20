@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build and deploy the quiz site to GitHub Pages.
 
-Regenerates docs/index.md from whatever quiz HTML files are in docs/quizzes/,
+Regenerates docs/index.md from ACTIVE_QUIZZES in docs/quizzes/,
 then runs `mkdocs gh-deploy` to build and push to the gh-pages branch.
 
 Usage:
@@ -21,6 +21,13 @@ ROOT = Path(__file__).resolve().parent
 QUIZ_DIR = ROOT / "docs" / "quizzes"
 INDEX = ROOT / "docs" / "index.md"
 
+# Only these files appear on the generated landing page. Removing a filename
+# from this list keeps its HTML file and direct URL available for later use.
+ACTIVE_QUIZZES = (
+    "history_043_quiz_9.html",
+    "history_045_test_3.html",
+)
+
 # Filename convention: <subject>_<lesson>_<type>_<number>.html
 # Lesson is optional (e.g. la_sentence_diagram_practice.html).
 FILENAME_RE = re.compile(
@@ -38,6 +45,7 @@ SUBJECTS = [
 # Nicer labels for specific files, where the filename alone isn't descriptive.
 # Key is the filename stem; anything not listed gets a label derived from the name.
 LABEL_OVERRIDES = {
+    "history_045_test_3": "Test 3 — Quarter Exam",
     "math_167_test_17": "Test 17 — Final Exam",
     "math_unit_conversions_practice": "Unit Conversion Drill",
     "la_169_test_17": "Test 17 — Final Exam",
@@ -50,7 +58,8 @@ Interactive practice quizzes. Each one opens in your browser, checks your answer
 you go, and saves your progress on that device.
 
 !!! tip "How to use these"
-    Answers must be exact — including spelling, capitalization, and punctuation.
+    Spell answers accurately and capitalize proper names. Punctuation and spacing
+    are ignored when checking answers.
     Your work is saved automatically, so you can close the page and come back to it.
 """
 
@@ -75,22 +84,22 @@ def scan_quizzes():
         sys.exit(f"error: {QUIZ_DIR} does not exist")
 
     found = {key: [] for key, _ in SUBJECTS}
-    unmatched = []
+    missing = [name for name in ACTIVE_QUIZZES if not (QUIZ_DIR / name).is_file()]
+    if missing:
+        sys.exit("error: missing active quiz file(s): " + ", ".join(missing)
+                 + ". Copy them into docs/quizzes/ or update ACTIVE_QUIZZES in deploy.py.")
 
-    for path in sorted(QUIZ_DIR.glob("*.html")):
+    for filename in ACTIVE_QUIZZES:
+        path = QUIZ_DIR / filename
         m = FILENAME_RE.match(path.stem)
         if not m:
-            unmatched.append(path.name)
-            continue
+            sys.exit(f"error: active quiz {filename} does not match the naming convention")
         subject = m.group("subject")
         lesson = m.group("lesson")
         label = LABEL_OVERRIDES.get(path.stem) or label_for(m.group("rest"))
         # Sort by lesson number; unnumbered entries sort last.
         sort_key = (int(lesson) if lesson else 10**6, label)
         found[subject].append((sort_key, label, lesson, path.name))
-
-    for name in unmatched:
-        print(f"  warning: skipping {name} (does not match naming convention)")
 
     for key in found:
         found[key].sort()
@@ -118,8 +127,8 @@ def build_index() -> str:
 def write_index() -> int:
     content = build_index()
     INDEX.write_text(content, encoding="utf-8")
-    count = len(list(QUIZ_DIR.glob("*.html")))
-    print(f"wrote {INDEX.relative_to(ROOT)} ({count} quiz files)")
+    count = len(ACTIVE_QUIZZES)
+    print(f"wrote {INDEX.relative_to(ROOT)} ({count} active quiz files)")
     return count
 
 

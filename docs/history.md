@@ -1,20 +1,14 @@
 # History
 
-Chapter quizzes and tests. Answers must be exact, including spelling, capitalization,
-and punctuation.
+Grade 5 history practice. Spell answers accurately and capitalize proper names.
+Punctuation and spacing are ignored when checking answers. Complete the study
+questions and map review to unlock the multiple-choice quiz.
 
-## [Test 10](quizzes/history_147_test_10.html)
+## [Quiz 9](quizzes/history_043_quiz_9.html)
 
-**Lesson 147.** Chapters 16–18 — pp. 533, 535, 550–551.
+**Lesson 43.** Sections 6.5–6.8, including geography.
 
-## [Quiz 19](quizzes/history_152_quiz_19.html)
+## [Test 3 — Quarter Exam](quizzes/history_045_test_3.html)
 
-**Lesson 152.** Chapter 19 — pp. 535, 550–551.
-
-## [Quiz 20](quizzes/history_157_quiz_20.html)
-
-**Lesson 157.** Chapter 20 — pp. 537, 550–551.
-
-## [Test 11](quizzes/history_160_test_11.html)
-
-**Lesson 160.** Chapters 13–20 — pp. 525, 537, 550–551.
+**Lesson 45.** Chapters 1–6, including geography. Textbook page references are
+included for each item.
