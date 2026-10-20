@@ -1,6 +1,6 @@
 # school2
 
-Interactive practice quizzes for math, language arts, and history, published as a
+Interactive practice quizzes for math, language arts, history, and science, published as a
 MkDocs site.
 
 **Site:** https://mjredmond.github.io/school2/
@@ -13,6 +13,7 @@ docs/
   math.md           hand-written subject pages
   language-arts.md
   history.md
+  science.md
   quizzes/          the quiz HTML files, served as-is
 mkdocs.yml
 deploy.py           regenerates the index, builds, and deploys
@@ -25,7 +26,8 @@ landing page. Files not on this list stay in `docs/quizzes/` and remain availabl
 at their existing direct URLs, but are not listed on the site pages. Older quizzes,
 tests, and practice drills are retained this way.
 
-The current list contains Grade 5 History Quiz 9 (Lesson 43) and Test 3 (Lesson 45).
+The current list contains Grade 5 History Quiz 9 (Lesson 43), History Test 3
+(Lesson 45), and Science Test 3 (Lesson 42).
 
 To add or replace the current practice:
 
@@ -35,8 +37,8 @@ To add or replace the current practice:
    <subject>_<lesson>_<type>_<number>.html
    ```
 
-   where subject is `math`, `la`, or `history` — for example
-   `math_162_quiz_33.html` or `history_160_test_11.html`. The lesson number is
+   where subject is `math`, `la`, `history`, or `science` — for example
+   `math_162_quiz_33.html` or `science_042_test_3.html`. The lesson number is
    optional for material not tied to a lesson.
 
 2. Add the filename to `ACTIVE_QUIZZES` in `deploy.py`. Remove entries that should

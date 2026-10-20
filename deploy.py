@@ -26,12 +26,13 @@ INDEX = ROOT / "docs" / "index.md"
 ACTIVE_QUIZZES = (
     "history_043_quiz_9.html",
     "history_045_test_3.html",
+    "science_042_test_3.html",
 )
 
 # Filename convention: <subject>_<lesson>_<type>_<number>.html
 # Lesson is optional (e.g. la_sentence_diagram_practice.html).
 FILENAME_RE = re.compile(
-    r"^(?P<subject>math|la|history)"
+    r"^(?P<subject>math|la|history|science)"
     r"(?:_(?P<lesson>\d+))?"
     r"_(?P<rest>.+)$"
 )
@@ -40,12 +41,14 @@ SUBJECTS = [
     ("math", "Math"),
     ("la", "Language Arts"),
     ("history", "History"),
+    ("science", "Science"),
 ]
 
 # Nicer labels for specific files, where the filename alone isn't descriptive.
 # Key is the filename stem; anything not listed gets a label derived from the name.
 LABEL_OVERRIDES = {
     "history_045_test_3": "Test 3 — Quarter Exam",
+    "science_042_test_3": "Test 3 — Quarter Exam",
     "math_167_test_17": "Test 17 — Final Exam",
     "math_unit_conversions_practice": "Unit Conversion Drill",
     "la_169_test_17": "Test 17 — Final Exam",
