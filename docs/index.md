@@ -9,6 +9,13 @@ you go, and saves your progress on that device.
     Your work is saved automatically, so you can close the page and come back to it.
 
 
+## Language Arts
+
+| Quiz | Lesson |
+| --- | --- |
+| [Test 4 — Quarter Exam](quizzes/la_042_test_4.html) | 042 |
+
+
 ## History
 
 | Quiz | Lesson |
