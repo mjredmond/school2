@@ -27,7 +27,8 @@ at their existing direct URLs, but are not listed on the site pages. Older quizz
 tests, and practice drills are retained this way.
 
 The current list contains Grade 5 History Quiz 9 (Lesson 43), History Test 3
-(Lesson 45), Science Test 3 (Lesson 42), and Language Arts Test 4 (Lesson 42).
+(Lesson 45), Science Test 3 (Lesson 42) with its multiple-choice drill, and Language Arts Test 4
+(Lesson 42).
 
 To add or replace the current practice:
 

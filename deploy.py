@@ -28,6 +28,7 @@ ACTIVE_QUIZZES = (
     "history_045_test_3.html",
     "science_042_test_3.html",
     "la_042_test_4.html",
+    "science_042_test_3_mc.html",
 )
 
 # Filename convention: <subject>_<lesson>_<type>_<number>.html
@@ -50,6 +51,7 @@ SUBJECTS = [
 LABEL_OVERRIDES = {
     "history_045_test_3": "Test 3 — Quarter Exam",
     "science_042_test_3": "Test 3 — Quarter Exam",
+    "science_042_test_3_mc": "Test 3 — Multiple-Choice Drill",
     "la_042_test_4": "Test 4 — Quarter Exam",
     "math_167_test_17": "Test 17 — Final Exam",
     "math_unit_conversions_practice": "Unit Conversion Drill",

@@ -28,4 +28,5 @@ you go, and saves your progress on that device.
 
 | Quiz | Lesson |
 | --- | --- |
+| [Test 3 — Multiple-Choice Drill](quizzes/science_042_test_3_mc.html) | 042 |
 | [Test 3 — Quarter Exam](quizzes/science_042_test_3.html) | 042 |
